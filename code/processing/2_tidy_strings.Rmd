@@ -8,8 +8,7 @@ output: html_document
 - string parsing only covers the first instance in the string. should i extract subsequent ones? likely higher coverage but lower specificity.
 - remove "needed" or "cutoff"
 - examples to exclude: 
-  - "a ≥ 0.70" returns "0.70"
-  - "a. Psychometrika, 65, 271-228. doi:10.1007" returns "0.1007"
+  - repeat appearances in string aren't captured: "ranges from 0.75 to 0.89" returns "0.75"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -54,11 +53,32 @@ data_article_length <- data_combined_results_files |>
   select(doi, total_length_of_article = value)
 
 data_processed <- data_combined_results_files |>
+  # check that there are not strings between "cronbach" and the estimate that suggest this is something other than a cronbach's alpha estimate 
+  # e.g, reporting of a cutoff value ("cronbach's alpha of > .70"; this could get rid of real values too but more important that we exclude rules of thumb being reported)
+  # e.g., a p value ("p < .05"). several of these were found.
+  mutate(alpha_locate = str_locate(value, "([0]|\\s|=)\\.[0-9]*")[,"start"],
+         substring = str_sub(value, start = 1, end = alpha_locate),
+         comparison_present = str_detect(substring, "([<>≥≤]|exceeding|lower|above|below|greater than|less than|more than|between)"),
+         comparison_present_after_estimate = str_detect(value, "(or above|or more|or greater|or below|or less|or lower)"),
+         cutoff_present = str_detect(substring, "cut(\\s|-)off"),
+         p_present = str_detect(substring, "p\\s*[=<>≥≤]"),
+         doi_present = str_detect(tolower(substring), "(doi:|doi.org)"),
+         # something about references to this journal keep getting confused
+         psychometrika_present = str_detect(tolower(substring), "psychometrika")) |>
+  # extract the estimate
   # mutate(alpha = str_extract(value, "(0*\\.[0-9]*)"), # numbers that are decimals below 1 with or without leading zero, of arbitrary number of digits after decimal place
   #        alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
   mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"), 
          alpha = str_remove(alpha, "="),
-         alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
+         alpha = ifelse(alpha == "." |
+                          comparison_present == TRUE |
+                          comparison_present_after_estimate == TRUE |
+                          cutoff_present == TRUE |
+                          p_present == TRUE |
+                          doi_present == TRUE |
+                          psychometrika_present == TRUE, 
+                        NA, 
+                        as.numeric(alpha))) |>
   select(doi, exemplar, text = value, alpha) |>
   full_join(data_article_length, by = "doi") |>
   mutate(text = ifelse(text == total_length_of_article, NA, text)) |>
