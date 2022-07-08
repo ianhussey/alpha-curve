@@ -3,3 +3,9 @@ old/*
 *.Rhistory
 *.pdf
 *.txt
+*.csv
+*.js
+*.gif
+*.svg
+*.css
+*.jpg
