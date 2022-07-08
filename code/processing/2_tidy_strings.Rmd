@@ -1,0 +1,128 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+# TODO
+
+- string parsing only covers the first instance in the string. should i extract subsequent ones? likely higher coverage but lower specificity.
+- remove "needed" or "cutoff"
+- examples to exclude: 
+  - "a ≥ 0.70" returns "0.70"
+  - "a. Psychometrika, 65, 271-228. doi:10.1007" returns "0.1007"
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+```
+
+# Regex tests
+
+```{r}
+
+values <- c("=.4", " 0.4", " .4", " 2.4", " 0.0.4")
+str_extract(values, "([0]|\\s|=)\\.[0-9]")
+
+```
+
+# Extract Cronbach's alphas from extracted strings
+
+```{r}
+
+results_files_names <- 
+  list.files(path = "../../data/apa_articles", 
+             pattern = ".csv", 
+             recursive = TRUE, 
+             full.names = TRUE)
+
+data_combined_results_files <- 
+  results_files_names |>
+  map_dfr(~ read_csv(.x, show_col_types = FALSE) |> 
+            mutate(across(everything(), as.character)), 
+          show_col_types = FALSE) |>
+  filter(key %in% c("post_cronbach", "total_length"))
+
+data_article_length <- data_combined_results_files |>
+  filter(key == "total_length") |>
+  select(doi, total_length_of_article = value)
+
+data_processed <- data_combined_results_files |>
+  # mutate(alpha = str_extract(value, "(0*\\.[0-9]*)"), # numbers that are decimals below 1 with or without leading zero, of arbitrary number of digits after decimal place
+  #        alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
+  mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"), 
+         alpha = str_remove(alpha, "="),
+         alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
+  select(doi, exemplar, text = value, alpha) |>
+  full_join(data_article_length, by = "doi") |>
+  mutate(text = ifelse(text == total_length_of_article, NA, text)) |>
+  # drop duplicate combinations of doi and exemplar
+  distinct(doi, exemplar, .keep_all = TRUE)
+
+data_processed_trimmed <- data_processed |>
+  drop_na()
+  
+```
+
+# Descriptives
+
+```{r}
+
+n_doi <- data_processed |>
+  distinct(doi) |>
+  count(name = "n_doi") 
+
+n_doi
+
+n_alphas <- data_processed_trimmed |>
+  count(name = "n_alphas")
+
+n_alphas
+
+proportion_with_alpha <- 
+  janitor::round_half_up(pull(n_alphas, n_alphas) / pull(n_doi, n_doi), 2)
+
+print(paste("proportion with alpha =", proportion_with_alpha))
+
+```
+
+# Plot
+
+```{r}
+
+ggplot(data_processed_trimmed, aes(x = alpha)) +
+  geom_histogram(binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1))
+
+ggplot(data_processed_trimmed, aes(x = alpha)) +
+  geom_density(adjust = 0.25) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1))
+
+```
+
+# Write to disk
+
+```{r}
+
+dir.create("../../data/processed")
+
+write_csv(data_processed_trimmed, "../../data/processed/data_processed_trimmed.csv")
+write_csv(data_processed, "../../data/processed/data_processed.csv")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
