@@ -1,0 +1,155 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(stringr)
+library(httr)
+
+```
+
+# Delete existing csv files
+
+For dev, if you want to clear the existing csv files.
+
+```{r eval=FALSE, include=TRUE}
+
+csv_files_to_delete <- 
+  list.files(path = "../../data/apa_articles", 
+             pattern = ".csv", 
+             recursive = TRUE, 
+             full.names = TRUE)
+
+for(csv in csv_files_to_delete){
+ unlink(csv)
+}
+
+```
+
+# Extract strings from articles
+
+Input: Assumes a folder called `apa_articles` exists, and inside it are folders named with doi numbers. Inside each folder is a file called `fulltext.txt` which contains the article text.
+Output: Creates a file called `results.csv` in each folder containing the results for that article.
+
+NB this script could take a really long time. It can be stopped and restarted and will skip files that already have a `results.csv` in the folder. 
+
+```{r}
+
+# Get a list of articles to go through
+dois <- list.files('../../data/apa_articles') 
+
+# Extract the results from each paper
+for(doi in dois) {
+  
+  try(
+    
+    if(!file.exists(sprintf('../../data/apa_articles/%s/results.csv', doi))) {  
+      
+      filename <- sprintf('../../data/apa_articles/%s/fulltext.txt', doi)  
+      
+      txt <- readChar(filename, file.info(filename)$size)
+      
+      txt <- gsub(pattern = '_', replacement = '', x = txt)
+      txt <- gsub(pattern = '&lt;', replacement = '<', x = txt)
+      txt <- gsub(pattern = '&gt;', replacement = '>', x = txt)
+      
+      total_length <- nchar(txt)
+      
+      # # search for p values
+      # ## their locations
+      # locations_p <- str_locate_all(pattern = "\\sp\\s*[=<>]\\s*\\d?\\.\\d*", txt)[[1]]
+      # 
+      # ## the p values
+      # result <- str_match_all(pattern = "\\sp\\s*[=<>]\\s*\\d?\\.\\d*", txt)[[1]][,1] %>%
+      #   gsub(patter = '[_ ]', replacement = '')
+      # 
+      # comparison <- unlist(str_match_all(result, pattern = "[<>=]"))
+      # 
+      # value <- unlist(str_match_all(result, pattern = "\\d?\\.\\d*"))
+      
+      
+      # search for 'cronbach' with text
+      
+      ## their locations
+      #locations_cronbach <- str_locate_all(pattern = "(C|c)ronbach|\u0301|\u1D6FC|\u1D6C2", txt)[[1]]
+      locations_cronbach <- 
+        str_locate_all(pattern = "(C|c)ronbach('|’)?s? (alpha|a|α)", txt)[[1]]
+        #str_locate_all(pattern = "Cronbach's (alpha|a|α)|Cronbach’s (alpha|a|α)|Cronbachs (alpha|a|α)", txt)[[1]]
+      ## strings before and after it
+      # pre_cronbach <- 
+      #   str_sub(txt,
+      #           start = locations_cronbach[, 1] - 20,
+      #           end = locations_cronbach[, 1])
+      
+      post_cronbach <- 
+        str_sub(txt,
+                end = locations_cronbach[, 2] + 100,
+                start = locations_cronbach[, 2])
+      
+      #if(!is.null(comparison)) {
+      
+      # combine results into long data frames
+      data_total_length <- 
+        data.frame(total_length = total_length) %>%
+        rownames_to_column(var = "exemplar") %>%
+        gather(key, value, -exemplar) %>%
+        mutate(type = "length",
+               doi = doi,
+               value = as.character(value))
+      
+      # p_values <- 
+      #   data.frame(locations_p = locations_p,
+      #              result = result,
+      #              comparison = comparison,
+      #              value = value) %>%
+      #   rownames_to_column(var = "exemplar") %>%
+      #   gather(key, value, -exemplar) %>%
+      #   mutate(type = "p_values",
+      #          doi = doi)
+      
+      string_cronbach <- 
+        data.frame(locations_cronbach = locations_cronbach,
+                   #pre_cronbach = pre_cronbach,
+                   post_cronbach = post_cronbach) %>%
+        rownames_to_column(var = "exemplar") %>%
+        gather(key, value, -exemplar) %>%
+        mutate(type = "string_cronbach",
+               doi = doi)
+      
+      # combine dfs
+      df <- 
+        bind_rows(data_total_length,
+                  #p_values, 
+                  string_cronbach) %>%
+        dplyr::select(doi, exemplar, type, key, value)
+      
+      # write to disk
+      write.csv(df, 
+                sprintf('../../data/apa_articles/%s/results.csv', doi),
+                row.names = FALSE)
+      #}
+      # print names of completed files
+      cat(sprintf('%s\n', doi)) 
+    },
+    silent = TRUE
+  )
+}
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
