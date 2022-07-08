@@ -92,7 +92,7 @@ for(doi in dois) {
       
       post_cronbach <- 
         str_sub(txt,
-                end = locations_cronbach[, 2] + 100,
+                end = locations_cronbach[, 2] + 50,
                 start = locations_cronbach[, 2])
       
       #if(!is.null(comparison)) {
