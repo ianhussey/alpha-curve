@@ -61,6 +61,7 @@ data_processed <- data_combined_results_files |>
          comparison_present = str_detect(substring, "([<>≥≤]|exceeding|lower|above|below|greater than|less than|more than|between)"),
          comparison_present_after_estimate = str_detect(value, "(or above|or more|or greater|or below|or less|or lower)"),
          cutoff_present = str_detect(substring, "cut(\\s|-)off"),
+         range_present = str_detect(substring, "(range|ranging|between|from)"),
          p_present = str_detect(substring, "p\\s*[=<>≥≤]"),
          doi_present = str_detect(tolower(substring), "(doi:|doi.org)"),
          # something about references to this journal keep getting confused
@@ -68,12 +69,13 @@ data_processed <- data_combined_results_files |>
   # extract the estimate
   # mutate(alpha = str_extract(value, "(0*\\.[0-9]*)"), # numbers that are decimals below 1 with or without leading zero, of arbitrary number of digits after decimal place
   #        alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
-  mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"), 
+  mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"),
          alpha = str_remove(alpha, "="),
          alpha = ifelse(alpha == "." |
                           comparison_present == TRUE |
                           comparison_present_after_estimate == TRUE |
                           cutoff_present == TRUE |
+                          range_present == TRUE |
                           p_present == TRUE |
                           doi_present == TRUE |
                           psychometrika_present == TRUE, 
@@ -122,7 +124,7 @@ ggplot(data_processed_trimmed, aes(x = alpha)) +
                      labels = seq(from = 0, to = 1, by = 0.1))
 
 ggplot(data_processed_trimmed, aes(x = alpha)) +
-  geom_density(adjust = 0.25) +
+  geom_density(adjust = 1) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1))
 
