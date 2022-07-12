@@ -9,6 +9,7 @@ output: html_document
 - remove "needed" or "cutoff"
 - examples to exclude: 
   - repeat appearances in string aren't captured: "ranges from 0.75 to 0.89" returns "0.75"
+  - "a = .90–.95" returns ".90". should i exclude on the basis of range if its followed by a dash?
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
