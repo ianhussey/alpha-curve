@@ -1,0 +1,81 @@
+---
+title: "Alpha curve"
+subtitle: "Analyses"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+```
+
+# Get data
+
+```{r}
+
+data_processed_trimmed <- read_csv("../../data/processed/data_processed_trimmed.csv")
+data_processed <- read_csv("../../data/processed/data_processed.csv")
+  
+```
+
+# Descriptives
+
+```{r}
+
+n_doi <- data_processed |>
+  distinct(doi) |>
+  count(name = "n_doi") 
+
+n_doi
+
+n_alphas <- data_processed_trimmed |>
+  count(name = "n_alphas")
+
+n_alphas
+
+proportion_with_alpha <- 
+  janitor::round_half_up(pull(n_alphas, n_alphas) / pull(n_doi, n_doi), 2)
+
+print(paste("proportion with alpha =", proportion_with_alpha))
+
+```
+
+# Plot
+
+```{r}
+
+ggplot(data_processed_trimmed, aes(x = alpha)) +
+  geom_histogram(binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1))
+
+ggplot(data_processed_trimmed, aes(x = alpha)) +
+  geom_density(adjust = 1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1))
+
+```
+
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```

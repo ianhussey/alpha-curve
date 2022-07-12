@@ -1,6 +1,14 @@
 ---
 title: "Data extraction"
-output: html_document
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
 ---
 
 # TODO
@@ -10,6 +18,12 @@ output: html_document
 - examples to exclude: 
   - repeat appearances in string aren't captured: "ranges from 0.75 to 0.89" returns "0.75"
   - "a = .90–.95" returns ".90". should i exclude on the basis of range if its followed by a dash?
+
+# Overview
+
+The previous script, "1_extract_strings.Rmd" finds instances of (variants of) "Cronbach's alpha" and saves the 50 characters after this matches to a csv file. This extraction is quite slow as it has to iterate over larger txt files. This file does the second stage of data processing, by extracting Cronbach's alpha estimates from these 50 character strings and excluding instances that are less likely to be valid alpha estimates.
+
+As in "1_extract_strings.Rmd", the goal here is to prioritize specificity over sensitivity. Likely many alpha estimates will not be extracted (e.g., those in tables), but we want high confidence that the values that are extracted are valid Cronbach's alpha estimates.   
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -25,10 +39,17 @@ library(tidyverse)
 
 # Regex tests
 
+Test some of the regex that is used below. NB leading spaces in strings don't print correctly.
+
 ```{r}
 
-values <- c("=.4", " 0.4", " .4", " 2.4", " 0.0.4")
-str_extract(values, "([0]|\\s|=)\\.[0-9]")
+regex_tests <- 
+  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "section 2.7", "doi 0.0.7"),
+         required_result = c(.7, .7, .7, .7, .7, .7, NA, NA)) |>
+  mutate(result = as.numeric(str_extract(required_result, "([0]|\\s|=)\\.[0-9]")),
+         test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE))
+
+regex_tests
 
 ```
 
@@ -65,11 +86,9 @@ data_processed <- data_combined_results_files |>
          range_present = str_detect(substring, "(range|ranging|between|from)"),
          p_present = str_detect(substring, "p\\s*[=<>≥≤]"),
          doi_present = str_detect(tolower(substring), "(doi:|doi.org)"),
-         # something about references to this journal keep getting confused
+         # something about references to this journal keep getting confused for alpha values
          psychometrika_present = str_detect(tolower(substring), "psychometrika")) |>
   # extract the estimate
-  # mutate(alpha = str_extract(value, "(0*\\.[0-9]*)"), # numbers that are decimals below 1 with or without leading zero, of arbitrary number of digits after decimal place
-  #        alpha = ifelse(alpha == ".", NA, as.numeric(alpha))) |>
   mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"),
          alpha = str_remove(alpha, "="),
          alpha = ifelse(alpha == "." |
@@ -91,44 +110,6 @@ data_processed <- data_combined_results_files |>
 data_processed_trimmed <- data_processed |>
   drop_na()
   
-```
-
-# Descriptives
-
-```{r}
-
-n_doi <- data_processed |>
-  distinct(doi) |>
-  count(name = "n_doi") 
-
-n_doi
-
-n_alphas <- data_processed_trimmed |>
-  count(name = "n_alphas")
-
-n_alphas
-
-proportion_with_alpha <- 
-  janitor::round_half_up(pull(n_alphas, n_alphas) / pull(n_doi, n_doi), 2)
-
-print(paste("proportion with alpha =", proportion_with_alpha))
-
-```
-
-# Plot
-
-```{r}
-
-ggplot(data_processed_trimmed, aes(x = alpha)) +
-  geom_histogram(binwidth = 0.01) +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1))
-
-ggplot(data_processed_trimmed, aes(x = alpha)) +
-  geom_density(adjust = 1) +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1))
-
 ```
 
 # Write to disk
