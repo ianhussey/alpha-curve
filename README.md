@@ -1,5 +1,9 @@
 # Alpha curve
 
+## Notes
+
+.pdf and .txt files scraped from pdfs are not stored on github, only .csv files containing short strings scraped from them.  
+
 
 
 ## Useful Zsh commands for dev

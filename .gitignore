@@ -3,7 +3,6 @@ old/*
 *.Rhistory
 *.pdf
 *.txt
-*.csv
 *.js
 *.gif
 *.svg
