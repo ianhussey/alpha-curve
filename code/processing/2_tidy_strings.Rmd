@@ -26,7 +26,10 @@ The previous script, "1_extract_strings.Rmd" finds instances of (variants of) "C
 As in "1_extract_strings.Rmd", the goal here is to prioritize specificity over sensitivity. Likely many alpha estimates will not be extracted (e.g., those in tables), but we want high confidence that the values that are extracted are valid Cronbach's alpha estimates.   
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
 ```
 
 # Dependencies
