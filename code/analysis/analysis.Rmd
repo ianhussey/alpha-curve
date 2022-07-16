@@ -31,9 +31,11 @@ library(tidyverse)
 
 ```{r}
 
-data_processed_trimmed <- read_csv("../../data/processed/data_processed_trimmed.csv")
 data_processed <- read_csv("../../data/processed/data_processed.csv")
-  
+
+data_processed_trimmed <- data_processed |>
+  drop_na()
+
 ```
 
 # Descriptives
@@ -58,22 +60,75 @@ print(paste("proportion with alpha =", proportion_with_alpha))
 
 ```
 
-# Plot
+# Plot alpha curve
 
 ```{r}
 
-ggplot(data_processed_trimmed, aes(x = alpha)) +
-  geom_histogram(binwidth = 0.01) +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1))
+#scales::viridis_pal()(9)[5]
+
+# ggplot(data_processed_trimmed, aes(x = alpha)) +
+#   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+#   geom_histogram(binwidth = 0.01, fill = "#21908CFF") +
+#   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+#                      labels = seq(from = 0, to = 1, by = 0.1),
+#                      minor_breaks = NULL) +
+#   scale_y_continuous(breaks = seq(from = 0, to = 500, by = 100),
+#                      labels = seq(from = 0, to = 500, by = 100)) +
+#   theme_bw() +
+#   labs(x = expression("Cronbach's" ~ alpha),
+#        y = "Count")
 
 ggplot(data_processed_trimmed, aes(x = alpha)) +
-  geom_density(adjust = 1) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_histogram(aes(y = ..density..), binwidth = 0.01, fill = "#21908CFF") +
+  geom_density(col = "black", adjust = 1.45) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1))
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  # scale_y_continuous(breaks = seq(from = 0, to = 500, by = 100),
+  #                    labels = seq(from = 0, to = 500, by = 100)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Kernal density")
 
 ```
 
+# Plot stacked alpha curve
+
+```{r}
+
+data_processed_recentered <- 
+  data_processed_trimmed |>
+  mutate(tranch = case_when(              alpha <= .65 ~ "0.00 < alpha <= 0.65",
+                            .65 < alpha & alpha <= .75 ~ "0.65 < alpha <= 0.75",
+                            .75 < alpha & alpha <= .85 ~ "0.75 < alpha <= 0.85",
+                            .85 < alpha & alpha <= .95 ~ "0.85 < alpha <= 0.95",
+                            .95 < alpha                ~ "0.95 < alpha <= 1.00")) |>
+  mutate(alpha_centered = case_when(tranch == "0.65 < alpha <= 0.75" ~ alpha - .7,
+                                    tranch == "0.75 < alpha <= 0.85" ~ alpha - .8,
+                                    tranch == "0.85 < alpha <= 0.95" ~ alpha - .9,
+                                    TRUE ~ NA_real_))
+
+data_processed_recentered |>
+  filter(alpha_centered > -0.045) |>
+  ggplot(aes(x = alpha_centered, fill = fct_rev(tranch))) +
+  geom_vline(xintercept = 0, linetype = "dotted") +
+  geom_histogram(position = "stack", binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(from = -0.05, to = 0.06, by = 0.01),
+                     labels = seq(from = -0.05, to = 0.06, by = 0.01)) +
+  coord_cartesian(xlim = c(-0.045, 0.055)) +
+  labs(fill = "Tranch") +
+  scale_fill_viridis_d(begin = 0.3, 
+                       end = 0.7,
+                       option = "magma",
+                       labels = c(expression("0.85 <" ~ alpha ~ "<= 0.95"),
+                                  expression("0.75 <" ~ alpha ~ "<= 0.85"),
+                                  expression("0.65 <" ~ alpha ~ "<= 0.75"))) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha ~ "(centered within each tranch)"),
+       y = "Count")
+
+```
 
 # Session info
 
