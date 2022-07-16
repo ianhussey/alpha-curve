@@ -47,12 +47,21 @@ Test some of the regex that is used below. NB leading spaces in strings don't pr
 ```{r}
 
 regex_tests <- 
-  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "section 2.7", "doi 0.0.7"),
-         required_result = c(.7, .7, .7, .7, .7, .7, NA, NA)) |>
-  mutate(result = as.numeric(str_extract(required_result, "([0]|\\s|=)\\.[0-9]")),
+  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "alpha of.70", "section 2.7", "doi 0.0.7"),
+         required_result = c(.7, .7, .7, .7, .7, .7, .7, NA, NA)) |>
+  mutate(result = as.numeric(str_extract(required_result, "([a-zA-Z]|[0]|\\s|=)\\.[0-9]*")),
          test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE))
 
 regex_tests
+
+```
+
+# Load data
+
+```{r}
+
+data_combined_results_files <- 
+  read_csv("../../data/processed/data_combined_results_files.csv")
 
 ```
 
@@ -60,22 +69,9 @@ regex_tests
 
 ```{r}
 
-results_files_names <- 
-  list.files(path = "../../data/apa_articles", 
-             pattern = ".csv", 
-             recursive = TRUE, 
-             full.names = TRUE)
-
-data_combined_results_files <- 
-  results_files_names |>
-  map_dfr(~ read_csv(.x, show_col_types = FALSE) |> 
-            mutate(across(everything(), as.character)), 
-          show_col_types = FALSE) |>
-  filter(key %in% c("post_cronbach", "total_length"))
-
 data_article_length <- data_combined_results_files |>
   filter(key == "total_length") |>
-  select(doi, total_length_of_article = value)
+  dplyr::select(doi, total_length_of_article = value)
 
 data_processed <- data_combined_results_files |>
   # check that there are not strings between "cronbach" and the estimate that suggest this is something other than a cronbach's alpha estimate 
@@ -83,16 +79,16 @@ data_processed <- data_combined_results_files |>
   # e.g., a p value ("p < .05"). several of these were found.
   mutate(alpha_locate = str_locate(value, "([0]|\\s|=)\\.[0-9]*")[,"start"],
          substring = str_sub(value, start = 1, end = alpha_locate),
-         comparison_present = str_detect(substring, "([<>≥≤]|exceeding|lower|above|below|greater than|less than|more than|between)"),
+         comparison_present = str_detect(substring, "([<>≥≤]|over|exceeding|above|greater|higher|more|lower|below|less|at least|between)"),
          comparison_present_after_estimate = str_detect(value, "(or above|or more|or greater|or below|or less|or lower)"),
-         cutoff_present = str_detect(substring, "cut(\\s|-)off"),
+         cutoff_present = str_detect(substring, "cut(\\s|-)off|criteria"),
          range_present = str_detect(substring, "(range|ranging|between|from)"),
          p_present = str_detect(substring, "p\\s*[=<>≥≤]"),
          doi_present = str_detect(tolower(substring), "(doi:|doi.org)"),
          # something about references to this journal keep getting confused for alpha values
          psychometrika_present = str_detect(tolower(substring), "psychometrika")) |>
   # extract the estimate
-  mutate(alpha = str_extract(value, "([0]|\\s|=)\\.[0-9]*"),
+  mutate(alpha = str_extract(value, "([a-zA-Z]|[0]|\\s|=)\\.[0-9]*"),
          alpha = str_remove(alpha, "="),
          alpha = ifelse(alpha == "." |
                           comparison_present == TRUE |
@@ -104,15 +100,12 @@ data_processed <- data_combined_results_files |>
                           psychometrika_present == TRUE, 
                         NA, 
                         as.numeric(alpha))) |>
-  select(doi, exemplar, text = value, alpha) |>
+  dplyr::select(doi, exemplar, text = value, alpha) |>
   full_join(data_article_length, by = "doi") |>
   mutate(text = ifelse(text == total_length_of_article, NA, text)) |>
   # drop duplicate combinations of doi and exemplar
   distinct(doi, exemplar, .keep_all = TRUE)
 
-data_processed_trimmed <- data_processed |>
-  drop_na()
-  
 ```
 
 # Write to disk
@@ -121,7 +114,6 @@ data_processed_trimmed <- data_processed |>
 
 dir.create("../../data/processed")
 
-write_csv(data_processed_trimmed, "../../data/processed/data_processed_trimmed.csv")
 write_csv(data_processed, "../../data/processed/data_processed.csv")
 
 ```

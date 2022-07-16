@@ -1687,7 +1687,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Data extraction</h1>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">12 July, 2022</h4>
+<h4 class="date">16 July, 2022</h4>
 
 </div>
 
@@ -1725,27 +1725,19 @@ values that are extracted are valid Cronbach’s alpha estimates.</p>
 <div id="dependencies" class="section level1">
 <h1>Dependencies</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.7     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.0
-## ✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 </div>
 <div id="regex-tests" class="section level1">
 <h1>Regex tests</h1>
 <p>Test some of the regex that is used below. NB leading spaces in
 strings don’t print correctly.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>regex_tests <span class="ot">&lt;-</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">string =</span> <span class="fu">c</span>(<span class="st">&quot;in the current sample was 0.7&quot;</span>, <span class="st">&quot;= 0.7&quot;</span>, <span class="st">&quot;= .7&quot;</span>, <span class="st">&quot;=.7&quot;</span>, <span class="st">&quot; 0.7&quot;</span>, <span class="st">&quot; .7&quot;</span>, <span class="st">&quot;section 2.7&quot;</span>, <span class="st">&quot;doi 0.0.7&quot;</span>),</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">required_result =</span> <span class="fu">c</span>(.<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, <span class="cn">NA</span>, <span class="cn">NA</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">result =</span> <span class="fu">as.numeric</span>(<span class="fu">str_extract</span>(required_result, <span class="st">&quot;([0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]&quot;</span>)),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">test_passed =</span> <span class="fu">ifelse</span>(result <span class="sc">==</span> required_result <span class="sc">|</span> (<span class="fu">is.na</span>(result) <span class="sc">&amp;</span> <span class="fu">is.na</span>(required_result)), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>regex_tests</span></code></pre></div>
-<pre><code>## # A tibble: 8 × 4
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>regex_tests <span class="ot">&lt;-</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">string =</span> <span class="fu">c</span>(<span class="st">&quot;in the current sample was 0.7&quot;</span>, <span class="st">&quot;= 0.7&quot;</span>, <span class="st">&quot;= .7&quot;</span>, <span class="st">&quot;=.7&quot;</span>, <span class="st">&quot; 0.7&quot;</span>, <span class="st">&quot; .7&quot;</span>, <span class="st">&quot;alpha of.70&quot;</span>, <span class="st">&quot;section 2.7&quot;</span>, <span class="st">&quot;doi 0.0.7&quot;</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">required_result =</span> <span class="fu">c</span>(.<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, <span class="cn">NA</span>, <span class="cn">NA</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">result =</span> <span class="fu">as.numeric</span>(<span class="fu">str_extract</span>(required_result, <span class="st">&quot;([a-zA-Z]|[0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>)),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">test_passed =</span> <span class="fu">ifelse</span>(result <span class="sc">==</span> required_result <span class="sc">|</span> (<span class="fu">is.na</span>(result) <span class="sc">&amp;</span> <span class="fu">is.na</span>(required_result)), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>regex_tests</span></code></pre></div>
+<pre><code>## # A tibble: 9 × 4
 ##   string                          required_result result test_passed
 ##   &lt;chr&gt;                                     &lt;dbl&gt;  &lt;dbl&gt; &lt;lgl&gt;      
 ## 1 &quot;in the current sample was 0.7&quot;             0.7    0.7 TRUE       
@@ -1754,76 +1746,63 @@ strings don’t print correctly.</p>
 ## 4 &quot;=.7&quot;                                       0.7    0.7 TRUE       
 ## 5 &quot; 0.7&quot;                                      0.7    0.7 TRUE       
 ## 6 &quot; .7&quot;                                       0.7    0.7 TRUE       
-## 7 &quot;section 2.7&quot;                              NA     NA   TRUE       
-## 8 &quot;doi 0.0.7&quot;                                NA     NA   TRUE</code></pre>
+## 7 &quot;alpha of.70&quot;                               0.7    0.7 TRUE       
+## 8 &quot;section 2.7&quot;                              NA     NA   TRUE       
+## 9 &quot;doi 0.0.7&quot;                                NA     NA   TRUE</code></pre>
+</div>
+<div id="load-data" class="section level1">
+<h1>Load data</h1>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data_combined_results_files <span class="ot">&lt;-</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="st">&quot;../../data/processed/data_combined_results_files.csv&quot;</span>)</span></code></pre></div>
 </div>
 <div id="extract-cronbachs-alphas-from-extracted-strings" class="section level1">
 <h1>Extract Cronbach’s alphas from extracted strings</h1>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>results_files_names <span class="ot">&lt;-</span> </span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list.files</span>(<span class="at">path =</span> <span class="st">&quot;../../data/apa_articles&quot;</span>, </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">pattern =</span> <span class="st">&quot;.csv&quot;</span>, </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">recursive =</span> <span class="cn">TRUE</span>, </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">full.names =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>data_combined_results_files <span class="ot">&lt;-</span> </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  results_files_names <span class="sc">|&gt;</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map_dfr</span>(<span class="sc">~</span> <span class="fu">read_csv</span>(.x, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), as.character)), </span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(key <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;post_cronbach&quot;</span>, <span class="st">&quot;total_length&quot;</span>))</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>data_article_length <span class="ot">&lt;-</span> data_combined_results_files <span class="sc">|&gt;</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(key <span class="sc">==</span> <span class="st">&quot;total_length&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(doi, <span class="at">total_length_of_article =</span> value)</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> data_combined_results_files <span class="sc">|&gt;</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check that there are not strings between &quot;cronbach&quot; and the estimate that suggest this is something other than a cronbach&#39;s alpha estimate </span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># e.g, reporting of a cutoff value (&quot;cronbach&#39;s alpha of &gt; .70&quot;; this could get rid of real values too but more important that we exclude rules of thumb being reported)</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="co"># e.g., a p value (&quot;p &lt; .05&quot;). several of these were found.</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha_locate =</span> <span class="fu">str_locate</span>(value, <span class="st">&quot;([0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>)[,<span class="st">&quot;start&quot;</span>],</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">substring =</span> <span class="fu">str_sub</span>(value, <span class="at">start =</span> <span class="dv">1</span>, <span class="at">end =</span> alpha_locate),</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">comparison_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;([&lt;&gt;≥≤]|exceeding|lower|above|below|greater than|less than|more than|between)&quot;</span>),</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">comparison_present_after_estimate =</span> <span class="fu">str_detect</span>(value, <span class="st">&quot;(or above|or more|or greater|or below|or less|or lower)&quot;</span>),</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">cutoff_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;cut(</span><span class="sc">\\</span><span class="st">s|-)off&quot;</span>),</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">range_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;(range|ranging|between|from)&quot;</span>),</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">p_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;p</span><span class="sc">\\</span><span class="st">s*[=&lt;&gt;≥≤]&quot;</span>),</span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>         <span class="at">doi_present =</span> <span class="fu">str_detect</span>(<span class="fu">tolower</span>(substring), <span class="st">&quot;(doi:|doi.org)&quot;</span>),</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>         <span class="co"># something about references to this journal keep getting confused for alpha values</span></span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>         <span class="at">psychometrika_present =</span> <span class="fu">str_detect</span>(<span class="fu">tolower</span>(substring), <span class="st">&quot;psychometrika&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>  <span class="co"># extract the estimate</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> <span class="fu">str_extract</span>(value, <span class="st">&quot;([0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>),</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">str_remove</span>(alpha, <span class="st">&quot;=&quot;</span>),</span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">ifelse</span>(alpha <span class="sc">==</span> <span class="st">&quot;.&quot;</span> <span class="sc">|</span></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>                          comparison_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>                          comparison_present_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>                          cutoff_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                          range_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>                          p_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>                          doi_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>                          psychometrika_present <span class="sc">==</span> <span class="cn">TRUE</span>, </span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>                        <span class="cn">NA</span>, </span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">as.numeric</span>(alpha))) <span class="sc">|&gt;</span></span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(doi, exemplar, <span class="at">text =</span> value, alpha) <span class="sc">|&gt;</span></span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(data_article_length, <span class="at">by =</span> <span class="st">&quot;doi&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">ifelse</span>(text <span class="sc">==</span> total_length_of_article, <span class="cn">NA</span>, text)) <span class="sc">|&gt;</span></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># drop duplicate combinations of doi and exemplar</span></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(doi, exemplar, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
-<pre><code>## Warning in ifelse(alpha == &quot;.&quot; | comparison_present == TRUE |
-## comparison_present_after_estimate == : NAs introduced by coercion</code></pre>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>data_processed_trimmed <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data_article_length <span class="ot">&lt;-</span> data_combined_results_files <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(key <span class="sc">==</span> <span class="st">&quot;total_length&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(doi, <span class="at">total_length_of_article =</span> value)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> data_combined_results_files <span class="sc">|&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># check that there are not strings between &quot;cronbach&quot; and the estimate that suggest this is something other than a cronbach&#39;s alpha estimate </span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># e.g, reporting of a cutoff value (&quot;cronbach&#39;s alpha of &gt; .70&quot;; this could get rid of real values too but more important that we exclude rules of thumb being reported)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># e.g., a p value (&quot;p &lt; .05&quot;). several of these were found.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha_locate =</span> <span class="fu">str_locate</span>(value, <span class="st">&quot;([0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>)[,<span class="st">&quot;start&quot;</span>],</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">substring =</span> <span class="fu">str_sub</span>(value, <span class="at">start =</span> <span class="dv">1</span>, <span class="at">end =</span> alpha_locate),</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">comparison_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;([&lt;&gt;≥≤]|over|exceeding|above|greater|higher|more|lower|below|less|at least|between)&quot;</span>),</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">comparison_present_after_estimate =</span> <span class="fu">str_detect</span>(value, <span class="st">&quot;(or above|or more|or greater|or below|or less|or lower)&quot;</span>),</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">cutoff_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;cut(</span><span class="sc">\\</span><span class="st">s|-)off|criteria&quot;</span>),</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">range_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;(range|ranging|between|from)&quot;</span>),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">p_present =</span> <span class="fu">str_detect</span>(substring, <span class="st">&quot;p</span><span class="sc">\\</span><span class="st">s*[=&lt;&gt;≥≤]&quot;</span>),</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">doi_present =</span> <span class="fu">str_detect</span>(<span class="fu">tolower</span>(substring), <span class="st">&quot;(doi:|doi.org)&quot;</span>),</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>         <span class="co"># something about references to this journal keep getting confused for alpha values</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">psychometrika_present =</span> <span class="fu">str_detect</span>(<span class="fu">tolower</span>(substring), <span class="st">&quot;psychometrika&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># extract the estimate</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> <span class="fu">str_extract</span>(value, <span class="st">&quot;([a-zA-Z]|[0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>),</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">str_remove</span>(alpha, <span class="st">&quot;=&quot;</span>),</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">ifelse</span>(alpha <span class="sc">==</span> <span class="st">&quot;.&quot;</span> <span class="sc">|</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>                          comparison_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>                          comparison_present_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>                          cutoff_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>                          range_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>                          p_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                          doi_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>                          psychometrika_present <span class="sc">==</span> <span class="cn">TRUE</span>, </span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>                        <span class="cn">NA</span>, </span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">as.numeric</span>(alpha))) <span class="sc">|&gt;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(doi, exemplar, <span class="at">text =</span> value, alpha) <span class="sc">|&gt;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(data_article_length, <span class="at">by =</span> <span class="st">&quot;doi&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">text =</span> <span class="fu">ifelse</span>(text <span class="sc">==</span> total_length_of_article, <span class="cn">NA</span>, text)) <span class="sc">|&gt;</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># drop duplicate combinations of doi and exemplar</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(doi, exemplar, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 </div>
 <div id="write-to-disk" class="section level1">
 <h1>Write to disk</h1>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;../../data/processed&quot;</span>)</span></code></pre></div>
-<pre><code>## Warning in dir.create(&quot;../../data/processed&quot;): &#39;../../data/processed&#39; already
-## exists</code></pre>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(data_processed_trimmed, <span class="st">&quot;../../data/processed/data_processed_trimmed.csv&quot;</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(data_processed, <span class="st">&quot;../../data/processed/data_processed.csv&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="st">&quot;../../data/processed&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(data_processed, <span class="st">&quot;../../data/processed/data_processed.csv&quot;</span>)</span></code></pre></div>
 </div>
 <div id="session-info" class="section level1">
 <h1>Session info</h1>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.2.0 (2022-04-22)
 ## Platform: x86_64-apple-darwin17.0 (64-bit)
 ## Running under: macOS Big Sur/Monterey 10.16

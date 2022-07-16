@@ -3,6 +3,10 @@ title: "Data extraction"
 output: html_document
 ---
 
+# Notes
+
+Because this script has to load a very large number of files (75k), runtime is slow. 3+ hours for the extract strings chunk, around 1 hour for combining the csv files.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -14,6 +18,21 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(stringr)
 library(httr)
+
+```
+
+# Examine contents of all folders
+
+```{r}
+
+files <- 
+  list.files(path = "../../data/apa_articles", 
+             recursive = TRUE)
+
+files_df <- 
+  tibble(dir_and_file = files) |>
+  separate(dir_and_file, into = c("dir", "file"), sep = "/") |>
+  count(file)
 
 ```
 
@@ -64,38 +83,14 @@ for(doi in dois) {
       
       total_length <- nchar(txt)
       
-      # # search for p values
-      # ## their locations
-      # locations_p <- str_locate_all(pattern = "\\sp\\s*[=<>]\\s*\\d?\\.\\d*", txt)[[1]]
-      # 
-      # ## the p values
-      # result <- str_match_all(pattern = "\\sp\\s*[=<>]\\s*\\d?\\.\\d*", txt)[[1]][,1] %>%
-      #   gsub(patter = '[_ ]', replacement = '')
-      # 
-      # comparison <- unlist(str_match_all(result, pattern = "[<>=]"))
-      # 
-      # value <- unlist(str_match_all(result, pattern = "\\d?\\.\\d*"))
-      
-      
       # search for 'cronbach' with text
-      
-      ## their locations
-      #locations_cronbach <- str_locate_all(pattern = "(C|c)ronbach|\u0301|\u1D6FC|\u1D6C2", txt)[[1]]
       locations_cronbach <- 
         str_locate_all(pattern = "(C|c)ronbach('|’)?s? (alpha|a|α)", txt)[[1]]
-        #str_locate_all(pattern = "Cronbach's (alpha|a|α)|Cronbach’s (alpha|a|α)|Cronbachs (alpha|a|α)", txt)[[1]]
-      ## strings before and after it
-      # pre_cronbach <- 
-      #   str_sub(txt,
-      #           start = locations_cronbach[, 1] - 20,
-      #           end = locations_cronbach[, 1])
-      
+
       post_cronbach <- 
         str_sub(txt,
                 end = locations_cronbach[, 2] + 50,
                 start = locations_cronbach[, 2])
-      
-      #if(!is.null(comparison)) {
       
       # combine results into long data frames
       data_total_length <- 
@@ -105,20 +100,9 @@ for(doi in dois) {
         mutate(type = "length",
                doi = doi,
                value = as.character(value))
-      
-      # p_values <- 
-      #   data.frame(locations_p = locations_p,
-      #              result = result,
-      #              comparison = comparison,
-      #              value = value) %>%
-      #   rownames_to_column(var = "exemplar") %>%
-      #   gather(key, value, -exemplar) %>%
-      #   mutate(type = "p_values",
-      #          doi = doi)
-      
+
       string_cronbach <- 
         data.frame(locations_cronbach = locations_cronbach,
-                   #pre_cronbach = pre_cronbach,
                    post_cronbach = post_cronbach) %>%
         rownames_to_column(var = "exemplar") %>%
         gather(key, value, -exemplar) %>%
@@ -136,13 +120,40 @@ for(doi in dois) {
       write.csv(df, 
                 sprintf('../../data/apa_articles/%s/results.csv', doi),
                 row.names = FALSE)
-      #}
+
       # print names of completed files
       cat(sprintf('%s\n', doi)) 
     },
     silent = TRUE
   )
 }
+
+```
+
+# Combine csv files & write to disk
+
+```{r}
+
+results_files_names <- 
+  list.files(path = "../../data/apa_articles", 
+             pattern = ".csv", 
+             recursive = TRUE, 
+             full.names = TRUE)
+
+data_combined_results_files <- 
+  results_files_names |>
+  map_dfr(~ read_csv(.x, show_col_types = FALSE) |> 
+            mutate(across(everything(), as.character)), 
+          show_col_types = FALSE) |>
+  filter(key %in% c("post_cronbach", "total_length"))
+
+dir.create("../../data/processed")
+
+# write_rds(data_combined_results_files,
+#           "../../data/processed/data_combined_results_files.rds")
+
+write_csv(data_combined_results_files,
+          "../../data/processed/data_combined_results_files.csv")
 
 ```
 
