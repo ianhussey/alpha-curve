@@ -11,14 +11,6 @@ output:
     toc_float: yes
 ---
 
-# TODO
-
-- string parsing only covers the first instance in the string. should i extract subsequent ones? likely higher coverage but lower specificity.
-- remove "needed" or "cutoff"
-- examples to exclude: 
-  - repeat appearances in string aren't captured: "ranges from 0.75 to 0.89" returns "0.75"
-  - "a = .90–.95" returns ".90". should i exclude on the basis of range if its followed by a dash?
-
 # Overview
 
 The previous script, "1_extract_strings.Rmd" finds instances of (variants of) "Cronbach's alpha" and saves the 50 characters after this matches to a csv file. This extraction is quite slow as it has to iterate over larger txt files. This file does the second stage of data processing, by extracting Cronbach's alpha estimates from these 50 character strings and excluding instances that are less likely to be valid alpha estimates.
@@ -44,11 +36,13 @@ library(tidyverse)
 
 Test some of the regex that is used below. NB leading spaces in strings don't print correctly.
 
+Repeat estimates only return the first estimate.
+
 ```{r}
 
 regex_tests <- 
-  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "alpha of.70", "section 2.7", "doi 0.0.7"),
-         required_result = c(.7, .7, .7, .7, .7, .7, .7, NA, NA)) |>
+  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "alpha of.70", "alphas of .70 and .80", "section 2.7", "doi 0.0.7"),
+         required_result = c(.7, .7, .7, .7, .7, .7, .7, .7, NA, NA)) |>
   mutate(result = as.numeric(str_extract(required_result, "([a-zA-Z]|[0]|\\s|=)\\.[0-9]*")),
          test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE))
 

@@ -1692,22 +1692,6 @@ div.tocify {
 </div>
 
 
-<div id="todo" class="section level1">
-<h1>TODO</h1>
-<ul>
-<li>string parsing only covers the first instance in the string. should
-i extract subsequent ones? likely higher coverage but lower
-specificity.</li>
-<li>remove “needed” or “cutoff”</li>
-<li>examples to exclude:
-<ul>
-<li>repeat appearances in string aren’t captured: “ranges from 0.75 to
-0.89” returns “0.75”</li>
-<li>“a = .90–.95” returns “.90”. should i exclude on the basis of range
-if its followed by a dash?</li>
-</ul></li>
-</ul>
-</div>
 <div id="overview" class="section level1">
 <h1>Overview</h1>
 <p>The previous script, “1_extract_strings.Rmd” finds instances of
@@ -1730,25 +1714,27 @@ values that are extracted are valid Cronbach’s alpha estimates.</p>
 <h1>Regex tests</h1>
 <p>Test some of the regex that is used below. NB leading spaces in
 strings don’t print correctly.</p>
+<p>Repeat estimates only return the first estimate.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>regex_tests <span class="ot">&lt;-</span> </span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">string =</span> <span class="fu">c</span>(<span class="st">&quot;in the current sample was 0.7&quot;</span>, <span class="st">&quot;= 0.7&quot;</span>, <span class="st">&quot;= .7&quot;</span>, <span class="st">&quot;=.7&quot;</span>, <span class="st">&quot; 0.7&quot;</span>, <span class="st">&quot; .7&quot;</span>, <span class="st">&quot;alpha of.70&quot;</span>, <span class="st">&quot;section 2.7&quot;</span>, <span class="st">&quot;doi 0.0.7&quot;</span>),</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">required_result =</span> <span class="fu">c</span>(.<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, <span class="cn">NA</span>, <span class="cn">NA</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">string =</span> <span class="fu">c</span>(<span class="st">&quot;in the current sample was 0.7&quot;</span>, <span class="st">&quot;= 0.7&quot;</span>, <span class="st">&quot;= .7&quot;</span>, <span class="st">&quot;=.7&quot;</span>, <span class="st">&quot; 0.7&quot;</span>, <span class="st">&quot; .7&quot;</span>, <span class="st">&quot;alpha of.70&quot;</span>, <span class="st">&quot;alphas of .70 and .80&quot;</span>, <span class="st">&quot;section 2.7&quot;</span>, <span class="st">&quot;doi 0.0.7&quot;</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">required_result =</span> <span class="fu">c</span>(.<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, .<span class="dv">7</span>, <span class="cn">NA</span>, <span class="cn">NA</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">result =</span> <span class="fu">as.numeric</span>(<span class="fu">str_extract</span>(required_result, <span class="st">&quot;([a-zA-Z]|[0]|</span><span class="sc">\\</span><span class="st">s|=)</span><span class="sc">\\</span><span class="st">.[0-9]*&quot;</span>)),</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">test_passed =</span> <span class="fu">ifelse</span>(result <span class="sc">==</span> required_result <span class="sc">|</span> (<span class="fu">is.na</span>(result) <span class="sc">&amp;</span> <span class="fu">is.na</span>(required_result)), <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>regex_tests</span></code></pre></div>
-<pre><code>## # A tibble: 9 × 4
-##   string                          required_result result test_passed
-##   &lt;chr&gt;                                     &lt;dbl&gt;  &lt;dbl&gt; &lt;lgl&gt;      
-## 1 &quot;in the current sample was 0.7&quot;             0.7    0.7 TRUE       
-## 2 &quot;= 0.7&quot;                                     0.7    0.7 TRUE       
-## 3 &quot;= .7&quot;                                      0.7    0.7 TRUE       
-## 4 &quot;=.7&quot;                                       0.7    0.7 TRUE       
-## 5 &quot; 0.7&quot;                                      0.7    0.7 TRUE       
-## 6 &quot; .7&quot;                                       0.7    0.7 TRUE       
-## 7 &quot;alpha of.70&quot;                               0.7    0.7 TRUE       
-## 8 &quot;section 2.7&quot;                              NA     NA   TRUE       
-## 9 &quot;doi 0.0.7&quot;                                NA     NA   TRUE</code></pre>
+<pre><code>## # A tibble: 10 × 4
+##    string                          required_result result test_passed
+##    &lt;chr&gt;                                     &lt;dbl&gt;  &lt;dbl&gt; &lt;lgl&gt;      
+##  1 &quot;in the current sample was 0.7&quot;             0.7    0.7 TRUE       
+##  2 &quot;= 0.7&quot;                                     0.7    0.7 TRUE       
+##  3 &quot;= .7&quot;                                      0.7    0.7 TRUE       
+##  4 &quot;=.7&quot;                                       0.7    0.7 TRUE       
+##  5 &quot; 0.7&quot;                                      0.7    0.7 TRUE       
+##  6 &quot; .7&quot;                                       0.7    0.7 TRUE       
+##  7 &quot;alpha of.70&quot;                               0.7    0.7 TRUE       
+##  8 &quot;alphas of .70 and .80&quot;                     0.7    0.7 TRUE       
+##  9 &quot;section 2.7&quot;                              NA     NA   TRUE       
+## 10 &quot;doi 0.0.7&quot;                                NA     NA   TRUE</code></pre>
 </div>
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
