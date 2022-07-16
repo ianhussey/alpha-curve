@@ -130,6 +130,77 @@ data_processed_recentered |>
 
 ```
 
+# Beta regression
+
+```{r}
+
+# sultion from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients
+
+library(broom)            
+library(betareg)          
+library(extraDistr)       
+
+model_beta <- data_processed_trimmed |>
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha)) |>
+  betareg(alpha ~ 1 | 1, data = _, 
+          link = "logit")
+
+beta_mu_intercept <- model_beta %>% 
+  tidy() %>% 
+  filter(component == "mean", term == "(Intercept)") %>% 
+  pull(estimate)
+
+# # average alpha according to model
+# plogis(beta_mu_intercept)
+# ## [1] 0.8174543
+
+beta_phi_intercept <- model_beta %>% 
+  tidy() %>% 
+  filter(component == "precision", term == "(Intercept)") %>% 
+  pull(estimate)
+
+# plot histogram and beta regression fit
+ggplot(data = tibble(alpha = 0:1), aes(x = alpha)) + 
+  geom_histogram(data = data_processed_trimmed,
+                 aes(y = ..density..), 
+                 binwidth = 0.01, 
+                 fill = "#21908CFF") +
+  stat_function(fun = extraDistr::dprop, size = 1,
+                args = list(size = exp(beta_phi_intercept), 
+                            mean = plogis(beta_mu_intercept))) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Density")
+
+```
+
+## Residuals
+
+Needs work
+
+```{r}
+
+data_pred <- data_processed_trimmed |>
+  dplyr::select(alpha) |>
+  mutate(residuals_deviance = residuals(model_beta, type = "deviance"),
+         residuals_sweighted2 = residuals(model_beta, type = "sweighted2")) |>
+  arrange(alpha) |>
+  distinct(alpha, .keep_all = TRUE)
+
+ggplot(data_pred, aes(alpha, residuals_deviance)) +
+  geom_point()
+
+ggplot(data_pred, aes(alpha, residuals_sweighted2)) +
+  geom_point()
+
+```
+
 # Session info
 
 ```{r}
