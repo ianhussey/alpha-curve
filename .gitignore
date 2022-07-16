@@ -1,6 +1,7 @@
 *.DS_Store
-old/*
 *.Rhistory
+
+old/*
 *.pdf
 *.txt
 *.js
@@ -8,3 +9,5 @@ old/*
 *.svg
 *.css
 *.jpg
+data/apa_articles/*
+data/apa_articles_with_personalisation_results.zip
