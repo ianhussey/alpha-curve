@@ -87,6 +87,11 @@ for(doi in dois) {
       locations_cronbach <- 
         str_locate_all(pattern = "(C|c)ronbach('|’)?s? (alpha|a|α)", txt)[[1]]
 
+      pre_cronbach <- 
+        str_sub(txt,
+                end = locations_cronbach[, 2] - 60,
+                start = locations_cronbach[, 2])
+      
       post_cronbach <- 
         str_sub(txt,
                 end = locations_cronbach[, 2] + 50,
@@ -103,6 +108,7 @@ for(doi in dois) {
 
       string_cronbach <- 
         data.frame(locations_cronbach = locations_cronbach,
+                   pre_cronbach = pre_cronbach,
                    post_cronbach = post_cronbach) %>%
         rownames_to_column(var = "exemplar") %>%
         gather(key, value, -exemplar) %>%
@@ -112,7 +118,6 @@ for(doi in dois) {
       # combine dfs
       df <- 
         bind_rows(data_total_length,
-                  #p_values, 
                   string_cronbach) %>%
         dplyr::select(doi, exemplar, type, key, value)
       
@@ -145,7 +150,7 @@ data_combined_results_files <-
   map_dfr(~ read_csv(.x, show_col_types = FALSE) |> 
             mutate(across(everything(), as.character)), 
           show_col_types = FALSE) |>
-  filter(key %in% c("post_cronbach", "total_length"))
+  filter(key %in% c("pre_cronbach", "post_cronbach", "total_length"))
 
 dir.create("../../data/processed")
 
