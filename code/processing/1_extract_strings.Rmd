@@ -34,6 +34,8 @@ files_df <-
   separate(dir_and_file, into = c("dir", "file"), sep = "/") |>
   count(file)
 
+files_df
+
 ```
 
 # Delete existing csv files
@@ -64,7 +66,7 @@ NB this script could take a really long time. It can be stopped and restarted an
 ```{r}
 
 # Get a list of articles to go through
-dois <- list.files('../../data/apa_articles') 
+dois <- list.files('../../data/apa_articles/') 
 
 # Extract the results from each paper
 for(doi in dois) {
