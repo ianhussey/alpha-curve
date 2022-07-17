@@ -182,6 +182,57 @@ ggplot(data = tibble(alpha = 0:1), aes(x = alpha)) +
 
 ## Residuals
 
+
+### Ruben's approach
+```{r}
+
+frequency <- data_processed_trimmed %>% 
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha)) %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = n()/first(n_total))
+
+ggplot(frequency, aes(alpha, freq)) + 
+  geom_col()
+
+frequency$fitted <- extraDistr::dprop(x = frequency$alpha, size = exp(beta_phi_intercept), 
+                            mean = plogis(beta_mu_intercept))
+
+frequency <- frequency %>% 
+  mutate(residual = freq*100 - fitted)
+
+ggplot(frequency, aes(alpha)) + 
+  geom_col(aes(y = freq*100)) +
+  geom_line(aes(y = fitted))
+
+diff <- frequency %>% 
+  mutate(frequency = 100*freq,
+         frequencyworesidual = if_else(residual > 0, frequency - residual, frequency),
+         pos_resid = residual > 0,
+         residual = if_else(residual > 0, residual, -1 * residual)) %>% 
+  select(alpha,fitted, pos_resid, frequencyworesidual, residual) %>% 
+  pivot_longer(c(-alpha, -fitted, -pos_resid))
+
+diff %>%  
+  mutate(name = factor(case_when(
+    name == "frequencyworesidual" ~ "3", 
+    pos_resid ~ "2",
+    TRUE ~ "1"))) %>% 
+ggplot(., aes(alpha)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(aes(y = value, fill = name), position = "stack") +
+  scale_fill_manual(values = c("3" = "gray", "2" = "#a46657", "1" = "#697d4f"), guide = "none") +
+  geom_step(aes(y = fitted))
+
+ggplot(frequency, aes(alpha, residual, fill = residual > 0)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col()
+```
+
+
 Needs work
 
 ```{r}
