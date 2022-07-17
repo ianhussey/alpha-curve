@@ -24,6 +24,9 @@ knitr::opts_chunk$set(message = FALSE,
 ```{r}
 
 library(tidyverse)
+library(broom)            
+library(betareg)          
+library(extraDistr) 
 
 ```
 
@@ -135,11 +138,7 @@ data_processed_recentered |>
 ```{r}
 
 # sultion from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients
-
-library(broom)            
-library(betareg)          
-library(extraDistr)       
-
+      
 model_beta <- data_processed_trimmed |>
   mutate(alpha = janitor::round_half_up(alpha, 2),
          alpha = case_when(alpha == 0 ~ 0.01,
@@ -180,75 +179,63 @@ ggplot(data = tibble(alpha = 0:1), aes(x = alpha)) +
 
 ```
 
-## Residuals
+# Plot alpha curve & residuals
 
-
-### Ruben's approach
 ```{r}
 
-frequency <- data_processed_trimmed %>% 
+data_frequency <- data_processed_trimmed %>% 
   mutate(alpha = janitor::round_half_up(alpha, 2),
          alpha = case_when(alpha == 0 ~ 0.01,
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
-  summarise(freq = n()/first(n_total))
+  summarise(freq = n()/first(n_total)) %>%
+  mutate(fitted = extraDistr::dprop(x = alpha, 
+                                    size = exp(beta_phi_intercept), 
+                                    mean = plogis(beta_mu_intercept)),
+         residual = freq*100 - fitted)
 
-ggplot(frequency, aes(alpha, freq)) + 
-  geom_col()
+# ggplot(data_frequency, aes(alpha)) + 
+#   geom_col(aes(y = freq*100)) +
+#   geom_line(aes(y = fitted))
 
-frequency$fitted <- extraDistr::dprop(x = frequency$alpha, size = exp(beta_phi_intercept), 
-                            mean = plogis(beta_mu_intercept))
-
-frequency <- frequency %>% 
-  mutate(residual = freq*100 - fitted)
-
-ggplot(frequency, aes(alpha)) + 
-  geom_col(aes(y = freq*100)) +
-  geom_line(aes(y = fitted))
-
-diff <- frequency %>% 
+data_diff <- data_frequency %>% 
   mutate(frequency = 100*freq,
          frequencyworesidual = if_else(residual > 0, frequency - residual, frequency),
          pos_resid = residual > 0,
          residual = if_else(residual > 0, residual, -1 * residual)) %>% 
-  select(alpha,fitted, pos_resid, frequencyworesidual, residual) %>% 
+  dplyr::select(alpha,fitted, pos_resid, frequencyworesidual, residual) %>% 
   pivot_longer(c(-alpha, -fitted, -pos_resid))
 
-diff %>%  
+data_diff %>%  
   mutate(name = factor(case_when(
     name == "frequencyworesidual" ~ "3", 
     pos_resid ~ "2",
-    TRUE ~ "1"))) %>% 
-ggplot(., aes(alpha)) + 
+    TRUE ~ "1"
+  ))) %>% 
+  ggplot(., aes(alpha)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(aes(y = value, fill = name), position = "stack") +
-  scale_fill_manual(values = c("3" = "gray", "2" = "#a46657", "1" = "#697d4f"), guide = "none") +
-  geom_step(aes(y = fitted))
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "lightgray", "2" = "#a46657", "1" = "#697d4f"), guide = "none") +
+  geom_step(aes(y = fitted)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Kernal density")
 
-ggplot(frequency, aes(alpha, residual, fill = residual > 0)) + 
+ggplot(data_frequency, aes(alpha, residual, fill = residual > 0)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col()
-```
-
-
-Needs work
-
-```{r}
-
-data_pred <- data_processed_trimmed |>
-  dplyr::select(alpha) |>
-  mutate(residuals_deviance = residuals(model_beta, type = "deviance"),
-         residuals_sweighted2 = residuals(model_beta, type = "sweighted2")) |>
-  arrange(alpha) |>
-  distinct(alpha, .keep_all = TRUE)
-
-ggplot(data_pred, aes(alpha, residuals_deviance)) +
-  geom_point()
-
-ggplot(data_pred, aes(alpha, residuals_sweighted2)) +
-  geom_point()
+  geom_col() +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_viridis_d(begin = .3, end = .7) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual")
 
 ```
 
