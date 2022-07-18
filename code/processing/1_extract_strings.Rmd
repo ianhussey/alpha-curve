@@ -5,7 +5,7 @@ output: html_document
 
 # Notes
 
-Because this script has to load a very large number of files (75k), runtime is slow. 3+ hours for the extract strings chunk, around 1 hour for combining the csv files.
+Because this script has to load a very large number of files (75k), run time is slow. This mostly depends on your HDD read/write speed, could be 45 mins with an M2 SSD or 4 hours with a slower one.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -18,23 +18,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(stringr)
 library(httr)
-
-```
-
-# Examine contents of all folders
-
-```{r}
-
-files <- 
-  list.files(path = "../../data/apa_articles", 
-             recursive = TRUE)
-
-files_df <- 
-  tibble(dir_and_file = files) |>
-  separate(dir_and_file, into = c("dir", "file"), sep = "/") |>
-  count(file)
-
-files_df
 
 ```
 
@@ -53,6 +36,23 @@ csv_files_to_delete <-
 for(csv in csv_files_to_delete){
  unlink(csv)
 }
+
+```
+
+# Examine contents of all folders
+
+```{r}
+
+files <- 
+  list.files(path = "../../data/apa_articles", 
+             recursive = TRUE)
+
+files_df <- 
+  tibble(dir_and_file = files) |>
+  separate(dir_and_file, into = c("dir", "file"), sep = "/") |>
+  count(file)
+
+files_df
 
 ```
 
