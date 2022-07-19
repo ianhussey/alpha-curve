@@ -27,6 +27,7 @@ library(tidyverse)
 library(broom)            
 library(betareg)          
 library(extraDistr) 
+library(patchwork)
 
 ```
 
@@ -37,7 +38,7 @@ library(extraDistr)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  drop_na()
+  drop_na() 
 
 ```
 
@@ -49,89 +50,152 @@ n_doi <- data_processed |>
   distinct(doi) |>
   count(name = "n_doi") 
 
-n_doi
+paste("n articles =", 
+      n_doi)
 
-n_alphas <- data_processed_trimmed |>
-  count(name = "n_alphas")
 
-n_alphas
+n_exclusions <- data_processed |>
+  filter(exclude_master == TRUE) |>
+  count(name = "n_exclusions")
 
-proportion_with_alpha <- 
-  janitor::round_half_up(pull(n_alphas, n_alphas) / pull(n_doi, n_doi), 2)
+paste("n exclusions =", 
+      n_exclusions)
 
-print(paste("proportion with alpha =", proportion_with_alpha))
+
+n_estimates_after_exclusions <- data_processed_trimmed |>
+  count(name = "n_estimates")
+
+paste("n alpha estimates after exclusions =", 
+      n_estimates_after_exclusions)
+
+
+proportion_with_valid_alpha <- 
+  janitor::round_half_up(pull(n_estimates_after_exclusions, n_estimates) / pull(n_doi, n_doi), 2)
+
+paste("proportion of articles with 1+ alpha estimates after exclusions =",
+      proportion_with_valid_alpha)
 
 ```
 
-# Plot alpha curve
+# Kernal smoothing
 
-```{r}
+```{r fig.height=6, fig.width=6}
 
-#scales::viridis_pal()(9)[5]
+data_frequency_temp <- data_processed_trimmed %>% 
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha)) %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
+  mutate(alpha = as.character(alpha)) 
 
-# ggplot(data_processed_trimmed, aes(x = alpha)) +
-#   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-#   geom_histogram(binwidth = 0.01, fill = "#21908CFF") +
-#   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-#                      labels = seq(from = 0, to = 1, by = 0.1),
-#                      minor_breaks = NULL) +
-#   scale_y_continuous(breaks = seq(from = 0, to = 500, by = 100),
-#                      labels = seq(from = 0, to = 500, by = 100)) +
-#   theme_bw() +
-#   labs(x = expression("Cronbach's" ~ alpha),
-#        y = "Count")
+# all_alphas <- tibble(alpha = seq(0.01,0.99,0.01))
+# 
+# x <- anti_join(all_alphas, data_frequency, by = "alpha")
+# 
+# temp <- data_frequency %>% 
+#   bind_rows(data_frequency, anti_join(all_alphas, data_frequency, by = "alpha")) %>%
+#   arrange(alpha, desc(freq)) %>%
+#   mutate(freq = ifelse(is.na(freq), 0, freq))
 
-ggplot(data_processed_trimmed, aes(x = alpha)) +
+all_alphas <- tibble(alpha = as.character(seq(0.01,0.99,0.01)), freq = 0)
+
+data_frequency <- data_frequency_temp %>% 
+  bind_rows(all_alphas %>% anti_join(data_frequency_temp, by = "alpha")) %>% 
+  arrange(alpha, desc(freq)) %>% 
+  distinct(alpha, .keep_all = TRUE)
+  
+# ggplot(data_frequency, aes(alpha, freq)) + 
+#   geom_col()
+
+temp <- density(data_processed_trimmed$alpha, 
+                n = length(seq(0.01, 0.99, 0.01)), 
+                from = 0.01, 
+                to = 0.99)
+
+data_frequency$density <- temp$y
+
+# data_frequency$fitted <- 
+#   extraDistr::dprop(x = data_frequency$alpha, 
+#                     size = exp(beta_phi_intercept), 
+#                     mean = plogis(beta_mu_intercept))
+# data_frequency$fitted <- dbeta(x = data_frequency$alpha, shape2 =  (beta_phi_intercept), 
+# shape1 = (beta_mu_intercept))
+
+# ggplot(data_frequency, aes(alpha, 100*freq)) + 
+#  geom_step(aes(y = density)) + 
+#  geom_col()
+
+data_frequency <- data_frequency %>% 
+  mutate(residual = freq*100 - density,
+         alpha = as.numeric(alpha))
+
+# ggplot(data_frequency, aes(alpha)) + 
+#   geom_col(aes(y = freq*100)) +
+#   geom_line(aes(y = fitted))
+
+diff <- data_frequency %>% 
+  mutate(frequency = 100*freq,
+         frequencyworesidual = if_else(residual > 0, frequency - residual, frequency),
+         pos_resid = residual > 0,
+         residual = if_else(residual > 0, residual, -1 * residual)) %>% 
+  dplyr::select(alpha, 
+                #fitted, 
+                density, 
+                pos_resid, 
+                frequencyworesidual, 
+                residual) %>% 
+  pivot_longer(c(frequencyworesidual, residual))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+p1 <- 
+  diff %>%  
+  mutate(name = factor(case_when(
+    name == "frequencyworesidual" ~ "3", 
+    pos_resid ~ "2",
+    TRUE ~ "1"))
+  ) %>% 
+  ggplot(., aes(alpha)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_histogram(aes(y = ..density..), binwidth = 0.01, fill = "#21908CFF") +
-  geom_density(col = "black", adjust = 1.45) +
+  geom_col(aes(y = value, fill = name), position = "stack") +
+  geom_step(aes(y = density), direction = "mid") +
+  #geom_step(aes(y = fitted)) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
                      minor_breaks = NULL) +
-  # scale_y_continuous(breaks = seq(from = 0, to = 500, by = 100),
-  #                    labels = seq(from = 0, to = 500, by = 100)) +
+  scale_fill_manual(values = c("3" = "lightgray", "2" = color_2, "1" = color_1), guide = "none") +
+  #scale_fill_viridis_d(begin = .3, end = .7) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
        y = "Kernal density")
 
-```
-
-# Plot stacked alpha curve
-
-```{r}
-
-data_processed_recentered <- 
-  data_processed_trimmed |>
-  mutate(tranch = case_when(              alpha <= .65 ~ "0.00 < alpha <= 0.65",
-                            .65 < alpha & alpha <= .75 ~ "0.65 < alpha <= 0.75",
-                            .75 < alpha & alpha <= .85 ~ "0.75 < alpha <= 0.85",
-                            .85 < alpha & alpha <= .95 ~ "0.85 < alpha <= 0.95",
-                            .95 < alpha                ~ "0.95 < alpha <= 1.00")) |>
-  mutate(alpha_centered = case_when(tranch == "0.65 < alpha <= 0.75" ~ alpha - .7,
-                                    tranch == "0.75 < alpha <= 0.85" ~ alpha - .8,
-                                    tranch == "0.85 < alpha <= 0.95" ~ alpha - .9,
-                                    TRUE ~ NA_real_))
-
-data_processed_recentered |>
-  filter(alpha_centered > -0.045) |>
-  ggplot(aes(x = alpha_centered, fill = fct_rev(tranch))) +
-  geom_vline(xintercept = 0, linetype = "dotted") +
-  geom_histogram(position = "stack", binwidth = 0.01) +
-  scale_x_continuous(breaks = seq(from = -0.05, to = 0.06, by = 0.01),
-                     labels = seq(from = -0.05, to = 0.06, by = 0.01)) +
-  coord_cartesian(xlim = c(-0.045, 0.055)) +
-  labs(fill = "Tranch") +
-  scale_fill_viridis_d(begin = 0.3, 
-                       end = 0.7,
-                       option = "magma",
-                       labels = c(expression("0.85 <" ~ alpha ~ "<= 0.95"),
-                                  expression("0.75 <" ~ alpha ~ "<= 0.85"),
-                                  expression("0.65 <" ~ alpha ~ "<= 0.75"))) +
+p2 <- 
+  ggplot(data_frequency, aes(alpha, residual, fill = residual > 0)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  #scale_fill_manual(values = c("3" = "gray", "2" = color_2, "1" = color_1), guide = "none") +
+  scale_fill_viridis_d(begin = .3, end = .7) +
+  scale_y_continuous(breaks = seq(from = -0.3, to = 0.3, by = 0.1),
+                     labels = seq(from = -0.3, to = 0.3, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha ~ "(centered within each tranch)"),
-       y = "Count")
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p1 + p2 + plot_layout(nrow = 2)
 
 ```
+
+- geom_step(aes(y = density) or geom_step(aes(y = fitted) ? are both plots using same residuals?
 
 # Beta regression
 
@@ -179,7 +243,7 @@ ggplot(data = tibble(alpha = 0:1), aes(x = alpha)) +
 
 ```
 
-# Plot alpha curve & residuals
+## Plot alpha curve & residuals
 
 ```{r}
 
@@ -236,6 +300,45 @@ ggplot(data_frequency, aes(alpha, residual, fill = residual > 0)) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
        y = "Residual")
+
+```
+
+# Stacked alphas 
+
+## Plot
+
+```{r}
+
+data_processed_recentered <- 
+  data_processed_trimmed |>
+  mutate(tranch = case_when(              alpha <= .65 ~ "0.00 < alpha <= 0.65",
+                            .65 < alpha & alpha <= .75 ~ "0.65 < alpha <= 0.75",
+                            .75 < alpha & alpha <= .85 ~ "0.75 < alpha <= 0.85",
+                            .85 < alpha & alpha <= .95 ~ "0.85 < alpha <= 0.95",
+                            .95 < alpha                ~ "0.95 < alpha <= 1.00")) |>
+  mutate(alpha_centered = case_when(tranch == "0.65 < alpha <= 0.75" ~ alpha - .7,
+                                    tranch == "0.75 < alpha <= 0.85" ~ alpha - .8,
+                                    tranch == "0.85 < alpha <= 0.95" ~ alpha - .9,
+                                    TRUE ~ NA_real_))
+
+data_processed_recentered |>
+  filter(alpha_centered > -0.045) |>
+  ggplot(aes(x = alpha_centered, fill = fct_rev(tranch))) +
+  geom_vline(xintercept = 0, linetype = "dotted") +
+  geom_histogram(position = "stack", binwidth = 0.01) +
+  scale_x_continuous(breaks = seq(from = -0.05, to = 0.06, by = 0.01),
+                     labels = seq(from = -0.05, to = 0.06, by = 0.01)) +
+  coord_cartesian(xlim = c(-0.045, 0.055)) +
+  labs(fill = "Tranch") +
+  scale_fill_viridis_d(begin = 0.3, 
+                       end = 0.7,
+                       option = "magma",
+                       labels = c(expression("0.85 <" ~ alpha ~ "<= 0.95"),
+                                  expression("0.75 <" ~ alpha ~ "<= 0.85"),
+                                  expression("0.65 <" ~ alpha ~ "<= 0.75"))) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha ~ "(centered within each tranch)"),
+       y = "Count")
 
 ```
 
