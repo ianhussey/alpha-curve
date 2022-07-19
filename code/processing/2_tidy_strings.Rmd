@@ -32,7 +32,18 @@ library(tidyverse)
 
 ```
 
-# Regex tests
+# Define regex
+
+```{r}
+
+regex_string             <- "([a-zA-Z]|[\\(,\\),0,=]| )\\.[0-9]{1,}"
+regex_string_subset      <- "\\.\\d*"
+regex_string_2plusdigits <- "([a-zA-Z]|[\\(,\\),0,=]| )\\.[0-9]{2,}"
+regex_string_doi         <- "\\.[0-9]{1,}\\.[0-9]{1,}"
+
+```
+
+## Tests
 
 Test some of the regex that is used below. NB leading spaces in strings don't print correctly.
 
@@ -41,14 +52,19 @@ Repeat estimates only return the first estimate.
 ```{r}
 
 regex_tests <- 
-  tibble(string = c("in the current sample was 0.7", "= 0.7", "= .7", "=.7", " 0.7", " .7", "alpha of.70", "alphas of .70 and .80", "section 2.7", "doi 0.0.7"),
-         required_result = c(.7, .7, .7, .7, .7, .7, .7, .7, NA, NA)) |>
-  mutate(result = as.numeric(str_extract(required_result, "([a-zA-Z]|[0]|\\s|=)\\.[0-9]*")),
-         test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE))
+  tibble(string = c("in the current sample was 0.70", "= 0.70", "= .70", "=.70", " 0.70", " .70", "alpha of.70", "alphas of .70 and .80", "(.70)", "0.7", "-0.7", "-.7", "section 2.70", "doi 0.0.70", ". 70"),
+         required_result = c(".70", ".70",".70",".70",".70",".70",".70",".70", ".70", ".7", NA, NA, NA, NA, NA)) |>
+  mutate(
+    result = str_extract(str_extract(string, regex_string), regex_string_subset),
+    #result = str_extract(string, regex_string),
+    test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE)
+  )
 
 regex_tests
 
 ```
+
+- doi is not caught by this extraction, but is later caught by exclusions
 
 # Load data
 
@@ -67,40 +83,152 @@ data_article_length <- data_combined_results_files |>
   filter(key == "total_length") |>
   dplyr::select(doi, total_length_of_article = value)
 
+data_text_pre <- data_combined_results_files |>
+  filter(key == "pre_cronbach") |>
+  dplyr::select(doi, exemplar, text_pre = value) |>
+  distinct(doi, exemplar, text_pre)
+
 data_processed <- data_combined_results_files |>
-  # check that there are not strings between "cronbach" and the estimate that suggest this is something other than a cronbach's alpha estimate 
-  # e.g, reporting of a cutoff value ("cronbach's alpha of > .70"; this could get rid of real values too but more important that we exclude rules of thumb being reported)
-  # e.g., a p value ("p < .05"). several of these were found.
-  mutate(alpha_locate = str_locate(value, "([0]|\\s|=)\\.[0-9]*")[,"start"],
-         substring = str_sub(value, start = 1, end = alpha_locate),
-         comparison_present = str_detect(substring, "([<>≥≤]|over|exceeding|above|greater|higher|more|lower|below|less|at least|between)"),
-         comparison_present_after_estimate = str_detect(value, "(or above|or more|or greater|or below|or less|or lower)"),
-         cutoff_present = str_detect(substring, "cut(\\s|-)off|criteria"),
-         range_present = str_detect(substring, "(range|ranging|between|from)"),
-         p_present = str_detect(substring, "p\\s*[=<>≥≤]"),
-         doi_present = str_detect(tolower(substring), "(doi:|doi.org)"),
-         # something about references to this journal keep getting confused for alpha values
-         psychometrika_present = str_detect(tolower(substring), "psychometrika")) |>
-  # extract the estimate
-  mutate(alpha = str_extract(value, "([a-zA-Z]|[0]|\\s|=)\\.[0-9]*"),
-         alpha = str_remove(alpha, "="),
-         alpha = ifelse(alpha == "." |
-                          comparison_present == TRUE |
-                          comparison_present_after_estimate == TRUE |
-                          cutoff_present == TRUE |
-                          range_present == TRUE |
-                          p_present == TRUE |
-                          doi_present == TRUE |
-                          psychometrika_present == TRUE, 
-                        NA, 
-                        as.numeric(alpha))) |>
-  dplyr::select(doi, exemplar, text = value, alpha) |>
+  filter(key == "post_cronbach") |>
+  rename(text_post = value) |>
+  mutate(
+    # locations
+    location_alpha_start = str_locate(text_post, regex_string)[,"start"],
+    location_alpha_end   = str_locate(text_post, regex_string)[,"end"],
+    # substrings
+    substring_between_cronbach_and_estimate = str_sub(text_post, start = 1, end = location_alpha_start),
+    substring_immediately_before_estimate = str_sub(text_post, start = location_alpha_start-3, end = location_alpha_start),
+    substring_immediately_after_estimate = str_sub(text_post, start = location_alpha_end, end = location_alpha_end+6),
+    # exclusion variables
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±]|over|exceed|above|greater|higher|more|lower|below|less|at least|between|the order of)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_after_estimate = str_detect(text_post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria"),
+    exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
+    exclude_p_present = str_detect(text_post, "p\\s*[=<>≥≤]"),
+    exclude_doi_present = str_detect(text_post, regex_string_doi),
+    # something about references to this journal keep getting confused for alpha values
+    exclude_psychometrika_present = str_detect(tolower(substring_between_cronbach_and_estimate), "psychometrika"),
+    exclude_odd_string_present = str_detect(tolower(substring_between_cronbach_and_estimate), " d s ")
+    ) |>
+  mutate(
+    # master exclusion variable
+    exclude_master = ifelse(
+      #alpha == "." |
+      exclude_comparison_present == TRUE |
+        exclude_comparison_present_immediately_after_estimate == TRUE |
+        exclude_comparison_present_immediately_before_estimate == TRUE |
+        exclude_comparison_present_after_estimate == TRUE |
+        exclude_cutoff_present == TRUE |
+        exclude_range_present == TRUE |
+        exclude_p_present == TRUE |
+        exclude_doi_present == TRUE |
+        exclude_psychometrika_present == TRUE |
+        exclude_odd_string_present == TRUE, 
+      TRUE, 
+      FALSE
+    ),
+    # extract the estimate
+    alpha_string = 
+      str_extract(
+        str_extract(text_post, regex_string), 
+        regex_string_subset
+      ),
+    alpha = ifelse(exclude_master, NA, as.numeric(alpha_string)),
+    # detect if the estimate was taken from a string with at least two digits after the decimal place
+    two_or_more_decimals = str_detect(text_post, regex_string_2plusdigits)
+  ) |>
+  dplyr::select(doi, 
+                exemplar, 
+                text_post, 
+                alpha, 
+                two_or_more_decimals,
+                alpha_string,
+                substring_between_cronbach_and_estimate,
+                substring_immediately_before_estimate,
+                substring_immediately_after_estimate,
+                exclude_master, 
+                exclude_comparison_present,
+                exclude_comparison_present_immediately_before_estimate,
+                exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_after_estimate,
+                exclude_cutoff_present,
+                exclude_range_present,
+                exclude_p_present,
+                exclude_doi_present,
+                exclude_psychometrika_present,
+                exclude_odd_string_present) |>
   full_join(data_article_length, by = "doi") |>
-  mutate(text = ifelse(text == total_length_of_article, NA, text)) |>
+  mutate(text_post = ifelse(text_post == total_length_of_article, NA, text_post)) |>
+  full_join(data_text_pre, by = c("doi", "exemplar")) |>
+  dplyr::select(doi, 
+                exemplar, 
+                text_pre, 
+                text_post, 
+                alpha, 
+                two_or_more_decimals,
+                alpha_string,
+                substring_between_cronbach_and_estimate,
+                substring_immediately_before_estimate,
+                substring_immediately_after_estimate,
+                exclude_master, 
+                exclude_comparison_present,
+                exclude_comparison_present_immediately_before_estimate,
+                exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_after_estimate,
+                exclude_cutoff_present,
+                exclude_range_present,
+                exclude_p_present,
+                exclude_doi_present,
+                exclude_psychometrika_present,
+                exclude_odd_string_present) |>
   # drop duplicate combinations of doi and exemplar
-  distinct(doi, exemplar, .keep_all = TRUE)
+  distinct(doi, exemplar, .keep_all = TRUE) |>
+  arrange(doi, exemplar)
 
 ```
+
+# Exclusions
+
+## Check whether estimates with one decimal place should be excluded
+
+We encountered the question of whether to include estimates that were reported to a single decimal place or not. One reason to not include these is the risk that they are more likely to represent reporting of a cutoff value rather than an estimate. However, inspection of the data showed there were very few cases of single digits, and so they could be inspected manually and retained.
+
+```{r}
+
+data_processed |>
+  drop_na() |>
+  filter(two_or_more_decimals == FALSE) |>
+  dplyr::select(text_pre, text_post, alpha)
+
+```
+
+## Count exclusions
+
+```{r}
+
+data_processed |>
+  dplyr::select(comp = exclude_comparison_present,
+                comp_after = exclude_comparison_present_after_estimate,
+                cutoff = exclude_cutoff_present,
+                range = exclude_range_present,
+                p = exclude_p_present,
+                doi = exclude_doi_present,
+                psychometrika = exclude_psychometrika_present) |>
+  drop_na() |>
+  count(comp,
+        comp_after,
+        cutoff,
+        range,
+        p,
+        doi,
+        psychometrika) |>
+  arrange(desc(n))
+
+```
+
+- Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
 
 # Write to disk
 
