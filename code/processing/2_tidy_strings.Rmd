@@ -187,6 +187,8 @@ data_processed <- data_combined_results_files |>
   distinct(doi, exemplar, .keep_all = TRUE) |>
   arrange(doi, exemplar)
 
+
+data_processed %>% drop_na(text_post) %>% select(contains("exclude")) %>% colMeans(na.rm=T) %>% round(2)
 ```
 
 # Exclusions
@@ -196,7 +198,6 @@ data_processed <- data_combined_results_files |>
 We encountered the question of whether to include estimates that were reported to a single decimal place or not. One reason to not include these is the risk that they are more likely to represent reporting of a cutoff value rather than an estimate. However, inspection of the data showed there were very few cases of single digits, and so they could be inspected manually and retained.
 
 ```{r}
-
 data_processed |>
   drop_na() |>
   filter(two_or_more_decimals == FALSE) |>

@@ -38,7 +38,8 @@ library(patchwork)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  drop_na() 
+  drop_na() %>% 
+  filter(two_or_more_decimals)
 
 ```
 
@@ -77,7 +78,7 @@ paste("proportion of articles with 1+ alpha estimates after exclusions =",
 
 ```
 
-# Kernal smoothing
+# Kernel smoothing
 
 ```{r fig.height=6, fig.width=6}
 
@@ -110,10 +111,10 @@ data_frequency <- data_frequency_temp %>%
 # ggplot(data_frequency, aes(alpha, freq)) + 
 #   geom_col()
 
-temp <- density(data_processed_trimmed$alpha, 
+temp <- density(data_processed_trimmed$alpha[which(! data_processed_trimmed$alpha %in% c(0.7, 0.8, 0.9))], 
                 n = length(seq(0.01, 0.99, 0.01)), 
                 from = 0.01, 
-                to = 0.99)
+                to = 0.99, bw = 0.05)
 
 data_frequency$density <- temp$y
 
@@ -153,6 +154,8 @@ diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
+total_n <- nrow(data_processed_trimmed)/100
+
 p1 <- 
   diff %>%  
   mutate(name = factor(case_when(
@@ -160,11 +163,11 @@ p1 <-
     pos_resid ~ "2",
     TRUE ~ "1"))
   ) %>% 
-  ggplot(., aes(alpha)) + 
+  ggplot(., aes(alpha, y = value * total_n, fill = name)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col(aes(y = value, fill = name), position = "stack") +
-  geom_step(aes(y = density), direction = "mid") +
-  #geom_step(aes(y = fitted)) +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density * total_n, group = 1), direction = "mid") +
+  ggrepel::geom_text_repel(aes(y = value * total_n, label = if_else(name %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(value*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
                      minor_breaks = NULL) +
@@ -172,27 +175,19 @@ p1 <-
   #scale_fill_viridis_d(begin = .3, end = .7) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "Kernal density")
+       y = "n alphas")
 
 p2 <- 
-  ggplot(data_frequency, aes(alpha, residual, fill = residual > 0)) + 
+  ggplot(data_frequency, aes(alpha, residual * total_n, fill = residual > 0)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
-  #scale_fill_manual(values = c("3" = "gray", "2" = color_2, "1" = color_1), guide = "none") +
-  scale_fill_viridis_d(begin = .3, end = .7) +
-  scale_y_continuous(breaks = seq(from = -0.3, to = 0.3, by = 0.1),
-                     labels = seq(from = -0.3, to = 0.3, by = 0.1),
-                     minor_breaks = NULL) +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
-                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
        y = "Residual") +
   theme(legend.position = "none")
 
-p1 + p2 + plot_layout(nrow = 2)
-
+p1 + p2 + plot_layout(nrow = 2, heights = c(0.7, 0.3))
 ```
 
 - geom_step(aes(y = density) or geom_step(aes(y = fitted) ? are both plots using same residuals?
@@ -207,8 +202,9 @@ model_beta <- data_processed_trimmed |>
   mutate(alpha = janitor::round_half_up(alpha, 2),
          alpha = case_when(alpha == 0 ~ 0.01,
                            alpha == 1 ~ 0.99,
-                           TRUE ~ alpha)) |>
-  betareg(alpha ~ 1 | 1, data = _, 
+                           TRUE ~ alpha)) %>%
+  filter(!alpha %in% c(0.4, 0.5, 0.6, 0.7, 0.8, 0.9)) %>% 
+  betareg(alpha ~ 1 | 1, data = ., 
           link = "logit")
 
 beta_mu_intercept <- model_beta %>% 
@@ -246,60 +242,70 @@ ggplot(data = tibble(alpha = 0:1), aes(x = alpha)) +
 ## Plot alpha curve & residuals
 
 ```{r}
+data_frequency$density <-
+  extraDistr::dprop(x = data_frequency$alpha,
+                    size = exp(beta_phi_intercept),
+                    mean = plogis(beta_mu_intercept))
 
-data_frequency <- data_processed_trimmed %>% 
-  mutate(alpha = janitor::round_half_up(alpha, 2),
-         alpha = case_when(alpha == 0 ~ 0.01,
-                           alpha == 1 ~ 0.99,
-                           TRUE ~ alpha)) %>% 
-  mutate(n_total = n()) %>% 
-  group_by(alpha) %>% 
-  summarise(freq = n()/first(n_total)) %>%
-  mutate(fitted = extraDistr::dprop(x = alpha, 
-                                    size = exp(beta_phi_intercept), 
-                                    mean = plogis(beta_mu_intercept)),
-         residual = freq*100 - fitted)
+data_frequency <- data_frequency %>% 
+  mutate(residual = freq*100 - density,
+         alpha = as.numeric(alpha))
 
 # ggplot(data_frequency, aes(alpha)) + 
 #   geom_col(aes(y = freq*100)) +
 #   geom_line(aes(y = fitted))
 
-data_diff <- data_frequency %>% 
+diff <- data_frequency %>% 
   mutate(frequency = 100*freq,
          frequencyworesidual = if_else(residual > 0, frequency - residual, frequency),
          pos_resid = residual > 0,
          residual = if_else(residual > 0, residual, -1 * residual)) %>% 
-  dplyr::select(alpha,fitted, pos_resid, frequencyworesidual, residual) %>% 
-  pivot_longer(c(-alpha, -fitted, -pos_resid))
+  dplyr::select(alpha, 
+                #fitted, 
+                density, 
+                pos_resid, 
+                frequencyworesidual, 
+                residual) %>% 
+  pivot_longer(c(frequencyworesidual, residual))
 
-data_diff %>%  
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1 <- 
+  diff %>%  
   mutate(name = factor(case_when(
     name == "frequencyworesidual" ~ "3", 
     pos_resid ~ "2",
-    TRUE ~ "1"
-  ))) %>% 
-  ggplot(., aes(alpha)) + 
+    TRUE ~ "1"))
+  ) %>% 
+  ggplot(., aes(alpha, y = value * total_n, fill = name)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col(aes(y = value, fill = name), position = "stack") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density * total_n, group = 1), direction = "mid") +
+  ggrepel::geom_text_repel(aes(y = value * total_n, label = if_else(name %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(value*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
                      minor_breaks = NULL) +
-  scale_fill_manual(values = c("3" = "lightgray", "2" = "#a46657", "1" = "#697d4f"), guide = "none") +
-  geom_step(aes(y = fitted)) +
+  scale_fill_manual(values = c("3" = "lightgray", "2" = color_2, "1" = color_1), guide = "none") +
+  #scale_fill_viridis_d(begin = .3, end = .7) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "Kernal density")
+       y = "n alphas")
 
-ggplot(data_frequency, aes(alpha, residual, fill = residual > 0)) + 
+p2 <- 
+  ggplot(data_frequency, aes(alpha, residual * total_n, fill = residual > 0)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
-                     minor_breaks = NULL) +
-  scale_fill_viridis_d(begin = .3, end = .7) +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "Residual")
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p1 + p2 + plot_layout(nrow = 2, heights = c(0.7, 0.3))
 
 ```
 
