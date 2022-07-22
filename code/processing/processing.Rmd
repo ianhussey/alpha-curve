@@ -1,0 +1,391 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(stringr)
+library(httr)
+
+```
+
+# Combine txt files
+
+```{r}
+
+# data_fulltexts <- 
+#   tibble(filename = list.files("../../data/apa_articles", 
+#                                pattern    = "*.text", 
+#                                recursive  = TRUE, 
+#                                full.names = TRUE)) |>
+#   mutate(doi  = str_remove(filename, "/fulltext.text"), 
+#          doi  = str_remove(doi, "../../data/apa_articles/"),
+#          text = purrr::map(filename, read_file),
+#          text = gsub(pattern = '_', replacement = '', x = text),
+#          text = gsub(pattern = '&lt;', replacement = '<', x = text),
+#          text = gsub(pattern = '&gt;', replacement = '>', x = text)) |>
+#   select(-filename)
+# 
+# write_rds(data_fulltexts, "../../data/raw/data_fulltexts.rds", compress = "gz")
+
+data_fulltexts <- read_rds("../../data/raw/data_fulltexts.rds")
+
+```
+
+# subset for dev
+
+```{r}
+
+# data_fulltexts_subset <- data_fulltexts |>
+#   sample_n(1000)
+
+```
+
+# Extract strings from articles
+
+## Cronbach's alpha
+
+```{r}
+
+data_extracted_cronbach_alpha <- data_fulltexts |>
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "(C|c)ronbach('|’)?s? (alpha|a|α)")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start, 
+         location_end = end) |>
+  mutate(pre  = str_sub(text,
+                        start = location_start - 50,
+                        end   = location_start - 1),
+         post = str_sub(text,
+                        start = location_end + 1,
+                        end   = location_end + 50),
+         all = paste(pre, "Cronbach's alpha", post, sep = ""),
+         regex_label = "Cronbach's alpha",
+         regex_inclusion = "(C|c)ronbach('|’)?s? (alpha|a|α)",
+         regex_exclusion = NA) |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion,
+         exemplar, location_start, location_end, 
+         pre, post, all)
+
+```
+
+## Internal consistency ... alpha (without Cronbach)
+
+```{r}
+
+data_extracted_internal_consistency_and_alpha <- data_fulltexts |>
+  # first find reference to internal consistency
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "internal consistenc")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start, 
+         location_end = end) |>
+  mutate(pre_ic  = str_sub(text,
+                           start = location_start - 50,
+                           end   = location_start - 1),
+         post_ic = str_sub(text,
+                           start = location_end + 1,
+                           end   = location_end + 75)) |>
+  # then find reference to alpha within the result
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate(string = post_ic, pattern = "(alpha|a|α)")
+    ) 
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start_alpha = start, 
+         location_end_alpha = end) |>
+  mutate(pre  = str_sub(text,
+                        start = location_end + location_start_alpha - 50,
+                        end   = location_end + location_start_alpha - 1),
+         post = str_sub(text,
+                        start = location_end + location_end_alpha + 1,
+                        end   = location_end + location_end_alpha + 50),
+         all = paste(pre, "α", post, sep = ""),
+         regex_label = "internal consistency ... alpha",
+         regex_inclusion = "c('internal consistenc', '(alpha|a|α)')",
+         regex_exclusion = "(C|c)ronbach('|’)?s?") |>
+  # then exclude strings with "cronbach" as this is caught by the previous extraction
+  filter(!str_detect(all, "(C|c)ronbach('|’)?s?")) |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion, 
+         exemplar, location_start, location_end, 
+         pre, post, all)
+
+```
+
+## Internal consistency (without Cronbach or alpha)
+
+```{r}
+# 
+# data_extracted_internal_consistency <- data_fulltexts_subset |>
+#   # first find reference to internal consistency
+#   rowwise() |>
+#   mutate(locations = list(
+#     as.data.frame(
+#       str_locate_all(string = text, pattern = "internal consistenc")
+#     ) |>
+#       rownames_to_column(var = "exemplar")
+#   )) |>
+#   ungroup() |>
+#   unnest(locations) |>
+#   rename(location_start = start, 
+#          location_end = end) |>
+#   mutate(pre  = str_sub(text,
+#                         start = location_start - 50,
+#                         end   = location_start - 1),
+#          post = str_sub(text,
+#                         start = location_end + 1,
+#                         end   = location_end + 50),
+#          all = paste(pre, "internal consistenc", post, sep = ""),
+#          regex_label = "internal consistency",
+#          regex_inclusion = "internal consistenc",
+#          regex_exclusion = "c('(C|c)ronbach('|’)?s?', '(alpha|a|α)')") |>
+#   # then exclude strings with "cronbach" as this is caught by the previous extraction
+#   filter(!str_detect(all, "(C|c)ronbach('|’)?s?") |
+#            !str_detect(all, "(alpha|a|α)")) |>
+#   select(doi, 
+#          regex_label, regex_inclusion, regex_exclusion, 
+#          exemplar, location_start, location_end, 
+#          pre, post, all)
+
+```
+
+## Combine
+
+```{r}
+
+data_extracted <- 
+  bind_rows(data_extracted_cronbach_alpha, 
+            data_extracted_internal_consistency_and_alpha)
+            #data_extracted_internal_consistency)
+
+#write_rds(data_extracted, "../../data/processed/data_extracted.rds", compress = "gz")
+
+#data_extracted <- read_rds("../../data/processed/data_extracted.rds")
+
+```
+
+# Extract estimates
+
+## Define regex
+
+```{r}
+
+regex_string             <- "([a-zA-Z]|[\\(,\\),0,=]| )\\.[0-9]{2,}"
+regex_string_subset      <- "\\.\\d*"
+regex_string_doi         <- "\\.[0-9]{1,}\\.[0-9]{1,}"
+
+```
+
+### Tests
+
+Test some of the regex that is used below. NB leading spaces in strings don't print correctly.
+
+Repeat estimates only return the first estimate.
+
+```{r}
+
+regex_tests <- 
+  tibble(string = c("in the current sample was 0.70", "= 0.70", "= .70", "=.70", " 0.70", " .70", "alpha of.70", "alphas of .70 and .80", "(.70)", "0.7", "-0.7", "-.7", "section 2.70", "doi 0.0.70", ". 70"),
+         required_result = c(".70", ".70",".70",".70",".70",".70",".70",".70", ".70", NA, NA, NA, NA, NA, NA)) |>
+  mutate(
+    result = str_extract(str_extract(string, regex_string), regex_string_subset),
+    #result = str_extract(string, regex_string),
+    test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE)
+  )
+
+regex_tests
+
+```
+
+- doi is not caught by this extraction, but is later caught by exclusions
+
+## Extract using regex
+
+```{r}
+
+data_estimates <- data_extracted |>
+  mutate(
+    # locations
+    location_alpha_start = str_locate(post, regex_string)[,"start"],
+    location_alpha_end   = str_locate(post, regex_string)[,"end"],
+    # substrings
+    substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
+    substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
+    substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
+    # exclusion variables
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±]|over|exceed|above|greater|higher|more|lower|below|less|at least|between|the order of)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria"),
+    exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
+    exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
+    exclude_doi_present = str_detect(post, regex_string_doi),
+    # something about references to this journal keep getting confused for alpha values
+    exclude_psychometrika_present = str_detect(tolower(substring_between_cronbach_and_estimate), "psychometrika"),
+    exclude_odd_string_present = str_detect(tolower(substring_between_cronbach_and_estimate), " d s ")
+    ) |>
+  mutate(
+    # master exclusion variable
+    exclude_master = ifelse(
+      #alpha == "." |
+      exclude_comparison_present == TRUE |
+        exclude_comparison_present_immediately_after_estimate == TRUE |
+        exclude_comparison_present_immediately_before_estimate == TRUE |
+        exclude_comparison_present_after_estimate == TRUE |
+        exclude_cutoff_present == TRUE |
+        exclude_range_present == TRUE |
+        exclude_p_present == TRUE |
+        exclude_doi_present == TRUE |
+        exclude_psychometrika_present == TRUE |
+        exclude_odd_string_present == TRUE, 
+      TRUE, 
+      FALSE
+    ),
+    # extract the estimate
+    alpha_string = 
+      str_extract(
+        str_extract(post, regex_string), 
+        regex_string_subset
+      ),
+    alpha = ifelse(exclude_master, NA, as.numeric(alpha_string))
+  ) |>
+  dplyr::select(doi, 
+                regex_label,
+                exemplar, 
+                alpha, 
+                pre, 
+                post, 
+                all,
+                regex_inclusion, 
+                regex_exclusion,
+                location_start, 
+                location_end,
+                alpha_string,
+                substring_between_cronbach_and_estimate,
+                substring_immediately_before_estimate,
+                substring_immediately_after_estimate,
+                exclude_master, 
+                exclude_comparison_present,
+                exclude_comparison_present_immediately_before_estimate,
+                exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_after_estimate,
+                exclude_cutoff_present,
+                exclude_range_present,
+                exclude_p_present,
+                exclude_doi_present,
+                exclude_psychometrika_present,
+                exclude_odd_string_present) |>
+  arrange(doi, regex_label)
+
+```
+
+## Exclusions
+
+### Exclude duplicates
+
+```{r}
+
+# despite the filter used in , some duplicate extractions from cronbach's alpha search above seem to be included. conservatively exclude them
+
+data_processed_cronbach_alpha_regex <- data_estimates |>
+  filter(regex_label == "Cronbach's alpha") 
+
+data_processed_not_cronbach_alpha_regex <- data_estimates |>
+  filter(!regex_label == "Cronbach's alpha") %>%
+  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha"))
+
+data_processed <- 
+  bind_rows(data_processed_cronbach_alpha_regex,
+            data_processed_not_cronbach_alpha_regex)
+
+# check there are no cases where duplicates seem to still be present
+data_processed |>
+  select(doi, regex_label, exemplar, alpha, all, location_start, location_end) |>
+  drop_na() |>
+  arrange(doi, exemplar) |>
+  filter((doi == lead(doi) & alpha == lead(alpha) & regex_label != lead(regex_label)) |
+           (doi == lag(doi) & alpha == lag(alpha) & regex_label != lag(regex_label)))
+
+```
+
+### Count exclusions
+
+```{r}
+
+data_processed |>
+  dplyr::select(comp = exclude_comparison_present,
+                comp_after = exclude_comparison_present_after_estimate,
+                cutoff = exclude_cutoff_present,
+                range = exclude_range_present,
+                p = exclude_p_present,
+                doi = exclude_doi_present,
+                psychometrika = exclude_psychometrika_present) |>
+  drop_na() |>
+  count(comp,
+        comp_after,
+        cutoff,
+        range,
+        p,
+        doi,
+        psychometrika) |>
+  arrange(desc(n))
+
+```
+
+- Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
+
+### Count estimates present
+
+```{r}
+
+data_processed |>
+  count()
+
+data_processed |>
+  count(regex_label)
+
+```
+
+## Write to disk
+
+```{r}
+
+dir.create("../../data/processed")
+
+write_csv(data_processed, "../../data/processed/data_processed.csv")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
