@@ -24,9 +24,9 @@ knitr::opts_chunk$set(message = FALSE,
 ```{r}
 
 library(tidyverse)
-library(broom)            
-library(betareg)          
-library(extraDistr) 
+library(broom)
+library(betareg)
+library(extraDistr)
 library(patchwork)
 library(coin)
 
@@ -39,8 +39,7 @@ library(coin)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  drop_na() %>% 
-  filter(two_or_more_decimals)
+  drop_na()
 
 ```
 
@@ -92,7 +91,7 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
 
 data_frequency_temp <- data_processed_trimmed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
-  # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regerssion
+  # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
   mutate(alpha = janitor::round_half_up(alpha, 2),
          alpha = case_when(alpha == 0 ~ 0.01,
@@ -109,10 +108,10 @@ data_density <-
   density(data_processed_trimmed %>%
             filter(!alpha %in% c(0.7, 0.8, 0.9)) %>%
             pull(alpha),
-          n = length(seq(0.01, 0.99, 0.01)),
+          n    = length(seq(0.01, 0.99, 0.01)),
           from = 0.01,
-          to = 0.99, 
-          bw = 0.04)
+          to   = 0.99, 
+          bw   = 0.03)
 
 data_frequency_temp2 <-
   # join the previous two tibbles to create a complete list of alpha bins
@@ -158,7 +157,7 @@ p1_kernel <-
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(position = "stack") +
   geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid") +
-  ggrepel::geom_text_repel(aes(y = value * total_n, label = if_else(name %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(value*total_n), NA_real_)), position = "stack") +
+  #ggrepel::geom_text_repel(aes(y = value * total_n, label = if_else(name %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(value*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
                      minor_breaks = NULL) +
@@ -182,7 +181,15 @@ p2_kernel <-
        y = "Residual") +
   theme(legend.position = "none")
 
-p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+
+p_kernel
+
+ggsave("p_kernel.pdf", 
+       plot = p_kernel, 
+       width = 6,
+       height = 4,
+       units = "in")
 
 ```
 
@@ -236,8 +243,9 @@ model_beta <- data_processed_trimmed |>
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) %>%
   filter(!alpha %in% c(0.7, 0.8, 0.9)) %>%
-  betareg(alpha ~ 1 | 1, data = .,
-          link = "logit")
+  betareg(alpha ~ 1 | 1, 
+          link = "logit",
+          data = .)
 
 beta_mu_intercept <- model_beta %>%
   tidy() %>%
@@ -311,7 +319,15 @@ p2_beta <-
        y = "Residual") +
   theme(legend.position = "none")
 
-p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+
+p_beta
+
+ggsave("p_beta.pdf", 
+       plot = p_beta, 
+       width = 6,
+       height = 4,
+       units = "in")
 
 ```
 
