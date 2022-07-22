@@ -12,3 +12,4 @@ old/*
 data/apa_articles/*
 data/apa_articles_with_personalisation_results.zip
 *.zip
+data/raw/data_fulltexts.rds
