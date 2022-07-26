@@ -213,15 +213,15 @@ ggsave("p_kernel.pdf",
 data_inflation_kernel <- data_frequency %>%
   filter(missing == FALSE) %>%
   #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
-  select(alpha, 
-         observed = freq, 
-         predicted = density_kernel, 
-         residual = residual_kernel) %>%
+  dplyr::select(alpha, 
+                observed = freq, 
+                predicted = density_kernel, 
+                residual = residual_kernel) %>%
   mutate(predicted = predicted/100,
          residual = residual/100,
          inflation = (observed/predicted - 1),
-         inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0)) %>%
-  mutate(group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+         inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
+         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
                                      TRUE ~ "non cutoff")))
 
 #knitr::kable(data_inflation_kernel)
@@ -350,23 +350,24 @@ ggsave("p_beta.pdf",
 data_inflation_beta <- data_frequency %>%
   filter(missing == FALSE) %>%
   #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
-  select(alpha, 
-         observed = freq, 
-         predicted = density_beta, 
-         residual = residual_beta) %>%
+  dplyr::select(alpha, 
+                observed = freq, 
+                predicted = density_beta, 
+                residual = residual_beta) %>%
   mutate(predicted = predicted/100,
          residual = residual/100,
-         inflation = janitor::round_half_up((observed/predicted - 1)*100, digits = 0)) %>%
-  mutate(group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+         inflation = (observed/predicted - 1),
+         inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
+         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
                                      TRUE ~ "non cutoff")))
 
 #knitr::kable(data_inflation_beta)
 
 ```
 
-- There were `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.69]`% fewer observations of Cronbach's $a$ = .69 and `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
-- There were `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.79]`% fewer observations of Cronbach's $a$ = .79 and `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
-- There were `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.89]`% more observations of Cronbach's $a$ = .89 and `r data_inflation_kernel$inflation[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.69]`% fewer observations of Cronbach's $a$ = .69 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.79]`% fewer observations of Cronbach's $a$ = .79 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.89]`% more observations of Cronbach's $a$ = .89 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
 
 ## Permutation test
 
