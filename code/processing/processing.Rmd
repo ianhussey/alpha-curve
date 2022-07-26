@@ -390,7 +390,7 @@ data_processed <-
 
 # check there are no cases where duplicates seem to still be present
 df <- data_processed |>
-  select(doi, regex_label, exemplar, alpha, all, location_start, location_end) |>
+  dplyr::select(doi, regex_label, exemplar, alpha, all, location_start, location_end) |>
   drop_na() |>
   arrange(doi, exemplar) |>
   filter((doi == lead(doi) & alpha == lead(alpha) & regex_label != lead(regex_label)) |
@@ -445,6 +445,7 @@ data_processed |>
 dir.create("../../data/processed")
 
 write_csv(data_processed, "../../data/processed/data_processed.csv")
+#data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 ```
 
