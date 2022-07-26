@@ -43,7 +43,7 @@ library(coin)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  drop_na()
+  filter(!is.na(alpha) & exclude_master == FALSE)
 
 ```
 
