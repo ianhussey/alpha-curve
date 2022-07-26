@@ -47,6 +47,18 @@ data_processed_trimmed <- data_processed |>
            exclude_master == FALSE &
            regex_label != "α") # excluded as they include many estimates other than alpha values
 
+data_processed_binned <- data_processed_trimmed %>%
+  # round the alpha values to 2 decimal places, using standard rounding method
+  # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
+  # nb none present in dataset
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha)) 
+
+# df <- data_processed_binned |>
+#   filter(alpha == .70)
+
 ```
 
 # Descriptives
@@ -103,15 +115,6 @@ paste("proportion of articles with 1+ alpha estimates after exclusions =",
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
-
-data_processed_binned <- data_processed_trimmed %>%
-  # round the alpha values to 2 decimal places, using standard rounding method
-  # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
-  # nb none present in dataset
-  mutate(alpha = janitor::round_half_up(alpha, 2),
-         alpha = case_when(alpha == 0 ~ 0.01,
-                           alpha == 1 ~ 0.99,
-                           TRUE ~ alpha))
 
 data_frequency_temp <- data_processed_binned %>% 
   mutate(n_total = n()) %>% 
