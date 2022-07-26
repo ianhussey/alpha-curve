@@ -55,6 +55,41 @@ data_fulltexts_subset <- data_fulltexts |>
 
 # Extract strings from articles
 
+## α
+
+```{r}
+
+data_extracted_alpha <- data_fulltexts |>
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "α")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start, 
+         location_end = end) |>
+  mutate(pre  = str_sub(text,
+                        start = location_end - 50,
+                        end   = location_end - 1),
+         post = str_sub(text,
+                        start = location_end,
+                        end   = location_end + 50),
+         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+         regex_label = "α",
+         regex_inclusion = "α",
+         regex_exclusion = NA) |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion,
+         exemplar, location_start, location_end, 
+         pre, post, all)
+
+write_rds(data_extracted_alpha, "../../data/processed/data_extracted_alpha.rds")
+
+```
+
 ## Cronbach's alpha
 
 ```{r}
