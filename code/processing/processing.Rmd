@@ -422,9 +422,7 @@ data_processed |>
 ```{r}
 
 data_processed |>
-  count()
-
-data_processed |>
+  filter(exclude_master == FALSE) |>
   count(regex_label)
 
 ```

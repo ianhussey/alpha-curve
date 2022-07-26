@@ -43,7 +43,9 @@ library(coin)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  filter(!is.na(alpha) & exclude_master == FALSE)
+  filter(!is.na(alpha) & 
+           exclude_master == FALSE &
+           regex_label != "α") # excluded as they include many estimates other than alpha values
 
 ```
 
@@ -82,8 +84,9 @@ paste("n alpha estimates after exclusions =",
       n_estimates_after_exclusions)
 
 
+
 proportion_with_valid_alpha <- 
-  janitor::round_half_up(pull(n_estimates_after_exclusions, n_estimates) / n_doi, 2)
+  janitor::round_half_up(nrow(distinct(data_processed_trimmed, doi)) / n_doi, 2)
 
 paste("proportion of articles with 1+ alpha estimates after exclusions =",
       proportion_with_valid_alpha)
@@ -179,7 +182,7 @@ p1_kernel <-
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "n alphas")
+       y = "Count")
 
 p2_kernel <- 
   ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
@@ -228,9 +231,9 @@ data_inflation_kernel <- data_frequency %>%
 
 ```
 
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.69]`% fewer observations of Cronbach's $a$ = .69 and `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.79]`% fewer observations of Cronbach's $a$ = .79 and `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.89]`% more observations of Cronbach's $a$ = .89 and `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
 
 ## Permutation test
 
@@ -316,7 +319,7 @@ p1_beta <-
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "n alphas")
+       y = "Count")
 
 p2_beta <-
   ggplot(data_frequency, aes(alpha, residual_beta * total_n, fill = residual_beta > 0)) +
@@ -365,9 +368,9 @@ data_inflation_beta <- data_frequency %>%
 
 ```
 
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.69]`% fewer observations of Cronbach's $a$ = .69 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.79]`% fewer observations of Cronbach's $a$ = .79 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.89]`% more observations of Cronbach's $a$ = .89 and `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
 
 ## Permutation test
 
