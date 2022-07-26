@@ -5,7 +5,7 @@ output: html_document
 
 # TODO
 
--   why are there fewer extractions now than before?? inspect each for false negatives and false positives? compare the old and new processed files?
+- NA
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -36,10 +36,11 @@ library(httr)
 #          text = gsub(pattern = '_', replacement = '', x = text),
 #          text = gsub(pattern = '&lt;', replacement = '<', x = text),
 #          text = gsub(pattern = '&gt;', replacement = '>', x = text)) |>
-#   select(-filename)
-# 
-# write_rds(data_fulltexts, "../../data/raw/data_fulltexts.rds", compress = "gz")
+#   select(-filename) |>
+#   mutate(text = tolower(text))
 
+# write_rds(data_fulltexts, "../../data/raw/data_fulltexts.rds", compress = "gz")
+# 
 data_fulltexts <- read_rds("../../data/raw/data_fulltexts.rds")
 
 ```
@@ -63,7 +64,7 @@ data_extracted_cronbach_alpha <- data_fulltexts |>
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate_all(string = text, pattern = "((C|c)ronbach('|’)?s?|(C|c)oefficient) (Alpha|alpha|α|a)")
+      str_locate_all(string = text, pattern = "(cronbach('|’)?s? (alpha|α|a)|(coefficient) (alpha|α|a =|a=))")
     ) |>
       rownames_to_column(var = "exemplar")
   )) |>
@@ -79,7 +80,7 @@ data_extracted_cronbach_alpha <- data_fulltexts |>
                         end   = location_end + 50),
          all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
          regex_label = "cronbach's alpha",
-         regex_inclusion = "((C|c)ronbach('|’)?s?|(C|c)oefficient) (Alpha|alpha|α|a)",
+         regex_inclusion = "(cronbach('|’)?s? (alpha|α|a)|(coefficient) (alpha|α|a =|a=))",
          regex_exclusion = "none") |>
   select(doi, 
          regex_label, regex_inclusion, regex_exclusion,
@@ -97,7 +98,7 @@ data_extracted_consistency_or_reliability_and_alpha <- data_fulltexts |>
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate_all(string = text, pattern = "(C|c)onsistenc|(R|r)eliabilit")
+      str_locate_all(string = text, pattern = "consistenc|reliabilit")
     ) |>
       rownames_to_column(var = "exemplar")
   )) |>
@@ -115,7 +116,7 @@ data_extracted_consistency_or_reliability_and_alpha <- data_fulltexts |>
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate(string = post_ic, pattern = "(Alpha|alpha|α|a =|a=)")
+      str_locate(string = post_ic, pattern = "(alpha|α|a =|a=)")
     ) 
   )) |>
   ungroup() |>
@@ -130,10 +131,10 @@ data_extracted_consistency_or_reliability_and_alpha <- data_fulltexts |>
                         end   = location_end + location_end_alpha + 50),
          all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
          regex_label = "consistency|reliability, alpha, !cronbach",
-         regex_inclusion = "c('(C|c)onsistenc|(R|r)eliabilit', '(Alpha|alpha|α|a =|a=)')",
-         regex_exclusion = "((C|c)ronbach('|’)?s?|(C|c)oefficient)") |>
+         regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
+         regex_exclusion = "(cronbach('|’)?s?|coefficient)") |>
   # then exclude strings with "cronbach" as this is caught by the previous extraction
-  filter(!str_detect(all, "((C|c)ronbach('|’)?s?|(C|c)oefficient)")) |>
+  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)")) |>
   select(doi, 
          regex_label, regex_inclusion, regex_exclusion, 
          exemplar, location_start, location_end, 
@@ -150,7 +151,7 @@ data_extracted_internal_consistency <- data_fulltexts |>
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate_all(string = text, pattern = "(I|i)nternal ((C|c)onsistenc|(R|r)eliabilit)")
+      str_locate_all(string = text, pattern = "internal (consistenc|reliabilit)")
     ) |>
       rownames_to_column(var = "exemplar")
   )) |>
@@ -166,11 +167,11 @@ data_extracted_internal_consistency <- data_fulltexts |>
                         end   = location_end + 50),
          all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
          regex_label = "internal consistency|reliability, !alpha, !cronbach",
-         regex_inclusion = "(I|i)nternal ((C|c)onsistenc|(R|r)eliabilit)",
-         regex_exclusion = "c('(C|c)ronbach('|’)?s?', '(Alpha|alpha|α|a =|a=)')") |>
+         regex_inclusion = "internal (consistenc|reliabilit)",
+         regex_exclusion = "c('cronbach('|’)?s?', '(alpha|α|a =|a=)')") |>
   # then exclude strings with "cronbach" as this is caught by the previous extraction
-  filter(!str_detect(all, "((C|c)ronbach('|’)?s?|(C|c)oefficient)") &
-           !str_detect(all, "(Alpha|alpha|α|a =|a=)")) |>
+  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)") &
+           !str_detect(all, "(alpha|α|a =|a=)")) |>
   select(doi,
          regex_label, regex_inclusion, regex_exclusion,
          exemplar, location_start, location_end,
@@ -205,8 +206,8 @@ data_extracted_alpha <- data_fulltexts |>
          regex_inclusion = "α",
          regex_exclusion = "none") |>
   # then exclude strings with "cronbach" as this is caught by the previous extraction
-  filter(!str_detect(all, "((C|c)ronbach('|’)?s?|(C|c)oefficient)"),
-         !str_detect(pre, "(C|c)onsistenc|(R|r)eliabilit")) |>
+  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)"),
+         !str_detect(pre, "consistenc|reliabilit")) |>
   select(doi, 
          regex_label, regex_inclusion, regex_exclusion,
          exemplar, location_start, location_end, 
@@ -279,17 +280,20 @@ data_estimates <- data_extracted |>
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
     # exclusion variables
-    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±]|over|larger|exceed|above|greater|higher|more|lower|below|smaller|less|at least|between|the order of)"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
     exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
     exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
+    exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
+    exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
     exclude_doi_present = str_detect(post, regex_string_doi),
+    exclude_doi_string_present = str_detect(all, "doi"),
     # something about references to this journal keep getting confused for alpha values
-    exclude_psychometrika_present = str_detect(tolower(substring_between_cronbach_and_estimate), "psychometrika"),
-    exclude_odd_string_present = str_detect(tolower(substring_between_cronbach_and_estimate), " d s ")
+    exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
+    exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s ")
     ) |>
   mutate(
     # master exclusion variable
@@ -302,7 +306,10 @@ data_estimates <- data_extracted |>
         exclude_cutoff_present == TRUE |
         exclude_range_present == TRUE |
         exclude_p_present == TRUE |
+        exclude_r_present == TRUE |
+        exclude_significance_present == TRUE |
         exclude_doi_present == TRUE |
+        exclude_doi_string_present == TRUE |
         exclude_psychometrika_present == TRUE |
         exclude_odd_string_present == TRUE, 
       TRUE, 
@@ -340,6 +347,7 @@ data_estimates <- data_extracted |>
                 exclude_cutoff_present,
                 exclude_range_present,
                 exclude_p_present,
+                exclude_significance_present,
                 exclude_doi_present,
                 exclude_psychometrika_present,
                 exclude_odd_string_present) |>
@@ -423,6 +431,10 @@ data_processed |>
 
 data_processed |>
   filter(exclude_master == FALSE) |>
+  count()
+
+data_processed |>
+  filter(exclude_master == FALSE) |>
   count(regex_label)
 
 ```
@@ -466,7 +478,7 @@ file.copy(from = files$current,
 ```{r}
 
 df <- data_processed |>
-  filter(alpha == .70 & regex_label == "α")
+  filter(alpha == .06)
 
 ```
 
