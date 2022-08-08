@@ -56,7 +56,7 @@ data_fulltexts_subset <- data_fulltexts |>
 
 # Extract strings from articles
 
-## Cronbach's alpha
+## Test-retest reliablitly
 
 ```{r}
 
@@ -64,7 +64,7 @@ data_extracted_trt <- data_fulltexts |>
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate_all(string = text, pattern = "test-?retest reliabilit")
+      str_locate_all(string = text, pattern = "test(-| )retest reliabilit")
     ) |>
       rownames_to_column(var = "exemplar")
   )) |>
@@ -80,7 +80,7 @@ data_extracted_trt <- data_fulltexts |>
                         end   = location_end + 50),
          all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
          regex_label = "test-retest reliability",
-         regex_inclusion = "test-?retest reliabilit",
+         regex_inclusion = "test(-| )retest reliabilit",
          regex_exclusion = "none") |>
   select(doi, 
          regex_label, regex_inclusion, regex_exclusion,
@@ -88,6 +88,8 @@ data_extracted_trt <- data_fulltexts |>
          pre, post, all)
 
 write_rds(data_extracted_trt, "../../data/processed/data_extracted_trt.rds", compress = "gz")
+
+#data_extracted_trt <- write_rds("../../data/processed/data_extracted_trt.rds")
 
 ```
 
@@ -130,7 +132,7 @@ regex_tests
 
 ```{r}
 
-data_processed_trt <- data_extracted_trt |>
+data_estimates <- data_extracted_trt |>
   mutate(
     # locations
     location_alpha_start = str_locate(post, regex_string)[,"start"],
@@ -217,11 +219,53 @@ data_processed_trt <- data_extracted_trt |>
 
 ## Exclusions
 
+### Exclude duplicates
+
+```{r}
+
+# despite the filter used in , some duplicate extractions from cronbach's alpha search above seem to be included. conservatively exclude them
+
+data_processed_cronbach_alpha_regex <- data_estimates |>
+  filter(regex_label == "cronbach's alpha") 
+
+data_processed_ic_alpha_regex <- data_estimates |>
+  filter(regex_label == "consistency|reliability, alpha, !cronbach") %>%
+  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha"))
+
+data_processed_ic_regex <- data_estimates |>
+  filter(regex_label == "internal consistency|reliability, !alpha, !cronbach") %>%
+  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
+  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha"))
+
+data_processed_alpha_regex <- data_estimates |>
+  filter(regex_label == "α") %>%
+  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
+  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
+  anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
+
+data_processed <- 
+  bind_rows(data_processed_cronbach_alpha_regex,
+            data_processed_ic_alpha_regex,
+            data_processed_ic_regex,
+            data_processed_alpha_regex)
+
+# check there are no cases where duplicates seem to still be present
+df <- data_processed |>
+  dplyr::select(doi, regex_label, exemplar, alpha, all, location_start, location_end) |>
+  drop_na() |>
+  arrange(doi, exemplar) |>
+  filter((doi == lead(doi) & alpha == lead(alpha) & regex_label != lead(regex_label)) |
+           (doi == lag(doi) & alpha == lag(alpha) & regex_label != lag(regex_label)))
+
+df
+
+```
+
 ### Count exclusions
 
 ```{r}
 
-data_processed_trt |>
+data_processed |>
   dplyr::select(comp = exclude_comparison_present,
                 comp_after = exclude_comparison_present_after_estimate,
                 cutoff = exclude_cutoff_present,
@@ -241,15 +285,19 @@ data_processed_trt |>
 
 ```
 
-- Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
+-   Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
 
 ### Count estimates present
 
 ```{r}
 
-data_processed_trt |>
+data_processed |>
   filter(exclude_master == FALSE) |>
   count()
+
+data_processed |>
+  filter(exclude_master == FALSE) |>
+  count(regex_label)
 
 ```
 
@@ -259,8 +307,8 @@ data_processed_trt |>
 
 dir.create("../../data/processed")
 
-write_csv(data_processed_trt, "../../data/processed/data_processed_trt.csv")
-#data_processed_trt <- read_csv("../../data/processed/data_processed_trt.csv")
+write_csv(data_processed, "../../data/processed/data_processed.csv")
+#data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 ```
 
