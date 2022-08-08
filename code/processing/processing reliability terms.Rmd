@@ -1,0 +1,100 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+# TODO
+
+-   why are there fewer extractions now than before?? inspect each for false negatives and false positives? compare the old and new processed files?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(stringr)
+library(httr)
+
+```
+
+# Data
+
+## To lowercase
+
+```{r}
+
+# data_fulltexts_lowercase <- data_fulltexts |>
+#   mutate(text = tolower(text))
+# 
+# write_rds(data_fulltexts_lowercase, "../../data/raw/data_fulltexts_lowercase.rds")
+data_fulltexts_lowercase <- read_rds("../../data/raw/data_fulltexts_lowercase.rds")
+
+
+```
+
+# Multiple forms of reliablity and validity
+
+## Detect strings
+
+```{r}
+
+data_prevalence <- data_fulltexts_lowercase |> 
+  mutate(
+    validity               = str_detect(string = text, pattern = "validity"),
+    criterion_validity     = str_detect(string = text, pattern = "criterion validity"),
+    structural_validity    = str_detect(string = text, pattern = "structural validity"),
+    convergent_validity    = str_detect(string = text, pattern = "convergent validity"), 
+    discriminant_validity  = str_detect(string = text, pattern = "discriminant validity"),
+    construct_validity     = str_detect(string = text, pattern = "construct validity"),
+    face_validity          = str_detect(string = text, pattern = "face validity"),
+    content_validity       = str_detect(string = text, pattern = "content validity"),
+    predictive_validity    = str_detect(string = text, pattern = "predictive validity"),
+    internal_validity      = str_detect(string = text, pattern = "internal validity"),
+    external_validity      = str_detect(string = text, pattern = "external validity"),
+    concurrent_validity    = str_detect(string = text, pattern = "concurrent validity"),
+    
+    reliability            = str_detect(string = text, pattern = "reliability"),
+    cronbach_alpha         = str_detect(string = text, pattern = "cronbach('|’)?s? (alpha|a|α)"),
+    internal_consistency   = str_detect(string = text, pattern = "internal consistenc"),
+    internal_reliability   = str_detect(string = text, pattern = "internal reliabilit"),
+    test_retest            = str_detect(string = text, pattern = "test( |-)reliabilit"), # new, not in data
+    measurement_invariance = str_detect(string = text, pattern = "measurement invarian")
+  ) |>
+  select(-text)
+
+```
+
+## Results
+
+```{r}
+
+data_prevalence |>
+  select(-doi) |>
+  summarize_all(mean) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value))
+
+```
+
+## Write to disk
+
+```{r}
+
+dir.create("../../data/processed")
+
+write_rds(data_prevalence, "../../data/processed/data_prevalence.rds")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
