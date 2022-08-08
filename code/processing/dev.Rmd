@@ -1,0 +1,22 @@
+# dev
+
+## Copy a subset of html files whose dois returned no estimates 
+
+These will be hand checked
+
+```{r}
+
+files <- data_fulltexts |>
+  select(doi) |>
+  anti_join(data_processed, by = "doi") |>
+  sample_n(75) |>
+  mutate(current = paste("../../data/apa_articles/", doi, "/fulltext.html", sep = ""),
+         new = paste("../../data/for hand checking/", doi, ".html", sep = ""))
+
+file.copy(from = files$current,
+          to = files$new, 
+          overwrite = TRUE, 
+          recursive = FALSE, 
+          copy.mode = TRUE)
+
+```
