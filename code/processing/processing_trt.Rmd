@@ -132,7 +132,7 @@ regex_tests
 
 ```{r}
 
-data_estimates <- data_extracted_trt |>
+data_processed_trt <- data_extracted_trt |>
   mutate(
     # locations
     location_alpha_start = str_locate(post, regex_string)[,"start"],
@@ -219,53 +219,11 @@ data_estimates <- data_extracted_trt |>
 
 ## Exclusions
 
-### Exclude duplicates
-
-```{r}
-
-# despite the filter used in , some duplicate extractions from cronbach's alpha search above seem to be included. conservatively exclude them
-
-data_processed_cronbach_alpha_regex <- data_estimates |>
-  filter(regex_label == "cronbach's alpha") 
-
-data_processed_ic_alpha_regex <- data_estimates |>
-  filter(regex_label == "consistency|reliability, alpha, !cronbach") %>%
-  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha"))
-
-data_processed_ic_regex <- data_estimates |>
-  filter(regex_label == "internal consistency|reliability, !alpha, !cronbach") %>%
-  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
-  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha"))
-
-data_processed_alpha_regex <- data_estimates |>
-  filter(regex_label == "α") %>%
-  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
-  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
-  anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
-
-data_processed <- 
-  bind_rows(data_processed_cronbach_alpha_regex,
-            data_processed_ic_alpha_regex,
-            data_processed_ic_regex,
-            data_processed_alpha_regex)
-
-# check there are no cases where duplicates seem to still be present
-df <- data_processed |>
-  dplyr::select(doi, regex_label, exemplar, alpha, all, location_start, location_end) |>
-  drop_na() |>
-  arrange(doi, exemplar) |>
-  filter((doi == lead(doi) & alpha == lead(alpha) & regex_label != lead(regex_label)) |
-           (doi == lag(doi) & alpha == lag(alpha) & regex_label != lag(regex_label)))
-
-df
-
-```
-
 ### Count exclusions
 
 ```{r}
 
-data_processed |>
+data_processed_trt |>
   dplyr::select(comp = exclude_comparison_present,
                 comp_after = exclude_comparison_present_after_estimate,
                 cutoff = exclude_cutoff_present,
@@ -291,11 +249,11 @@ data_processed |>
 
 ```{r}
 
-data_processed |>
+data_processed_trt |>
   filter(exclude_master == FALSE) |>
   count()
 
-data_processed |>
+data_processed_trt |>
   filter(exclude_master == FALSE) |>
   count(regex_label)
 
@@ -307,8 +265,8 @@ data_processed |>
 
 dir.create("../../data/processed")
 
-write_csv(data_processed, "../../data/processed/data_processed.csv")
-#data_processed <- read_csv("../../data/processed/data_processed.csv")
+write_csv(data_processed_trt, "../../data/processed/data_processed_trt.csv")
+#data_processed_trt <- read_csv("../../data/processed/data_processed_trt.csv")
 
 ```
 
