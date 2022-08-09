@@ -264,7 +264,7 @@ regex_tests
 
 ```
 
--   doi is not caught by this extraction, but is later caught by exclusions
+- doi is not caught by this extraction, but is later caught by exclusions
 
 ## Extract using regex
 
@@ -280,10 +280,11 @@ data_estimates <- data_extracted |>
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
     # exclusion variables
-    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of)"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|minimum)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
     exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
     exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
@@ -293,7 +294,8 @@ data_estimates <- data_extracted |>
     exclude_doi_string_present = str_detect(all, "doi"),
     # something about references to this journal keep getting confused for alpha values
     exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
-    exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s ")
+    exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
+    exclude_kappa = str_detect(all, "(kappa|κ)")
     ) |>
   mutate(
     # master exclusion variable
@@ -311,7 +313,9 @@ data_estimates <- data_extracted |>
         exclude_doi_present == TRUE |
         exclude_doi_string_present == TRUE |
         exclude_psychometrika_present == TRUE |
-        exclude_odd_string_present == TRUE, 
+        exclude_odd_string_present == TRUE |
+        exclude_kappa == TRUE |
+        exclude_s == TRUE,
       TRUE, 
       FALSE
     ),
@@ -423,7 +427,7 @@ data_processed |>
 
 ```
 
--   Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
+- Biggest exclusion is for range, then comparison, then both range and comparison, then comparison after the estimate.
 
 ### Count estimates present
 
