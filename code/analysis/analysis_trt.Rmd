@@ -40,7 +40,7 @@ library(coin)
 
 ```{r}
 
-data_processed <- read_csv("../../data/processed/data_processed.csv")
+data_processed <- read_csv("../../data/processed/data_processed_trt.csv")
 
 data_processed_trimmed <- data_processed |>
   filter(!is.na(alpha) & 
@@ -56,12 +56,8 @@ data_processed_binned <- data_processed_trimmed %>%
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) 
 
-# dat <- data_processed_trimmed |>
-#   filter(exclude_master == FALSE) |>
-#   group_by(doi) |>
-#   mutate(n_estimates = n()) |>
-#   ungroup() |>
-#   select(doi, n_estimates, exemplar, alpha, all)
+# df <- data_processed_binned |>
+#   filter(alpha == .70)
 
 ```
 
@@ -204,7 +200,7 @@ p2_kernel <-
        y = "Residual") +
   theme(legend.position = "none")
 
-p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.7, 0.3))
 
 p_kernel
 
@@ -341,7 +337,7 @@ p2_beta <-
        y = "Residual") +
   theme(legend.position = "none")
 
-p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.7, 0.3))
 
 p_beta
 

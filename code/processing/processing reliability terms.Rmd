@@ -73,6 +73,9 @@ data_prevalence <- data_fulltexts_lowercase |>
 ```{r}
 
 data_prevalence |>
+  count()
+
+data_prevalence |>
   select(-doi) |>
   summarize_all(mean) |>
   mutate_all(round, digits = 2) |>
@@ -88,6 +91,7 @@ data_prevalence |>
 dir.create("../../data/processed")
 
 write_rds(data_prevalence, "../../data/processed/data_prevalence.rds")
+#data_prevalence <- read_rds("../../data/processed/data_prevalence.rds")
 
 ```
 
