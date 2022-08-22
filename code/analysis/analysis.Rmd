@@ -134,7 +134,7 @@ data_density <-
           n    = length(seq(0.01, 0.99, 0.01)),
           from = 0.01,
           to   = 0.99, 
-          bw   = 0.03)
+          bw   = "nrd0")
 
 data_frequency <-
   # join the previous two tibbles to create a complete list of alpha bins
