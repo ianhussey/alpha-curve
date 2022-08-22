@@ -390,6 +390,318 @@ independence_test(residual ~ group,
 
 ```
 
+
+
+# Taym
+## Beta regression, cauchit link
+```{r}
+
+# solution from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients
+
+model_beta <- data_processed_binned %>%
+  betareg(alpha ~ 1 | 1, 
+          link = "cauchit",
+          data = .)
+
+beta_mu_intercept <- model_beta %>%
+  tidy() %>%
+  filter(component == "mean", term == "(Intercept)") %>%
+  pull(estimate)
+
+beta_phi_intercept <- model_beta %>%
+  tidy() %>%
+  filter(component == "precision", term == "(Intercept)") %>%
+  pull(estimate)
+
+data_frequency$density_beta <-
+  extraDistr::dprop(x = data_frequency$alpha,
+                    size = exp(beta_phi_intercept),
+                    mean = plogis(beta_mu_intercept))
+
+data_frequency <- data_frequency %>%
+  mutate(residual_beta = freq*100 - density_beta,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+data_diff <- data_frequency %>%
+  mutate(frequency = 100*freq,
+         frequency_without_residual_beta = if_else(residual_beta > 0, frequency - residual_beta, frequency),
+         pos_resid_beta = residual_beta > 0,
+         residual_beta = if_else(residual_beta > 0, residual_beta, -1 * residual_beta)) %>%
+  dplyr::select(alpha,
+                density_beta,
+                pos_resid_beta,
+                frequency_without_residual_beta,
+                residual_beta) %>%
+  pivot_longer(names_to = "type",
+               values_to = "residual_beta",
+               c(frequency_without_residual_beta, residual_beta))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1_beta <-
+  data_diff %>%  
+  mutate(type = factor(case_when(
+    type == "frequency_without_residual_beta" ~ "3",
+    pos_resid_beta ~ "2",
+    TRUE ~ "1"))
+  ) %>%
+  ggplot(., aes(alpha, y = residual_beta * total_n, fill = type)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_beta * total_n, group = 1), direction = "mid") +
+  #ggrepel::geom_text_repel(aes(y = residual_beta * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_beta*total_n), NA_real_)), position = "stack") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
+                    guide = "none") +
+  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Count")
+
+p2_beta <-
+  ggplot(data_frequency, aes(alpha, residual_beta * total_n, fill = residual_beta > 0)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_beta
+```
+## Some modifications to the kernel density
+### Narrower bandwidth
+```{r}
+# create tibble containing all alpha bins, for a later join
+all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
+                     freq = 0,
+                     missing = TRUE)
+
+data_frequency_temp <- data_processed_binned %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
+  # convert alpha to character to facilitate a join later
+  mutate(alpha = as.character(alpha))
+
+# kernel density estimation
+data_density <- 
+  density(data_processed_binned %>%
+            pull(alpha),
+          n    = length(seq(0.01, 0.99, 0.01)),
+          from = 0.01,
+          to   = 0.99, 
+          bw   = "nrd")
+
+data_frequency <-
+  # join the previous two tibbles to create a complete list of alpha bins
+  data_frequency_temp %>%
+  bind_rows(all_alphas %>% anti_join(data_frequency_temp, by = "alpha")) %>%
+  arrange(alpha, desc(freq)) %>%
+  distinct(alpha, .keep_all = TRUE) %>%
+  mutate(density_kernel = data_density$y,
+         missing = ifelse(is.na(missing), FALSE, missing)) %>%
+  mutate(residual_kernel = freq*100 - density_kernel,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+data_diff <- data_frequency %>%
+  mutate(frequency = freq*100,
+         frequency_without_residual_kernel = if_else(residual_kernel > 0, frequency - residual_kernel, frequency),
+         pos_resid_kernel = residual_kernel > 0,
+         residual_kernel = if_else(residual_kernel > 0, residual_kernel, -1 * residual_kernel)) %>%
+  dplyr::select(alpha,
+                #fitted,
+                density_kernel,
+                pos_resid_kernel,
+                frequency_without_residual_kernel,
+                residual_kernel) %>%
+  pivot_longer(names_to = "type",
+               values_to = "residual_kernel",
+               c(frequency_without_residual_kernel, residual_kernel))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1_kernel <-
+  data_diff %>%  
+  mutate(type = factor(case_when(
+    type == "frequency_without_residual_kernel" ~ "3",
+    pos_resid_kernel ~ "2",
+    TRUE ~ "1"))
+  ) %>% 
+  ggplot(., aes(alpha, y = residual_kernel * total_n, fill = type)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid") +
+  #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
+                    guide = "none") +
+  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Count")
+
+p2_kernel <- 
+  ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel
+```
+
+### Change distribution
+```{r}
+# create tibble containing all alpha bins, for a later join
+all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
+                     freq = 0,
+                     missing = TRUE)
+
+data_frequency_temp <- data_processed_binned %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
+  # convert alpha to character to facilitate a join later
+  mutate(alpha = as.character(alpha))
+
+# kernel density estimation
+data_density <- 
+  density(data_processed_binned %>%
+            pull(alpha),
+          n    = length(seq(0.01, 0.99, 0.01)),
+          from = 0.01,
+          to   = 0.99, 
+          bw   = 0.03,
+          kernel = "rectangular")
+
+data_frequency <-
+  # join the previous two tibbles to create a complete list of alpha bins
+  data_frequency_temp %>%
+  bind_rows(all_alphas %>% anti_join(data_frequency_temp, by = "alpha")) %>%
+  arrange(alpha, desc(freq)) %>%
+  distinct(alpha, .keep_all = TRUE) %>%
+  mutate(density_kernel = data_density$y,
+         missing = ifelse(is.na(missing), FALSE, missing)) %>%
+  mutate(residual_kernel = freq*100 - density_kernel,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+data_diff <- data_frequency %>%
+  mutate(frequency = freq*100,
+         frequency_without_residual_kernel = if_else(residual_kernel > 0, frequency - residual_kernel, frequency),
+         pos_resid_kernel = residual_kernel > 0,
+         residual_kernel = if_else(residual_kernel > 0, residual_kernel, -1 * residual_kernel)) %>%
+  dplyr::select(alpha,
+                #fitted,
+                density_kernel,
+                pos_resid_kernel,
+                frequency_without_residual_kernel,
+                residual_kernel) %>%
+  pivot_longer(names_to = "type",
+               values_to = "residual_kernel",
+               c(frequency_without_residual_kernel, residual_kernel))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1_kernel <-
+  data_diff %>%  
+  mutate(type = factor(case_when(
+    type == "frequency_without_residual_kernel" ~ "3",
+    pos_resid_kernel ~ "2",
+    TRUE ~ "1"))
+  ) %>% 
+  ggplot(., aes(alpha, y = residual_kernel * total_n, fill = type)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid") +
+  #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
+                    guide = "none") +
+  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Count")
+
+p2_kernel <- 
+  ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel
+```
+
+
+
+
+## Bayesian Beta reg
+```{r}
+library(brms)
+library(tidybayes)
+
+bayes_beta <- data_processed_binned %>%
+  brm(
+  bf(alpha ~ 1,
+     phi ~ 1),
+  data = .,
+  family = Beta(),
+  chains = 4, iter= 2000, warmup = 1000,
+  cores = 4, seed = 914914
+)
+pp_check(bayes_beta)
+summary(bayes_beta)
+browseURL('https://www.youtube.com/watch?v=dJ9FY06urr4&ab_channel=ceilingsoldier')
+```
+
+`
+
+
+
 # Session info
 
 ```{r}
