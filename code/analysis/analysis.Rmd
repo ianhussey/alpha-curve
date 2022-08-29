@@ -238,9 +238,9 @@ data_inflation_kernel <- data_frequency %>%
 
 ```
 
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
-- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $\alpha$ = .70 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $\alpha$ = .80 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $\alpha$ = .90 than predicted.
 
 ## Permutation test
 
