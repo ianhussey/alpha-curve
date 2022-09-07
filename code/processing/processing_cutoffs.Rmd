@@ -166,7 +166,7 @@ data_processed_cutoffs <- data_extracted |>
 
 ```{r}
 
-dir.create("../../data/data_processed_cutoffs")
+dir.create("../../data/processed")
 
 write_csv(data_processed, "../../data/processed/data_processed_cutoffs.csv")
 #data_processed <- read_csv("../../data/processed/data_processed_cutoffs.csv")
