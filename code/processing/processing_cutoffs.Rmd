@@ -167,15 +167,6 @@ write_csv(data_processed_cutoffs, "../../data/processed/data_processed_cutoffs.c
 
 ```
 
-## Trim
-
-```{r}
-
-data_processed_cutoffs_trimmed <- data_processed_cutoffs |>
-  filter(!is.na(alpha) & regex_label != "α" & exclude_master == FALSE)
-
-```
-
 # Session info
 
 ```{r}

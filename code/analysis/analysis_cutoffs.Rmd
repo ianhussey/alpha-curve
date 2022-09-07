@@ -1,0 +1,73 @@
+---
+title: "Analysis of cutoffs and comparisons found in data"
+subtitle: "e.g., >.70, ≥.70, or greater than .70"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+Whereas analysis.Rmd analyses alpha values that do *not* involve a comparison in the string (including >, ≥ or 'greater than'), this analysis *only* analyses the frequency and contents of these strings in order to understand what cut-offs were reported in the dataset. 
+
+Note that even manual inspection of the strings cannot necessarily distinguish between the reporting of sample estimates vs cut-off criteria. E.g., between "all alphas were > .70" (estimate) vs. "alpha was >.70 which is the accepted cut-off for good reliability". As such, the presence of lots of occurrences of odd values such as .53 do not represent evidence that these were used as cutoff. The weak inference that can be made here is that the most commonly reported comparative estimates (e.g., >.70) reflect at least an influence of perceived standards of acceptability on how estimates are reported. 
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+```
+
+```{r}
+
+data_processed_cutoffs <- read_csv("../../data/processed/data_processed_cutoffs.csv")
+
+data_processed_cutoffs_trimmed <- data_processed_cutoffs |>
+  filter(!is.na(alpha) & 
+           regex_label != "α" & 
+           exclude_master == FALSE & 
+           (include_comparison_present == TRUE |
+                include_comparison_present_after_estimate == TRUE |
+                include_cutoff_present == TRUE)) |>
+  select(doi, exemplar, alpha, all, 
+         include_comparison_present, include_comparison_present_after_estimate, include_cutoff_present)
+
+data_processed_cutoffs_trimmed |>
+  count(alpha) |>
+  arrange(desc(n)) |>
+  knitr::kable()
+
+for_manual_string_inspection <- data_processed_cutoffs_trimmed |>
+  filter(alpha %in% c(0.7, 0.8, 0.9))
+
+for_manual_string_inspection_2 <- data_processed_cutoffs_trimmed |>
+  filter(alpha %in% c(0.60, 0.75, 0.85))
+
+```
+
+Results therefore demonstrate that .80, .70, .90 are the three most commonly reported comparative estimates (respectively), followed by .85, .60 and .75.
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
