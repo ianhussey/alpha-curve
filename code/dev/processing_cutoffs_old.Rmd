@@ -21,74 +21,11 @@ library(httr)
 
 ```
 
-# Combine txt files
+# Load data
 
 ```{r}
 
-# data_fulltexts <- 
-#   tibble(filename = list.files("../../data/apa_articles", 
-#                                pattern    = "*.txt", 
-#                                recursive  = TRUE, 
-#                                full.names = TRUE)) |>
-#   mutate(doi  = str_remove(filename, "/fulltext.txt"), 
-#          doi  = str_remove(doi, "../../data/apa_articles/"),
-#          text = purrr::map(filename, read_file),
-#          text = gsub(pattern = '_', replacement = '', x = text),
-#          text = gsub(pattern = '&lt;', replacement = '<', x = text),
-#          text = gsub(pattern = '&gt;', replacement = '>', x = text)) |>
-#   select(-filename) |>
-#   mutate(text = tolower(text))
-
-# write_rds(data_fulltexts, "../../data/raw/data_fulltexts.rds", compress = "gz")
-# 
-data_fulltexts <- read_rds("../../data/raw/data_fulltexts.rds")
-
-```
-
-# subset for dev
-
-```{r}
-
-data_fulltexts <- data_fulltexts |>
-  sample_n(1000)
-
-```
-
-# Extract strings from articles
-
-## Comparison
-
-```{r}
-
-data_extracted_comparison <- data_fulltexts |>
-  rowwise() |>
-  mutate(locations = list(
-    as.data.frame(
-      str_locate_all(string = text, pattern = "((>|≥)|'or greater')") # comparison 
-    ) |>
-      rownames_to_column(var = "exemplar")
-  )) |>
-  ungroup() |>
-  unnest(locations) |>
-  rename(location_start = start, 
-         location_end = end) |>
-  mutate(pre  = str_sub(text,
-                        start = location_end - 50,
-                        end   = location_end - 1),
-         post = str_sub(text,
-                        start = location_end,
-                        end   = location_end + 50),
-         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
-         regex_label = "comparison",
-         regex_inclusion = "((>|≥)|'or greater')",
-         regex_exclusion = "none") |>
-  select(doi, 
-         regex_label, regex_inclusion, regex_exclusion,
-         exemplar, location_start, location_end, 
-         pre, post, all)
-
-write_rds(data_extracted_comparison, "../../data/processed/data_extracted_comparison.rds", compress = "gz")
-#data_extracted_comparison <- read_rds("../../data/processed/data_extracted_comparison.rds")
+data_extracted <- read_rds("../../data/processed/data_extracted.rds")
 
 ```
 
@@ -113,9 +50,12 @@ Repeat estimates only return the first estimate.
 ```{r}
 
 regex_tests <- 
-  tibble(string = c("in the current sample was 0.70", "= 0.70", "= .70", "=.70", " 0.70", " .70", "alpha of.70", "alphas of .70 and .80", "(.70)", "0.7", "-0.7", "-.7", "section 2.70", "doi 0.0.70", ". 70")) |>
+  tibble(string = c("in the current sample was 0.70", "= 0.70", "= .70", "=.70", " 0.70", " .70", "alpha of.70", "alphas of .70 and .80", "(.70)", "0.7", "-0.7", "-.7", "section 2.70", "doi 0.0.70", ". 70"),
+         required_result = c(".70", ".70",".70",".70",".70",".70",".70",".70", ".70", NA, NA, NA, NA, NA, NA)) |>
   mutate(
-    result = str_extract(str_extract(string, regex_string), regex_string_subset)
+    result = str_extract(str_extract(string, regex_string), regex_string_subset),
+    #result = str_extract(string, regex_string),
+    test_passed = ifelse(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE)
   )
 
 regex_tests
@@ -125,6 +65,11 @@ regex_tests
 - doi is not caught by this extraction, but is later caught by exclusions
 
 ## Extract using regex
+
+
+use existing fully processed data and pull out the exclusions==TRUE for some of the below? maybe they dont need modified at all. or can be further processed.
+
+
 
 ```{r}
 
@@ -237,17 +182,17 @@ data_processed_ic_regex <- data_estimates |>
   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha"))
 
-# data_processed_alpha_regex <- data_estimates |>
-#   filter(regex_label == "α") %>%
-#   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
-#   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
-#   anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
+data_processed_alpha_regex <- data_estimates |>
+  filter(regex_label == "α") %>%
+  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
+  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
+  anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
 
 data_processed <- 
   bind_rows(data_processed_cronbach_alpha_regex,
             data_processed_ic_alpha_regex,
-            data_processed_ic_regex)
-            #data_processed_alpha_regex)
+            data_processed_ic_regex,
+            data_processed_alpha_regex)
 
 # check there are no cases where duplicates seem to still be present
 df <- data_processed |>
@@ -311,6 +256,41 @@ write_csv(data_processed, "../../data/processed/data_processed.csv")
 #data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 ```
+
+
+exclude_comparison_present
+"([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|minimum)")
+
+exclude_comparison_present_after_estimate 
+"(or above|or higher|or more|or greater|or below|or less|or lower)"
+
+exclude_cutoff_present 
+"cut(\\s|-)off|criteria"
+
+```{r}
+
+data_cutoffs <- read_csv("../../data/processed/data_processed.csv") |>
+  filter(exclude_cutoff_present == TRUE |
+           exclude_comparison_present == TRUE |
+           exclude_comparison_present_after_estimate == TRUE)
+
+data_cutoffs |>
+  count(exclude_cutoff_present,
+        exclude_comparison_present,
+        exclude_comparison_present_after_estimate) |>
+  arrange(desc(n))
+
+data_cutoffs |>
+  filter(exclude_cutoff_present == TRUE) |>
+  select(all)
+
+temp <- data_cutoffs |>
+  filter(exclude_comparison_present_after_estimate == TRUE) |>
+  select(all)
+
+```
+
+
 
 # Session info
 
