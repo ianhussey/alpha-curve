@@ -85,7 +85,6 @@ data_processed_cutoffs <- data_extracted |>
     exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<≤±≈]|over|larger|exceed|above|upper|higher|more|lower|below|smaller|less|at least|between|the order of|minimum)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
-    exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
     exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
@@ -104,8 +103,6 @@ data_processed_cutoffs <- data_extracted |>
       exclude_comparison_present == TRUE |
         exclude_comparison_present_immediately_after_estimate == TRUE |
         exclude_comparison_present_immediately_before_estimate == TRUE |
-        exclude_comparison_present_after_estimate == TRUE |
-        exclude_cutoff_present == TRUE |
         exclude_range_present == TRUE |
         exclude_p_present == TRUE |
         exclude_r_present == TRUE |
@@ -114,8 +111,7 @@ data_processed_cutoffs <- data_extracted |>
         exclude_doi_string_present == TRUE |
         exclude_psychometrika_present == TRUE |
         exclude_odd_string_present == TRUE |
-        exclude_kappa == TRUE |
-        exclude_s == TRUE,
+        exclude_kappa == TRUE,
       TRUE, 
       FALSE
     ),
@@ -150,8 +146,6 @@ data_processed_cutoffs <- data_extracted |>
                 exclude_comparison_present,
                 exclude_comparison_present_immediately_before_estimate,
                 exclude_comparison_present_immediately_after_estimate,
-                exclude_comparison_present_after_estimate,
-                exclude_cutoff_present,
                 exclude_range_present,
                 exclude_p_present,
                 exclude_significance_present,
@@ -168,8 +162,17 @@ data_processed_cutoffs <- data_extracted |>
 
 dir.create("../../data/processed")
 
-write_csv(data_processed, "../../data/processed/data_processed_cutoffs.csv")
-#data_processed <- read_csv("../../data/processed/data_processed_cutoffs.csv")
+write_csv(data_processed_cutoffs, "../../data/processed/data_processed_cutoffs.csv")
+#data_processed_cutoffs <- read_csv("../../data/processed/data_processed_cutoffs.csv")
+
+```
+
+## Trim
+
+```{r}
+
+data_processed_cutoffs_trimmed <- data_processed_cutoffs |>
+  filter(!is.na(alpha) & regex_label != "α" & exclude_master == FALSE)
 
 ```
 
