@@ -181,37 +181,39 @@ data_extracted_internal_consistency <- data_fulltexts |>
 
 ## α
 
+contains too many non-alpha estimates, eg p values
+
 ```{r}
 
-data_extracted_alpha <- data_fulltexts |>
-  rowwise() |>
-  mutate(locations = list(
-    as.data.frame(
-      str_locate_all(string = text, pattern = "α")
-    ) |>
-      rownames_to_column(var = "exemplar")
-  )) |>
-  ungroup() |>
-  unnest(locations) |>
-  rename(location_start = start, 
-         location_end = end) |>
-  mutate(pre  = str_sub(text,
-                        start = location_end - 50,
-                        end   = location_end - 1),
-         post = str_sub(text,
-                        start = location_end,
-                        end   = location_end + 50),
-         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
-         regex_label = "α",
-         regex_inclusion = "α",
-         regex_exclusion = "none") |>
-  # then exclude strings with "cronbach" as this is caught by the previous extraction
-  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)"),
-         !str_detect(pre, "consistenc|reliabilit")) |>
-  select(doi, 
-         regex_label, regex_inclusion, regex_exclusion,
-         exemplar, location_start, location_end, 
-         pre, post, all)
+# data_extracted_alpha <- data_fulltexts |>
+#   rowwise() |>
+#   mutate(locations = list(
+#     as.data.frame(
+#       str_locate_all(string = text, pattern = "α")
+#     ) |>
+#       rownames_to_column(var = "exemplar")
+#   )) |>
+#   ungroup() |>
+#   unnest(locations) |>
+#   rename(location_start = start, 
+#          location_end = end) |>
+#   mutate(pre  = str_sub(text,
+#                         start = location_end - 50,
+#                         end   = location_end - 1),
+#          post = str_sub(text,
+#                         start = location_end,
+#                         end   = location_end + 50),
+#          all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+#          regex_label = "alpha",
+#          regex_inclusion = "α",
+#          regex_exclusion = "none") |>
+#   # then exclude strings with "cronbach" as this is caught by the previous extraction
+#   filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)"),
+#          !str_detect(pre, "consistenc|reliabilit")) |>
+#   select(doi, 
+#          regex_label, regex_inclusion, regex_exclusion,
+#          exemplar, location_start, location_end, 
+#          pre, post, all)
 
 ```
 
@@ -222,11 +224,10 @@ data_extracted_alpha <- data_fulltexts |>
 data_extracted <- 
   bind_rows(data_extracted_cronbach_alpha, 
             data_extracted_consistency_or_reliability_and_alpha,
-            data_extracted_internal_consistency,
-            data_extracted_alpha)
+            data_extracted_internal_consistency)
+            #data_extracted_alpha)
 
 write_rds(data_extracted, "../../data/processed/data_extracted.rds", compress = "gz")
-
 #data_extracted <- read_rds("../../data/processed/data_extracted.rds")
 
 ```
@@ -379,17 +380,17 @@ data_processed_ic_regex <- data_estimates |>
   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha"))
 
-data_processed_alpha_regex <- data_estimates |>
-  filter(regex_label == "α") %>%
-  anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
-  anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
-  anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
+# data_processed_alpha_regex <- data_estimates |>
+#   filter(regex_label == "α") %>%
+#   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha")) %>%
+#   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha")) %>%
+#   anti_join(data_processed_ic_regex,             by = c("doi", "alpha"))
 
 data_processed <- 
   bind_rows(data_processed_cronbach_alpha_regex,
             data_processed_ic_alpha_regex,
-            data_processed_ic_regex,
-            data_processed_alpha_regex)
+            data_processed_ic_regex)
+            #data_processed_alpha_regex)
 
 # check there are no cases where duplicates seem to still be present
 df <- data_processed |>

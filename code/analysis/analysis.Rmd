@@ -43,9 +43,7 @@ library(coin)
 data_processed <- read_csv("../../data/processed/data_processed.csv")
 
 data_processed_trimmed <- data_processed |>
-  filter(!is.na(alpha) & 
-           exclude_master == FALSE &
-           regex_label != "α") # excluded as they include many estimates other than alpha values
+  filter(!is.na(alpha) & exclude_master == FALSE)
 
 data_processed_binned <- data_processed_trimmed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
