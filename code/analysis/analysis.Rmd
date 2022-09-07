@@ -221,7 +221,6 @@ ggsave("p_kernel.pdf",
 
 data_inflation_kernel <- data_frequency %>%
   filter(missing == FALSE) %>%
-  #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
   dplyr::select(alpha, 
                 observed = freq, 
                 predicted = density_kernel, 
@@ -230,12 +229,12 @@ data_inflation_kernel <- data_frequency %>%
          residual = residual/100,
          inflation = (observed/predicted - 1),
          inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
+         group_7_cutoffs = as.factor(case_when(alpha %in% c(.60, .65, .70, .75, .80, .85, .90) ~ "cutoff",
+                                               TRUE ~ "non cutoff")),
          group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
                                                TRUE ~ "non cutoff")),
          group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
                                                TRUE ~ "non cutoff")))
-
-#knitr::kable(data_inflation_kernel)
 
 ```
 
@@ -263,6 +262,17 @@ independence_test(residual ~ group_3_cutoffs,
 independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_kernel,
                   distribution = "exact",
+                  alternative = "greater")
+
+```
+
+.60, .65, .70, .75, .80, .85, .90 against the rest (NB this test is more exploratory)
+
+```{r}
+
+independence_test(residual ~ group_7_cutoffs,
+                  data = data_inflation_kernel,
+                  distribution = "approximate",
                   alternative = "greater")
 
 ```
@@ -373,7 +383,6 @@ ggsave("p_beta.pdf",
 
 data_inflation_beta <- data_frequency %>%
   filter(missing == FALSE) %>%
-  #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
   dplyr::select(alpha, 
                 observed = freq, 
                 predicted = density_beta, 
@@ -384,8 +393,6 @@ data_inflation_beta <- data_frequency %>%
          inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
          group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
                                      TRUE ~ "non cutoff")))
-
-#knitr::kable(data_inflation_beta)
 
 ```
 
