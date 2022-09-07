@@ -189,7 +189,8 @@ p1_kernel <-
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
-       y = "Count")
+       y = "Count") +
+  ylim(0, 1800)
 
 p2_kernel <- 
   ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
@@ -231,8 +232,10 @@ data_inflation_kernel <- data_frequency %>%
          residual = residual/100,
          inflation = (observed/predicted - 1),
          inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
-         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
-                                     TRUE ~ "non cutoff")))
+         group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+                                               TRUE ~ "non cutoff")),
+         group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
+                                               TRUE ~ "non cutoff")))
 
 #knitr::kable(data_inflation_kernel)
 
@@ -242,11 +245,24 @@ data_inflation_kernel <- data_frequency %>%
 - There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $\alpha$ = .80 than predicted.
 - There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $\alpha$ = .90 than predicted.
 
-## Permutation test
+## Permutation tests
+
+.70, .80, and .90 against the rest:
 
 ```{r}
 
-independence_test(residual ~ group,
+independence_test(residual ~ group_3_cutoffs,
+                  data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+.70 against the rest:
+
+```{r}
+
+independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_kernel,
                   distribution = "exact",
                   alternative = "greater")
