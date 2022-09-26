@@ -15,7 +15,7 @@ output:
 # TODO
 
 - Once we get access to it:
-  - Do any necessary wrangling 
+  - Do any necessary wrangling, including exclusion variables
   - Reorganise/rename data files/dirs  
   - Add descriptives
 
@@ -43,10 +43,10 @@ library(coin)
 
 ```{r}
 
-data_processed <- read_csv("../../data/processed/data_processed.csv") # TODO Customise to I/O dataset
+data_processed <- read_csv("../../data/processed/data_processed.csv")  # TODO Customise to I/O dataset
 
 data_processed_trimmed <- data_processed |>
-  filter(!is.na(alpha) & exclude_master == FALSE)
+  filter(!is.na(alpha) & exclude_master == FALSE) # TODO Customise to I/O dataset
 
 data_processed_binned <- data_processed_trimmed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
