@@ -109,7 +109,7 @@ paste("proportion of articles with 1+ alpha estimates after exclusions =",
 
 # Kernel smoothing
 
-## Plot
+## Model and plot
 
 ```{r}
 
@@ -229,8 +229,6 @@ data_inflation_kernel <- data_frequency %>%
          residual = residual/100,
          inflation = (observed/predicted - 1),
          inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
-         group_7_cutoffs = as.factor(case_when(alpha %in% c(.60, .65, .70, .75, .80, .85, .90) ~ "cutoff",
-                                               TRUE ~ "non cutoff")),
          group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
                                                TRUE ~ "non cutoff")),
          group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
@@ -266,20 +264,11 @@ independence_test(residual ~ group_1_cutoff,
 
 ```
 
-.60, .65, .70, .75, .80, .85, .90 against the rest (NB this test is more exploratory)
-
-```{r}
-
-independence_test(residual ~ group_7_cutoffs,
-                  data = data_inflation_kernel,
-                  distribution = "approximate",
-                  alternative = "greater")
-
-```
-
 # Beta regression
 
-## Plot
+Beta regression was also explored, but it had many more assumptions and poorer fit (e.g., large degree of unmodelled variance around $\alpha$ of .85 to .95), so it was rejected in favor of kernel smoothing. It is reported here for transparency.
+
+## Model and plot
 
 ```{r}
 
@@ -391,20 +380,35 @@ data_inflation_beta <- data_frequency %>%
          residual = residual/100,
          inflation = (observed/predicted - 1),
          inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
-         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
-                                     TRUE ~ "non cutoff")))
+         group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+                                               TRUE ~ "non cutoff")),
+         group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
+                                               TRUE ~ "non cutoff")))
 
 ```
 
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
-- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_beta$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_beta$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_beta$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
 
 ## Permutation test
 
+.70, .80, and .90 against the rest:
+
 ```{r}
 
-independence_test(residual ~ group,
+independence_test(residual ~ group_3_cutoffs,
+                  data = data_inflation_beta,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+.70 against the rest:
+
+```{r}
+
+independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_beta,
                   distribution = "exact",
                   alternative = "greater")
