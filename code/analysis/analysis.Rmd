@@ -129,10 +129,13 @@ data_frequency_temp <- data_processed_binned %>%
 data_density <- 
   density(data_processed_binned %>%
             pull(alpha),
-          n    = length(seq(0.01, 0.99, 0.01)),
-          from = 0.01,
-          to   = 0.99, 
-          bw   = "nrd0")
+          n      = length(seq(0.01, 0.99, 0.01)),
+          from   = 0.01,
+          to     = 0.99, 
+          kernel = "gaussian",
+          bw     = "nrd0")
+
+data_density
 
 data_frequency <-
   # join the previous two tibbles to create a complete list of alpha bins
