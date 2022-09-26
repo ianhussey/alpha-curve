@@ -1,17 +1,15 @@
-# Alpha curve
+# A excess of barely-reliable Cronbach's α values
 
-## Notes
+## OSF project
 
-.pdf and .txt files scraped from pdfs are not stored on github, only .csv files containing short strings scraped from them.  
+[osf.io/pe3t7](https://osf.io/pe3t7/)
+
+## Manuscript
+
+[Google doc](https://docs.google.com/document/d/1pDF6IWEZVURnWxMWkQBsp05cok4e-0y_TMtlFIebPUU)
+
+## Data
+
+Note that .pdf and .txt files scraped from pdfs are not stored on github, only .csv files containing short strings scraped from them.  
 
 
-
-## Useful Zsh commands for dev
-
-Remove all non-pdf files from a folder. NB you MUST cd to the correct directory first or you risk wiping your hard drive.
-
-```rm -- **/^*.(pdf)(.)```
-
-count number of files in each dir
-
-```du -a | cut -d/ -f2 | sort | uniq -c | sort -nr```
