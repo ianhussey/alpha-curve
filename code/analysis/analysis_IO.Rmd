@@ -93,9 +93,7 @@ data_density <-
           from   = 0.01,
           to     = 0.99, 
           kernel = "gaussian",
-          bw     = "nrd0")
-
-data_density
+          bw     = 0.01) # "nrd0" in the psychology dataset returns 0.01
 
 data_frequency <-
   # join the previous two tibbles to create a complete list of alpha bins
