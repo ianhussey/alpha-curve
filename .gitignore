@@ -9,6 +9,7 @@ old/*
 *.svg
 *.css
 *.jpg
+*.html
 data/raw/psychology/apa_articles/*
 data/raw/psychology/apa_articles_with_personalisation_results.zip
 *.zip
