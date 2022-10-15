@@ -1,0 +1,17 @@
+ref,construct,taxCode,level
+1,Psychological: Other,30085,1
+1,Psychological: Traits,20447,2
+1,Psychological: States,20424,2
+1,Psychological: Values and needs,30097,2
+1,Attitudes: Other,20115,1
+1,Attitudes: Job-targeted,20083,2
+1,Attitudes: Person-targeted,20027,2
+1,Attitudes: Organization-targeted,20061,2
+1,Employee behaviors: Other,30030,1
+1,Employee behaviors: Performance,20228,2
+1,Employee behaviors: Performance: Role performance,30031,3
+1,Employee behaviors: Performance: Extra-role performance,10199,3
+1,Employee behaviors: Performance: Counterproductive WB,20187,3
+1,Employee behaviors: Leadership,20201,2
+1,KSAOs: Other,20379,1
+1,KSAOs: Ability,20375,2

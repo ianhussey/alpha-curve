@@ -1,4 +1,4 @@
-# A excess of barely-reliable Cronbach's α values
+# An excess of barely-reliable Cronbach's α values
 
 ## OSF project
 
@@ -6,5 +6,5 @@
 
 ## Data
 
-Note that .pdf and .txt files scraped from pdfs are not stored on github, only .csv files containing short strings scraped from them.  
+Raw data are not public for copyright and data sharing agreement reasons. Processed data are available.
 
