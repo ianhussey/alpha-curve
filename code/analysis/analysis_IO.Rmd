@@ -14,10 +14,7 @@ output:
 
 # TODO
 
-- Once we get access to it:
-  - Do any necessary wrangling, including exclusion variables
-  - Reorganise/rename data files/dirs  
-  - Add descriptives
+- Add descriptives
 
 ```{r setup, include=FALSE}
 
@@ -31,7 +28,6 @@ knitr::opts_chunk$set(message = FALSE,
 ```{r}
 
 library(tidyverse)
-library(betareg)
 library(broom)
 library(extraDistr)
 library(patchwork)
@@ -43,12 +39,9 @@ library(coin)
 
 ```{r}
 
-data_processed <- read_csv("../../data/processed/data_processed.csv")  # TODO Customise to I/O dataset
+data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
 
-data_processed_trimmed <- data_processed |>
-  filter(!is.na(alpha) & exclude_master == FALSE) # TODO Customise to I/O dataset
-
-data_processed_binned <- data_processed_trimmed %>%
+data_processed_binned <- data_processed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
@@ -126,7 +119,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_trimmed)/100
+total_n <- nrow(data_processed)/100
 
 p1_kernel <-
   data_diff %>%  
@@ -149,7 +142,7 @@ p1_kernel <-
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
        y = "Count") +
-  ylim(0, 1800)
+  ylim(0, 4200)
 
 p2_kernel <- 
   ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
@@ -168,7 +161,7 @@ p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
 p_kernel
 
-ggsave("p_kernel_IO.pdf", 
+ggsave("plots/p_kernel_IO.pdf", 
        plot = p_kernel, 
        width = 6,
        height = 4,

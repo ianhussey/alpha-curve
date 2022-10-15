@@ -37,7 +37,7 @@ library(tidyverse)
 
 ```{r}
 
-data_processed_cutoffs <- read_csv("../../data/processed/data_processed_cutoffs.csv")
+data_processed_cutoffs <- read_csv("../../data/processed/psychology/data_processed_psychology_cutoffs.csv")
 
 data_processed_cutoffs_trimmed <- data_processed_cutoffs |>
   filter(!is.na(alpha) & 

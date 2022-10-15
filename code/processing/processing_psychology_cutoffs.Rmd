@@ -25,7 +25,7 @@ library(httr)
 
 ```{r}
 
-data_extracted <- read_rds("../../data/processed/data_extracted.rds")
+data_extracted <- read_rds("../../data/processed/psychology/data_extracted_psychology.rds")
 
 ```
 
@@ -160,10 +160,8 @@ data_processed_cutoffs <- data_extracted |>
 
 ```{r}
 
-dir.create("../../data/processed")
-
-write_csv(data_processed_cutoffs, "../../data/processed/data_processed_cutoffs.csv")
-#data_processed_cutoffs <- read_csv("../../data/processed/data_processed_cutoffs.csv")
+write_csv(data_processed_cutoffs, "../../data/processed/psychology/data_processed_psychology_cutoffs.csv")
+#data_processed_cutoffs <- read_csv("../../data/processed/psychology/data_processed_psychology_cutoffs.csv")
 
 ```
 

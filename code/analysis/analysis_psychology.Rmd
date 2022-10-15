@@ -40,7 +40,7 @@ library(coin)
 
 ```{r}
 
-data_processed <- read_csv("../../data/processed/data_processed.csv")
+data_processed <- read_csv("../../data/processed/psychology/data_processed_psychology.csv")
 
 data_processed_trimmed <- data_processed |>
   filter(!is.na(alpha) & exclude_master == FALSE)
@@ -208,7 +208,7 @@ p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
 p_kernel
 
-ggsave("p_kernel_psychology.pdf", 
+ggsave("plots/p_kernel_psychology.pdf", 
        plot = p_kernel, 
        width = 6,
        height = 4,
@@ -359,7 +359,7 @@ p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
 p_beta
 
-ggsave("p_beta_psychology.pdf", 
+ggsave("plots/p_beta_psychology.pdf", 
        plot = p_beta, 
        width = 6,
        height = 4,
