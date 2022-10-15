@@ -14,3 +14,4 @@ data/raw/psychology/apa_articles/*
 data/raw/psychology/apa_articles_with_personalisation_results.zip
 *.zip
 data/raw/psychology/data_fulltexts.rds
+data/raw/IO/alphaDb_clean_metaBUS_2018_09_09.rds
