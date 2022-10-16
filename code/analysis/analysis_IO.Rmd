@@ -33,6 +33,8 @@ library(extraDistr)
 library(patchwork)
 library(coin)
 
+dir.create("plots")
+
 ```
 
 # Get data

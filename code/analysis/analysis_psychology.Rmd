@@ -34,6 +34,8 @@ library(extraDistr)
 library(patchwork)
 library(coin)
 
+dir.create("plots")
+
 ```
 
 # Get data
@@ -359,11 +361,11 @@ p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
 p_beta
 
-ggsave("plots/p_beta_psychology.pdf", 
-       plot = p_beta, 
-       width = 6,
-       height = 4,
-       units = "in")
+# ggsave("plots/p_beta_psychology.pdf", 
+#        plot = p_beta, 
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
