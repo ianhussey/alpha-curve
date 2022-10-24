@@ -2,7 +2,6 @@
 *.Rhistory
 
 old/*
-*.pdf
 *.txt
 *.js
 *.gif

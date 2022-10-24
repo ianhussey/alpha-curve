@@ -163,6 +163,8 @@ p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
 p_kernel
 
+write_rds(p_kernel, "plots/p_kernel_IO.rds")
+
 ggsave("plots/p_kernel_IO.pdf", 
        plot = p_kernel, 
        width = 6,
