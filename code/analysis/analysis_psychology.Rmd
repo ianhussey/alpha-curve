@@ -168,7 +168,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_trimmed)/100
+total_n <- nrow(data_processed_binned)/100
 
 p1_kernel <-
   data_diff %>%  
@@ -322,7 +322,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_trimmed)/100
+total_n <- nrow(data_processed_binned)/100
 
 p1_beta <-
   data_diff %>%  
