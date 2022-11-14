@@ -28,6 +28,7 @@ knitr::opts_chunk$set(message = FALSE,
 ```{r}
 
 library(tidyverse)
+library(scales)
 library(betareg)
 library(broom)
 library(extraDistr)
@@ -183,13 +184,13 @@ p1_kernel <-
   geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2) +
   #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
   scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
                     guide = "none") +
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "", #expression("Cronbach's" ~ alpha),
        y = "Count") +
   ylim(0, 1800)
 
@@ -200,7 +201,10 @@ p2_kernel <-
   geom_hline(yintercept = 0, size = 0.2) +
   scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -100, to = 100, by = 25),
+                     labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
@@ -215,6 +219,74 @@ write_rds(p_kernel, "plots/p_kernel_psychology.rds")
 
 ggsave("plots/p_kernel_psychology.pdf", 
        plot = p_kernel, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+### Alt plot
+
+```{r}
+
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+plot_data <- data_processed_binned |>
+  mutate(n_total = n()) |>
+  group_by(alpha) |>
+  summarise(count = sum(!is.na(alpha))) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
+                          alpha %in% c(.69, .79, .89) ~ "Pre cut-off",
+                          TRUE ~ "Other"),
+         type = fct_relevel(type, "Other", "Pre cut-off", "Cut-off")) |>
+  right_join(data_frequency, by = "alpha") |>
+  drop_na()
+
+p1_kernel_alt <-
+  ggplot(plot_data, aes(alpha, y = count, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
+  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = "", # expression("Cronbach's" ~ alpha),
+       y = "Count") +
+  ylim(0, 1800) +
+  theme(legend.position = "none")
+
+p2_kernel_alt <- 
+  ggplot(plot_data, aes(alpha, residual_kernel * total_n, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
+  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom")
+
+p_kernel_alt <- p1_kernel_alt + p2_kernel_alt + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel_alt
+
+write_rds(p_kernel_alt, "plots/p_kernel_psychology_alt.rds")
+
+ggsave("plots/p_kernel_psychology_alt.pdf", 
+       plot = p_kernel_alt, 
        width = 6,
        height = 4,
        units = "in")
@@ -338,13 +410,13 @@ p1_beta <-
   geom_step(aes(y = density_beta * total_n, group = 1), direction = "mid", size = 0.2) +
   #ggrepel::geom_text_repel(aes(y = residual_beta * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_beta*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
   scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
                     guide = "none") +
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "", #expression("Cronbach's" ~ alpha),
        y = "Count")
 
 p2_beta <-
@@ -354,7 +426,10 @@ p2_beta <-
   geom_hline(yintercept = 0, size = 0.2) +
   scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -100, to = 100, by = 25),
+                     labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
   labs(x = expression("Cronbach's" ~ alpha),
