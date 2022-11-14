@@ -133,7 +133,7 @@ p1_kernel <-
   ggplot(., aes(alpha, y = residual_kernel * total_n, fill = type)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(position = "stack") +
-  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2) +
   #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
@@ -150,6 +150,7 @@ p2_kernel <-
   ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
   scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = seq(from = 0, to = 1, by = 0.1),
