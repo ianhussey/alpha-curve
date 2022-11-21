@@ -1,0 +1,1 @@
+From article extractions: “loewenthal (1996) asserts that cronbach’s α ≥ .60 reflects adequate reliability for scales”
