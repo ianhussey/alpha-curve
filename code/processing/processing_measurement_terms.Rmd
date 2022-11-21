@@ -1,0 +1,116 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(stringr)
+library(httr)
+
+```
+
+# Data
+
+```{r}
+
+data_fulltexts <- read_rds("../../data/raw/psychology/data_fulltexts.rds")
+
+```
+
+# Detect strings
+
+```{r}
+
+data_prevalence <- data_fulltexts |> 
+  mutate(
+    validity                     = str_detect(string = text, pattern = regex("validity",                            ignore_case = TRUE)),
+    criterion_validity           = str_detect(string = text, pattern = regex("criterion validity",                  ignore_case = TRUE)),
+    structural_validity          = str_detect(string = text, pattern = regex("structural validity",                 ignore_case = TRUE)),
+    convergent_validity          = str_detect(string = text, pattern = regex("convergent validity"),                ignore_case = TRUE), 
+    discriminant_validity        = str_detect(string = text, pattern = regex("discriminant validity",               ignore_case = TRUE)),
+    construct_validity           = str_detect(string = text, pattern = regex("construct validity",                  ignore_case = TRUE)),
+    face_validity                = str_detect(string = text, pattern = regex("face validity",                       ignore_case = TRUE)),
+    content_validity             = str_detect(string = text, pattern = regex("content validity",                    ignore_case = TRUE)),
+    predictive_validity          = str_detect(string = text, pattern = regex("predictive validity",                 ignore_case = TRUE)),
+    internal_validity            = str_detect(string = text, pattern = regex("internal validity",                   ignore_case = TRUE)),
+    external_validity            = str_detect(string = text, pattern = regex("external validity",                   ignore_case = TRUE)),
+    concurrent_validity          = str_detect(string = text, pattern = regex("concurrent validity",                 ignore_case = TRUE)),
+    
+    reliability                  = str_detect(string = text, pattern = regex("reliability",                         ignore_case = TRUE)),
+    
+    internal_reliability         = str_detect(string = text, pattern = regex("internal reliabilit",                 ignore_case = TRUE)),
+    internal_consistency         = str_detect(string = text, pattern = regex("internal consistenc",                 ignore_case = TRUE)),
+    test_retest                  = str_detect(string = text, pattern = regex("test( |-)retest",                     ignore_case = TRUE)), # new, not in data
+    test_retest_reliability      = str_detect(string = text, pattern = regex("test( |-)retest reliabilit",          ignore_case = TRUE)), # new, not in data
+    split_half                   = str_detect(string = text, pattern = regex("(split half|split-half|splithalf)",   ignore_case = TRUE)), # new, not in data
+    split_half_reliability       = str_detect(string = text, pattern = regex("(split half|split-half|splithalf) reliability", ignore_case = TRUE)), # new, not in data
+    
+    cronbach                     = str_detect(string = text, pattern = regex("cronbach",                            ignore_case = TRUE)),    # new, not in data
+    alpha                        = str_detect(string = text, pattern = regex("(alpha|a|α)",                         ignore_case = TRUE)),   # new, not in data
+    cronbach_alpha               = str_detect(string = text, pattern = regex("cronbach('|’)?s? (alpha|a|α)",        ignore_case = TRUE)),  
+    coefficient_alpha            = str_detect(string = text, pattern = regex("coefficient (alpha|a|α)",             ignore_case = TRUE)),  # new, not in data
+    
+    mcdonalds_omega              = str_detect(string = text, pattern = regex("mcdonald('|’)?s? (omega|ω)",          ignore_case = TRUE)), # new, not in data
+    omega                        = str_detect(string = text, pattern = regex("(omega|ω)",                           ignore_case = TRUE)), # new, not in data
+    
+    factor_analys                = str_detect(string = text, pattern = regex("factor analys",                       ignore_case = TRUE)), # new, not in data
+    exploratory_factor_analys    = str_detect(string = text, pattern = regex("exploratory factor analys",           ignore_case = TRUE)), # new, not in data
+    confirmatory_factor_analys   = str_detect(string = text, pattern = regex("confirmatory factor analys",          ignore_case = TRUE)), # new, not in data
+    network_analys               = str_detect(string = text, pattern = regex("network analys",                      ignore_case = TRUE)), # new, not in data
+    
+    measurement_invarian         = str_detect(string = text, pattern = regex("measurement (non-|non)?invarian)",    ignore_case = TRUE)),
+    
+    factor_structure             = str_detect(string = text, pattern = regex("factor structure",                         ignore_case = TRUE)),  # new, not in data
+    dimensionality               = str_detect(string = text, pattern = regex("dimensionality",                         ignore_case = TRUE)),  # new, not in data
+    unidimensionality            = str_detect(string = text, pattern = regex("unidimensional",                         ignore_case = TRUE)),  # new, not in data
+  ) |>
+  select(-text)
+
+```
+
+# Results
+
+```{r}
+
+data_prevalence |>
+  count()
+
+data_prevalence |>
+  select(-doi) |>
+  summarize_all(mean) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value))
+
+```
+
+# Write to disk
+
+```{r}
+
+write_rds(data_prevalence, "../../data/processed/psychology/data_measurement_terms.rds")
+#data_prevalence <- read_rds("../../data/processed/psychology/data_measurement_terms.rds")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
+
+
