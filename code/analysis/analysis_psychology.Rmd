@@ -29,6 +29,7 @@ knitr::opts_chunk$set(message = FALSE,
 
 library(tidyverse)
 library(scales)
+library(ggtext)
 library(betareg)
 library(broom)
 library(extraDistr)
@@ -82,31 +83,35 @@ data_processed_binned <- data_processed_trimmed %>%
 
 n_doi <- 74470
 
-paste("n articles =", 
-      n_doi)
+cat("n articles =", 
+      n_doi, "\n")
 
 
 n_exclusions <- data_processed |>
   filter(exclude_master == TRUE) |>
-  count(name = "n_exclusions")
+  count(name = "n_exclusions") |>
+  pull(n_exclusions)
 
-paste("n exclusions =", 
-      n_exclusions)
+cat("n exclusions =", n_exclusions, "\n")
 
 
 n_estimates_after_exclusions <- data_processed_trimmed |>
-  count(name = "n_estimates")
+  count(name = "n_estimates") |>
+  pull(n_estimates)
 
-paste("n alpha estimates after exclusions =", 
-      n_estimates_after_exclusions)
+cat("n alpha estimates after exclusions =", 
+      n_estimates_after_exclusions, "\n")
 
 
+dois_with_valid_alpha <- nrow(distinct(data_processed_trimmed, doi))
+
+cat("n articles with 1+ alpha estimate after exclusions = ", dois_with_valid_alpha, "\n")
 
 proportion_with_valid_alpha <- 
-  janitor::round_half_up(nrow(distinct(data_processed_trimmed, doi)) / n_doi, 2)
+  janitor::round_half_up(dois_with_valid_alpha / n_doi*100, 1)
 
-paste("proportion of articles with 1+ alpha estimates after exclusions =",
-      proportion_with_valid_alpha)
+cat("proportion of articles with 1+ alpha estimates after exclusions =",
+      proportion_with_valid_alpha, "\n")
 
 ```
 
@@ -190,8 +195,9 @@ p1_kernel <-
                     guide = "none") +
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
-  labs(x = "", #expression("Cronbach's" ~ alpha),
+  labs(x = "", #"Cronbach's &alpha;",
        y = "Count") +
+  #theme(axis.title.x = element_markdown()) +
   ylim(0, 1800)
 
 p2_kernel <- 
@@ -207,9 +213,10 @@ p2_kernel <-
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "Cronbach's &alpha;",
        y = "Residual") +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        axis.title.x = element_markdown())
 
 p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
@@ -256,7 +263,9 @@ p1_kernel_alt <-
   # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
   labs(x = "", # expression("Cronbach's" ~ alpha),
-       y = "Count") +
+       y = "Count",
+       fill = "") +
+  # theme(axis.title.x = element_markdown()) +
   ylim(0, 1800) +
   theme(legend.position = "none")
 
@@ -274,10 +283,11 @@ p2_kernel_alt <-
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "Cronbach's &alpha;",
        y = "Residual",
        fill = "") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown())
 
 p_kernel_alt <- p1_kernel_alt + p2_kernel_alt + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
@@ -290,6 +300,125 @@ ggsave("plots/p_kernel_psychology_alt.pdf",
        width = 6,
        height = 4,
        units = "in")
+
+```
+
+### Alt Zoom
+
+```{r}
+
+p1_kernel_alt_zoom <-
+  ggplot(plot_data, aes(alpha, y = count, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
+  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.01),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = "", # "Cronbach's &alpha;",
+       y = "Count",
+       fill = "") +
+  ylim(0, 800) +
+  theme(legend.position = "none",
+        axis.title.x = element_markdown()) +
+  coord_cartesian(xlim = c(.6725, .7175)) +
+  annotate("text", 
+           x = .70, 
+           y = plot_data$count[plot_data$alpha == .70] + 120, 
+           label = "Kernel\nsmoothing\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .70, 
+           xend = .70, 
+           y = plot_data$count[plot_data$alpha == .70],  # observed counts
+           yend = total_n * plot_data$density_kernel[plot_data$alpha == .70], # predicted counts
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm"))) +
+  annotate("text", 
+           x = .69, 
+           y = plot_data$count[plot_data$alpha == .70] + 120, 
+           label = "Calliper\ntest\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .69, 
+           xend = .69, 
+           y = plot_data$count[plot_data$alpha == .70],  # observed counts .70
+           yend = plot_data$count[plot_data$alpha == .69], # observed counts .69
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm")))
+
+p2_kernel_alt_zoom <- 
+  ggplot(plot_data, aes(alpha, residual_kernel * total_n, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
+  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.01),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown()) +
+  coord_cartesian(xlim = c(.6725, .7175), ylim = c(-80, 145)) +
+  annotate("text", 
+           x = .70, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .70] + 25, 
+           label = "Kernel\nsmoothing\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .70, 
+           xend = .70, 
+           y = 0,  
+           yend = total_n * plot_data$residual_kernel[plot_data$alpha == .70], # predicted counts
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm"))) +
+  annotate("text", 
+           x = .69, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .70] + 25, 
+           label = "Calliper\ntest\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .69, 
+           xend = .69, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .69],
+           yend = total_n * plot_data$residual_kernel[plot_data$alpha == .70], # residual .69
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm")))
+
+p_kernel_alt_zoom <- p1_kernel_alt_zoom + p2_kernel_alt_zoom + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel_alt_zoom
+
+```
+
+### Combined
+
+```{r}
+
+(p1_kernel_alt + ggtitle("Full range")) +
+  #(p1_kernel_alt_zoom + labs(title = "Subset around &alpha; = .70") + theme(plot.title = element_markdown())) +
+  (p1_kernel_alt_zoom + ggtitle("Subset")) +
+  p2_kernel_alt +
+  p2_kernel_alt_zoom + 
+  plot_layout(nrow = 2, ncol = 2,
+              widths = c(0.6, 0.4, 0.6, 0.4),
+              guides = "collect") &
+  theme(legend.position = 'bottom') 
 
 ```
 
@@ -337,6 +466,108 @@ independence_test(residual ~ group_3_cutoffs,
 
 independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+# Caliper tests
+
+See Gerber et al. (2010) "Publication Bias in Two Political Behavior Literatures"
+
+Using alpha ± 0.01 calipers. 
+
+The usual null hypothesis of no differences cannot be tested against, so instead I calculate over/under ratios for each 0.01 and its neighbour, i.e., ratio = count($\alpha_x$) / count($\alpha_{x-0.01}$). Because very few counts are present in \alpha < .50, which makes the ratios very poorly estimated, I exclude these values. The hypothesis that the ratio for the cut-off score ratio being larger than the ratios calculated from non cut-offs is then tested via permuation test.
+
+## Quantify excess
+
+```{r}
+
+data_caliper <- data_processed_binned %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(count = sum(!is.na(alpha)))
+
+data_caliper |>
+  filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
+  mutate(type = ifelse(alpha %in% c(.70, .80, .90), "threshold", "nonthreshold"),
+         cutoff = case_when(alpha %in% c(.69, .70) ~ .70,
+                            alpha %in% c(.79, .80) ~ .80,
+                            alpha %in% c(.89, .90) ~ .90)) |>
+  select(-alpha) |>
+  pivot_wider(names_from = type, 
+              values_from = count) |>
+  mutate(ratio = threshold/nonthreshold)
+
+data_caliper_all <- data_caliper |>
+  mutate(ratio = count/lag(count),
+         group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+                                               TRUE ~ "non cutoff")),
+         group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
+                                              TRUE ~ "non cutoff")))
+
+```
+
+## Plot
+
+```{r}
+
+cbp2 <- c("#999999", "#56B4E9")
+
+data_caliper_all |>
+  filter(alpha >= .50) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off", 
+                          TRUE ~ "Other"),
+         type = fct_relevel(type, "Other", "Cut-off")) |>
+  #mutate(type = ifelse(ratio > 1, "1", "2")) |>
+  ggplot(aes(x = alpha, y = ratio, fill = type, color = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  #geom_col(position = "stack") +
+  geom_segment(aes(x = alpha,
+                   xend = alpha,
+                   y = 1, 
+                   yend = ratio), size = 3) +
+  #scale_color_viridis_d(direction = -1, begin = 0.2, end = 0.6, option = "plasma") +
+  #scale_color_viridis_d(direction = -1, begin = 0.2, end = 0.55, option = "magma") +
+  scale_color_manual(values = cbp2) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.05),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = 0, to = 2, by = 0.2),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       #y = "Ratio<br />n(&alpha;<sub>i</sub>) / n(&alpha;<sub>i-0.01</sub>)",
+       y = "Calliper test ratio<br />(|&alpha;<sub>i</sub>| / |&alpha;<sub>i-0.01</sub>|)",
+       color = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown(),
+        axis.title.y = element_markdown())
+
+```
+
+Note that $|\alpha_i|$ refers to cardinality (i.e., count) rather than absolute value. Unfortunately these are annotated in the same way using vertical bars. 
+
+## Permutation tests
+
+.70/.69, .80/.79, and .90/.89 against the rest:
+
+```{r}
+
+independence_test(ratio ~ group_3_cutoffs,
+                  data = filter(data_caliper_all, alpha >= .50),
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+.70/.69 against the rest:
+
+```{r}
+
+independence_test(ratio ~ group_1_cutoff,
+                  data = filter(data_caliper_all, alpha >= .50),
                   distribution = "exact",
                   alternative = "greater")
 
@@ -416,7 +647,7 @@ p1_beta <-
                     guide = "none") +
   scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
-  labs(x = "", #expression("Cronbach's" ~ alpha),
+  labs(x = "", #"Cronbach's &alpha;",
        y = "Count")
 
 p2_beta <-
@@ -432,7 +663,7 @@ p2_beta <-
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "Cronbach's &alpha;",
        y = "Residual") +
   theme(legend.position = "none")
 
