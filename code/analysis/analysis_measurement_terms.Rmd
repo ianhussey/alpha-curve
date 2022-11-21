@@ -1,0 +1,230 @@
+---
+title: "Analysis of measurement terms"
+subtitle: "Analyses of Psychology/APA dataset"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(janitor)
+
+```
+
+# Data
+
+```{r}
+
+data_measurement_terms <- read_rds("../../data/processed/psychology/data_measurement_terms.rds")
+
+data_journals_and_fields <- read_rds("../../data/processed/psychology/data_journals_and_fields.rds")
+
+data_combined <- 
+  full_join(data_measurement_terms, data_journals_and_fields, by = "doi") |>
+  mutate(s_validity = ifelse(criterion_validity |
+                               structural_validity |
+                               convergent_validity |
+                               discriminant_validity |
+                               construct_validity |
+                               face_validity |
+                               content_validity |
+                               predictive_validity |
+                               internal_validity |
+                               external_validity |
+                               concurrent_validity, TRUE, FALSE),
+         s_factor = ifelse(factor_analys |
+                             exploratory_factor_analys |
+                             confirmatory_factor_analys |
+                             factor_structure |
+                             dimensionality |
+                             unidimensionality, TRUE, FALSE),
+         s_reliability = ifelse(internal_reliability |
+                                  internal_consistency |
+                                  test_retest |
+                                  test_retest_reliability |
+                                  split_half |
+                                  split_half_reliability |
+                                  cronbach_alpha |
+                                  coefficient_alpha |
+                                  mcdonalds_omega, TRUE, FALSE))
+
+```
+
+# Prevalence
+
+## Categories
+
+```{r}
+
+data_combined |>
+  select(starts_with("s_")) |>
+  summarize_all(mean) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value)) |>
+  drop_na() |>
+  kable() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# validity
+# reliability
+# alpha
+# cronbach
+# omega
+# network_analys
+# measurement_invarian
+
+```
+
+## All
+
+```{r} 
+
+data_combined |>
+  select(-doi) |>
+  summarize_all(mean) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value)) |>
+  drop_na() |>
+  kable() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# Prevalence by subfield
+
+## Categories
+
+```{r}
+
+data_combined |>
+  select(starts_with("s_"), field) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  select(field, reliability = s_reliability, 
+         validity = s_validity, 
+         factor_structure = s_factor) |>
+  arrange(desc(reliability)) |>
+  drop_na() |>
+  kable() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+n_articles <- data_combined |>
+  select(starts_with("s_"), field) |>
+  count(field)
+
+data_combined |>
+  select(starts_with("s_"), field) |>
+  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  left_join(n_articles, by = "field") |>
+  select(Subfield = field, 
+         `N articles` = n,
+         Reliability = s_reliability, 
+         Validity = s_validity, 
+         `Factor structure` = s_factor) |>
+  arrange(desc(Reliability)) |>
+  drop_na()|>
+  #column_to_rownames(var = "field") |>
+  kable() |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 2, "Percent of articles" = 3))
+
+data_combined |>
+  select(starts_with("s_"), field) |>
+  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  left_join(n_articles, by = "field") |>
+  select(Subfield = field, 
+         `N articles` = n,
+         Reliability = s_reliability, 
+         Validity = s_validity) |>
+  arrange(desc(Reliability)) |>
+  drop_na()|>
+  #column_to_rownames(var = "field") |>
+  kable() |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 2, "Percent of articles" = 2))
+
+# validity
+# reliability
+# alpha
+# cronbach
+# omega
+# network_analys
+# measurement_invarian
+
+```
+
+## All
+
+```{r} 
+
+data_combined |>
+  select(-doi) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  #mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  drop_na() |>
+  kable() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+data_combined |>
+  select(-doi) |>
+  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
+  select(field, 
+         `Cronbach's alpha` = cronbach_alpha, 
+         `Split-half reliability` = split_half) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  arrange(desc(`Cronbach's alpha`)) |>
+  drop_na()|>
+  #column_to_rownames(var = "field") |>
+  kable() |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 1, "Percent of articles" = 2))
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
