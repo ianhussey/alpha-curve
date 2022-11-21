@@ -1,0 +1,395 @@
+---
+title: "Alpha curve"
+subtitle: "Analyses"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(betareg)
+library(broom)
+library(extraDistr)
+library(patchwork)
+library(coin)
+
+```
+
+# Get data
+
+```{r}
+
+data_processed <- read_csv("../../data/processed/data_processed_trt.csv")
+
+data_processed_trimmed <- data_processed |>
+  filter(!is.na(alpha) & 
+           exclude_master == FALSE &
+           regex_label != "α") # excluded as they include many estimates other than alpha values
+
+data_processed_binned <- data_processed_trimmed %>%
+  # round the alpha values to 2 decimal places, using standard rounding method
+  # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
+  # nb none present in dataset
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha)) 
+
+# df <- data_processed_binned |>
+#   filter(alpha == .70)
+
+```
+
+# Descriptives
+
+```{r}
+
+# data_fulltexts <-
+#   tibble(filename = list.files("../../data/apa_articles",
+#                                pattern    = "*.txt",
+#                                recursive  = TRUE,
+#                                full.names = TRUE))
+# 
+# n_doi <- nrow(data_fulltexts)
+# n_doi$n_doi
+# # [1] 74470
+
+n_doi <- 74470
+
+paste("n articles =", 
+      n_doi)
+
+
+n_exclusions <- data_processed |>
+  filter(exclude_master == TRUE) |>
+  count(name = "n_exclusions")
+
+paste("n exclusions =", 
+      n_exclusions)
+
+
+n_estimates_after_exclusions <- data_processed_trimmed |>
+  count(name = "n_estimates")
+
+paste("n alpha estimates after exclusions =", 
+      n_estimates_after_exclusions)
+
+
+
+proportion_with_valid_alpha <- 
+  janitor::round_half_up(nrow(distinct(data_processed_trimmed, doi)) / n_doi, 2)
+
+paste("proportion of articles with 1+ alpha estimates after exclusions =",
+      proportion_with_valid_alpha)
+
+```
+
+# Kernel smoothing
+
+## Plot
+
+```{r}
+
+# create tibble containing all alpha bins, for a later join
+all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
+                     freq = 0,
+                     missing = TRUE)
+
+data_frequency_temp <- data_processed_binned %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
+  # convert alpha to character to facilitate a join later
+  mutate(alpha = as.character(alpha))
+
+# kernel density estimation
+data_density <- 
+  density(data_processed_binned %>%
+            pull(alpha),
+          n    = length(seq(0.01, 0.99, 0.01)),
+          from = 0.01,
+          to   = 0.99, 
+          bw   = 0.03)
+
+data_frequency <-
+  # join the previous two tibbles to create a complete list of alpha bins
+  data_frequency_temp %>%
+  bind_rows(all_alphas %>% anti_join(data_frequency_temp, by = "alpha")) %>%
+  arrange(alpha, desc(freq)) %>%
+  distinct(alpha, .keep_all = TRUE) %>%
+  mutate(density_kernel = data_density$y,
+         missing = ifelse(is.na(missing), FALSE, missing)) %>%
+  mutate(residual_kernel = freq*100 - density_kernel,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+data_diff <- data_frequency %>%
+  mutate(frequency = freq*100,
+         frequency_without_residual_kernel = if_else(residual_kernel > 0, frequency - residual_kernel, frequency),
+         pos_resid_kernel = residual_kernel > 0,
+         residual_kernel = if_else(residual_kernel > 0, residual_kernel, -1 * residual_kernel)) %>%
+  dplyr::select(alpha,
+                #fitted,
+                density_kernel,
+                pos_resid_kernel,
+                frequency_without_residual_kernel,
+                residual_kernel) %>%
+  pivot_longer(names_to = "type",
+               values_to = "residual_kernel",
+               c(frequency_without_residual_kernel, residual_kernel))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1_kernel <-
+  data_diff %>%  
+  mutate(type = factor(case_when(
+    type == "frequency_without_residual_kernel" ~ "3",
+    pos_resid_kernel ~ "2",
+    TRUE ~ "1"))
+  ) %>% 
+  ggplot(., aes(alpha, y = residual_kernel * total_n, fill = type)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid") +
+  #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
+                    guide = "none") +
+  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Count")
+
+p2_kernel <- 
+  ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+
+p_kernel
+
+ggsave("p_kernel.pdf", 
+       plot = p_kernel, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+## Quantify excess 
+
+```{r}
+
+data_inflation_kernel <- data_frequency %>%
+  filter(missing == FALSE) %>%
+  #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
+  dplyr::select(alpha, 
+                observed = freq, 
+                predicted = density_kernel, 
+                residual = residual_kernel) %>%
+  mutate(predicted = predicted/100,
+         residual = residual/100,
+         inflation = (observed/predicted - 1),
+         inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
+         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+                                     TRUE ~ "non cutoff")))
+
+#knitr::kable(data_inflation_kernel)
+
+```
+
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+
+## Permutation test
+
+```{r}
+
+independence_test(residual ~ group,
+                  data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+# Beta regression
+
+## Plot
+
+```{r}
+
+# solution from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients
+
+model_beta <- data_processed_binned %>%
+  betareg(alpha ~ 1 | 1, 
+          link = "logit",
+          data = .)
+
+beta_mu_intercept <- model_beta %>%
+  tidy() %>%
+  filter(component == "mean", term == "(Intercept)") %>%
+  pull(estimate)
+
+beta_phi_intercept <- model_beta %>%
+  tidy() %>%
+  filter(component == "precision", term == "(Intercept)") %>%
+  pull(estimate)
+
+data_frequency$density_beta <-
+  extraDistr::dprop(x = data_frequency$alpha,
+                    size = exp(beta_phi_intercept),
+                    mean = plogis(beta_mu_intercept))
+
+data_frequency <- data_frequency %>%
+  mutate(residual_beta = freq*100 - density_beta,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+data_diff <- data_frequency %>%
+  mutate(frequency = 100*freq,
+         frequency_without_residual_beta = if_else(residual_beta > 0, frequency - residual_beta, frequency),
+         pos_resid_beta = residual_beta > 0,
+         residual_beta = if_else(residual_beta > 0, residual_beta, -1 * residual_beta)) %>%
+  dplyr::select(alpha,
+                density_beta,
+                pos_resid_beta,
+                frequency_without_residual_beta,
+                residual_beta) %>%
+  pivot_longer(names_to = "type",
+               values_to = "residual_beta",
+               c(frequency_without_residual_beta, residual_beta))
+
+
+color_1 <- scales::viridis_pal()(11)[3]
+color_2 <- scales::viridis_pal()(11)[7]
+
+total_n <- nrow(data_processed_trimmed)/100
+
+p1_beta <-
+  data_diff %>%  
+  mutate(type = factor(case_when(
+    type == "frequency_without_residual_beta" ~ "3",
+    pos_resid_beta ~ "2",
+    TRUE ~ "1"))
+  ) %>%
+  ggplot(., aes(alpha, y = residual_beta * total_n, fill = type)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_beta * total_n, group = 1), direction = "mid") +
+  #ggrepel::geom_text_repel(aes(y = residual_beta * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_beta*total_n), NA_real_)), position = "stack") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
+                    guide = "none") +
+  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Count")
+
+p2_beta <-
+  ggplot(data_frequency, aes(alpha, residual_beta * total_n, fill = residual_beta > 0)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = seq(from = 0, to = 1, by = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = expression("Cronbach's" ~ alpha),
+       y = "Residual") +
+  theme(legend.position = "none")
+
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.7, 0.3))
+
+p_beta
+
+ggsave("p_beta.pdf", 
+       plot = p_beta, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+## Quantify excess 
+
+```{r}
+
+data_inflation_beta <- data_frequency %>%
+  filter(missing == FALSE) %>%
+  #filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) %>%
+  dplyr::select(alpha, 
+                observed = freq, 
+                predicted = density_beta, 
+                residual = residual_beta) %>%
+  mutate(predicted = predicted/100,
+         residual = residual/100,
+         inflation = (observed/predicted - 1),
+         inflation_for_reporting = janitor::round_half_up(inflation*100, digits = 0),
+         group = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
+                                     TRUE ~ "non cutoff")))
+
+#knitr::kable(data_inflation_beta)
+
+```
+
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $a$ = .70 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.80]`% more observations of Cronbach's $a$ = .80 than predicted.
+- There were `r data_inflation_beta$inflation_for_reporting[data_inflation_kernel$alpha == 0.90]`% more observations of Cronbach's $a$ = .90 than predicted.
+
+## Permutation test
+
+```{r}
+
+independence_test(residual ~ group,
+                  data = data_inflation_beta,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
