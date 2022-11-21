@@ -346,7 +346,7 @@ j_other <- c(
 data_journals_and_fields <- data_journals |>
   mutate(field = case_when(
     journal %in% j_behaviorism ~ "behaviorism",
-    journal %in% j_clincial ~ "clincial",
+    journal %in% j_clincial ~ "clinical",
     journal %in% j_personality_and_social ~ "personality/social",
     journal %in% j_developmental ~ "developmental",
     journal %in% j_educational ~ "educational",
