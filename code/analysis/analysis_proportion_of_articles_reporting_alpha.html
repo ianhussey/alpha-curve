@@ -3193,9 +3193,9 @@ journal of theoretical and philosophical psychology
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(field, alpha) <span class="sc">|&gt;</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">n_articles =</span> <span class="fu">sum</span>(n),</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">percent_with_alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(n[alpha<span class="sc">==</span><span class="cn">TRUE</span>]<span class="sc">/</span><span class="fu">sum</span>(n)<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">percent_reporting_cronbachs_alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(n[alpha<span class="sc">==</span><span class="cn">TRUE</span>]<span class="sc">/</span><span class="fu">sum</span>(n)<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), </span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(percent_with_alpha))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(percent_reporting_cronbachs_alpha))</span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>summary_fields <span class="sc">|&gt;</span></span>
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
@@ -3210,7 +3210,7 @@ field
 n_articles
 </th>
 <th style="text-align:right;">
-percent_with_alpha
+percent_reporting_cronbachs_alpha
 </th>
 </tr>
 </thead>
@@ -3382,11 +3382,110 @@ history/philosophy
 </tr>
 </tbody>
 </table>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>summary_fields <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;clincial&quot;</span>, <span class="st">&quot;personality/social&quot;</span>, <span class="st">&quot;cognitive&quot;</span>, <span class="st">&quot;developmental&quot;</span>, <span class="st">&quot;educational&quot;</span>, <span class="st">&quot;applied&quot;</span>, <span class="st">&quot;cognitive/experimental&quot;</span>, <span class="st">&quot;health&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">journal_category =</span> field) <span class="sc">|&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+journal_category
+</th>
+<th style="text-align:right;">
+n_articles
+</th>
+<th style="text-align:right;">
+percent_reporting_cronbachs_alpha
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+health
+</td>
+<td style="text-align:right;">
+2831
+</td>
+<td style="text-align:right;">
+33.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+personality/social
+</td>
+<td style="text-align:right;">
+4522
+</td>
+<td style="text-align:right;">
+30.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+applied
+</td>
+<td style="text-align:right;">
+2785
+</td>
+<td style="text-align:right;">
+29.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+educational
+</td>
+<td style="text-align:right;">
+2126
+</td>
+<td style="text-align:right;">
+26.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+clincial
+</td>
+<td style="text-align:right;">
+17225
+</td>
+<td style="text-align:right;">
+21.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+developmental
+</td>
+<td style="text-align:right;">
+3295
+</td>
+<td style="text-align:right;">
+19.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+cognitive/experimental
+</td>
+<td style="text-align:right;">
+9236
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div id="session-info" class="section level1">
 <h1>Session info</h1>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.2.1 (2022-06-23)
 ## Platform: aarch64-apple-darwin20 (64-bit)
 ## Running under: macOS Monterey 12.6

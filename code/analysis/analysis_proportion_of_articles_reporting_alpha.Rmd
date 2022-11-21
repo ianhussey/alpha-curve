@@ -431,11 +431,17 @@ summary_fields <- data_journals_alphas_fields |>
   count(field, alpha) |>
   group_by(field) |>
   summarize(n_articles = sum(n),
-            percent_with_alpha = janitor::round_half_up(n[alpha==TRUE]/sum(n)*100, 1), 
+            percent_reporting_cronbachs_alpha = janitor::round_half_up(n[alpha==TRUE]/sum(n)*100, 1), 
             .groups = "drop") |>
-  arrange(desc(percent_with_alpha))
+  arrange(desc(percent_reporting_cronbachs_alpha))
 
 summary_fields |>
+  kable() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+summary_fields |>
+  filter(field %in% c("clincial", "personality/social", "cognitive", "developmental", "educational", "applied", "cognitive/experimental", "health")) |>
+  rename(journal_category = field) |>
   kable() |>
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
