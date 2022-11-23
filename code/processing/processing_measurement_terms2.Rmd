@@ -1,0 +1,84 @@
+---
+title: "Data extraction"
+output: html_document
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(stringr)
+library(httr)
+
+```
+
+# Data
+
+```{r}
+
+data_fulltexts <- read_rds("../../data/raw/psychology/data_fulltexts.rds")
+
+```
+
+# Detect strings
+
+```{r}
+
+data_measurement_terms <- data_fulltexts |> 
+  mutate(
+    icc = str_detect(string = text, pattern = "icc"),
+    replic = str_detect(string = text, pattern = "replic"),
+    robust = str_detect(string = text, pattern = "robust"),
+    boundary_condition = str_detect(string = text, pattern = "boundary condition"),
+    mediat = str_detect(string = text, pattern = "mediat"),
+    moderat = str_detect(string = text, pattern = "moderat"),
+    cause = str_detect(string = text, pattern = "cause"),
+    causal = str_detect(string = text, pattern = "causal")
+  ) |>
+  select(-text)
+
+```
+
+# Results
+
+```{r}
+
+data_measurement_terms |>
+  count()
+
+data_measurement_terms |>
+  select(-doi) |>
+  summarize_all(mean) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value))
+
+```
+
+# Write to disk
+
+```{r}
+
+write_rds(data_measurement_terms, "../../data/processed/psychology/data_measurement_terms2.rds")
+#data_measurement_terms <- read_rds("../../data/processed/psychology/data_measurement_terms2.rds")
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
+
+
