@@ -41,8 +41,13 @@ data_measurement_terms <- data_fulltexts |>
     boundary_condition = str_detect(string = text, pattern = "boundary condition"),
     mediat = str_detect(string = text, pattern = "mediat"),
     moderat = str_detect(string = text, pattern = "moderat"),
-    cause = str_detect(string = text, pattern = "cause"),
-    causal = str_detect(string = text, pattern = "causal")
+    cause = str_detect(string = text, pattern = "(cause|causal)"),
+    confound = str_detect(string = text, pattern = "confound"),
+    collider = str_detect(string = text, pattern = "collider"),
+    hypothesi = str_detect(string = text, pattern = "hypothesi"),
+    theory = str_detect(string = text, pattern = "(theory|theori)"),
+    model = str_detect(string = text, pattern = "model"),
+    analys = str_detect(string = text, pattern = "analys")
   ) |>
   select(-text)
 
