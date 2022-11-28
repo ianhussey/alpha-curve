@@ -38,7 +38,10 @@ library(janitor)
 
 ```{r}
 
-data_measurement_terms <- read_rds("../../data/processed/psychology/data_measurement_terms.rds")
+data_measurement_terms <-
+  left_join(read_rds("../../data/processed/psychology/data_measurement_terms.rds"),
+            read_rds("../../data/processed/psychology/data_measurement_terms2.rds"),
+            by = "doi")
 
 data_journals_and_fields <- read_rds("../../data/processed/psychology/data_journals_and_fields.rds")
 
@@ -69,7 +72,8 @@ data_combined <-
                                   split_half_reliability |
                                   cronbach_alpha |
                                   coefficient_alpha |
-                                  mcdonalds_omega, TRUE, FALSE))
+                                  mcdonalds_omega |
+                                  icc, TRUE, FALSE))
 
 ```
 
@@ -103,13 +107,16 @@ data_combined |>
 
 ```{r} 
 
-data_combined |>
+results_prevalence_all <- 
+  data_combined |>
   select(-doi) |>
   summarize_all(mean) |>
   mutate_all(round, digits = 2) |>
   gather() |>
   arrange(desc(value)) |>
-  drop_na() |>
+  drop_na() 
+
+results_prevalence_all |>
   kable() |>
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
@@ -127,7 +134,8 @@ data_combined |>
   summarize_all(mean) |>
   mutate_if(is.numeric, function(x)x*100) |>
   mutate_if(is.numeric, round, digits = 1) |>
-  select(field, reliability = s_reliability, 
+  select(field, 
+         reliability = s_reliability, 
          validity = s_validity, 
          factor_structure = s_factor) |>
   arrange(desc(reliability)) |>
@@ -192,13 +200,15 @@ data_combined |>
 
 ```{r} 
 
-data_combined |>
-  select(-doi) |>
+results_prevalence_subfield <- data_combined |>
+  select(-doi, -journal) |>
   group_by(field) |>
   summarize_all(mean) |>
-  #mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, function(x)x*100) |>
   mutate_if(is.numeric, round, digits = 1) |>
-  drop_na() |>
+  drop_na() 
+
+results_prevalence_subfield |>
   kable() |>
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
