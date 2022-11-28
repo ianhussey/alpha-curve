@@ -1893,7 +1893,7 @@ border-radius: 0px;
 <h1 class="title toc-ignore">Analysis of measurement terms</h1>
 <h3 class="subtitle">Analyses of Psychology/APA dataset</h3>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">21 November, 2022</h4>
+<h4 class="date">28 November, 2022</h4>
 
 </div>
 
@@ -1913,110 +1913,65 @@ border-radius: 0px;
 </div>
 <div id="data" class="section level1">
 <h1>Data</h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_measurement_terms <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/psychology/data_measurement_terms.rds&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data_journals_and_fields <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/psychology/data_journals_and_fields.rds&quot;</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>data_combined <span class="ot">&lt;-</span> </span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(data_measurement_terms, data_journals_and_fields, <span class="at">by =</span> <span class="st">&quot;doi&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">s_validity =</span> <span class="fu">ifelse</span>(criterion_validity <span class="sc">|</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                               structural_validity <span class="sc">|</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                               convergent_validity <span class="sc">|</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                               discriminant_validity <span class="sc">|</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                               construct_validity <span class="sc">|</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                               face_validity <span class="sc">|</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                               content_validity <span class="sc">|</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                               predictive_validity <span class="sc">|</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                               internal_validity <span class="sc">|</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                               external_validity <span class="sc">|</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                               concurrent_validity, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>         <span class="at">s_factor =</span> <span class="fu">ifelse</span>(factor_analys <span class="sc">|</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                             exploratory_factor_analys <span class="sc">|</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                             confirmatory_factor_analys <span class="sc">|</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                             factor_structure <span class="sc">|</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                             dimensionality <span class="sc">|</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                             unidimensionality, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">s_reliability =</span> <span class="fu">ifelse</span>(internal_reliability <span class="sc">|</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                                  internal_consistency <span class="sc">|</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                                  test_retest <span class="sc">|</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                                  test_retest_reliability <span class="sc">|</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                                  split_half <span class="sc">|</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                                  split_half_reliability <span class="sc">|</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                                  cronbach_alpha <span class="sc">|</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>                                  coefficient_alpha <span class="sc">|</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>                                  mcdonalds_omega, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_measurement_terms <span class="ot">&lt;-</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(<span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/psychology/data_measurement_terms.rds&quot;</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/psychology/data_measurement_terms2.rds&quot;</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">by =</span> <span class="st">&quot;doi&quot;</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>data_journals_and_fields <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/psychology/data_journals_and_fields.rds&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>data_combined <span class="ot">&lt;-</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(data_measurement_terms, data_journals_and_fields, <span class="at">by =</span> <span class="st">&quot;doi&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">field =</span> <span class="fu">str_to_title</span>(field)) <span class="sc">|&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">summary_reliability =</span> <span class="fu">ifelse</span>(internal_reliability <span class="sc">|</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                        internal_consistency <span class="sc">|</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                                        test_retest <span class="sc">|</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                                        test_retest_reliability <span class="sc">|</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                                        split_half <span class="sc">|</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                                        split_half_reliability <span class="sc">|</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>                                        cronbach_alpha <span class="sc">|</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                                        coefficient_alpha <span class="sc">|</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                                        mcdonalds_omega <span class="sc">|</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                                        icc, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">summary_validity =</span> <span class="fu">ifelse</span>(criterion_validity <span class="sc">|</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                                     structural_validity <span class="sc">|</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                                     convergent_validity <span class="sc">|</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                                     discriminant_validity <span class="sc">|</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                                     construct_validity <span class="sc">|</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                                     face_validity <span class="sc">|</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                                     content_validity <span class="sc">|</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                                     predictive_validity <span class="sc">|</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                                     internal_validity <span class="sc">|</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                                     external_validity <span class="sc">|</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>                                     concurrent_validity <span class="sc">|</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>                                     dimensionality <span class="sc">|</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>                                     unidimensionality, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>         <span class="at">summary_either =</span> <span class="fu">ifelse</span>(summary_reliability <span class="sc">|</span> summary_validity, </span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                                 <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>         <span class="at">summary_factor =</span> <span class="fu">ifelse</span>(factor_analys <span class="sc">|</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>                                   exploratory_factor_analys <span class="sc">|</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>                                   confirmatory_factor_analys <span class="sc">|</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                                   factor_structure, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>),</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>         <span class="at">summary_any =</span> <span class="fu">ifelse</span>(summary_reliability <span class="sc">|</span> summary_validity <span class="sc">|</span> summary_factor, </span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>                              <span class="cn">TRUE</span>, <span class="cn">FALSE</span>))</span></code></pre></div>
 </div>
 <div id="prevalence" class="section level1">
 <h1>Prevalence</h1>
-<div id="categories" class="section level2">
-<h2>Categories</h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;s_&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(round, <span class="at">digits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(value)) <span class="sc">|&gt;</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-key
-</th>
-<th style="text-align:right;">
-value
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-s_reliability
-</td>
-<td style="text-align:right;">
-0.27
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-s_validity
-</td>
-<td style="text-align:right;">
-0.24
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-s_factor
-</td>
-<td style="text-align:right;">
-0.22
-</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validity</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># reliability</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># cronbach</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># omega</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># network_analys</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># measurement_invarian</span></span></code></pre></div>
-</div>
 <div id="all" class="section level2">
 <h2>All</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi) <span class="sc">|&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(round, <span class="at">digits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>() <span class="sc">|&gt;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(value)) <span class="sc">|&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">|&gt;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>results_prevalence_all <span class="ot">&lt;-</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  data_combined <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi) <span class="sc">|&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(round, <span class="at">digits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(value)) <span class="sc">|&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>results_prevalence_all <span class="sc">|&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -2038,10 +1993,82 @@ alpha
 </tr>
 <tr>
 <td style="text-align:left;">
+cause
+</td>
+<td style="text-align:right;">
+0.91
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+analys
+</td>
+<td style="text-align:right;">
+0.89
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+model
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+theory
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mediat
+</td>
+<td style="text-align:right;">
+0.63
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hypothesi
+</td>
+<td style="text-align:right;">
+0.62
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 validity
 </td>
 <td style="text-align:right;">
 0.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_any
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+0.44
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+replic
+</td>
+<td style="text-align:right;">
+0.42
 </td>
 </tr>
 <tr>
@@ -2054,7 +2081,23 @@ reliability
 </tr>
 <tr>
 <td style="text-align:left;">
-s_reliability
+summary_either
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_reliability
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_validity
 </td>
 <td style="text-align:right;">
 0.27
@@ -2062,18 +2105,26 @@ s_reliability
 </tr>
 <tr>
 <td style="text-align:left;">
-s_validity
+robust
 </td>
 <td style="text-align:right;">
-0.24
+0.23
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-s_factor
+confound
 </td>
 <td style="text-align:right;">
-0.22
+0.21
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_factor
+</td>
+<td style="text-align:right;">
+0.19
 </td>
 </tr>
 <tr>
@@ -2119,6 +2170,14 @@ construct_validity
 <tr>
 <td style="text-align:left;">
 factor_structure
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+icc
 </td>
 <td style="text-align:right;">
 0.09
@@ -2254,6 +2313,14 @@ omega
 </tr>
 <tr>
 <td style="text-align:left;">
+boundary_condition
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 criterion_validity
 </td>
 <td style="text-align:right;">
@@ -2316,582 +2383,107 @@ network_analys
 0.00
 </td>
 </tr>
+<tr>
+<td style="text-align:left;">
+collider
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
 </tbody>
 </table>
+</div>
+<div id="categories" class="section level2">
+<h2>Categories</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;summary_&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_all</span>(round, <span class="at">digits =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(value)) <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+key
+</th>
+<th style="text-align:right;">
+value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+summary_any
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_either
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_reliability
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_validity
+</td>
+<td style="text-align:right;">
+0.27
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+summary_factor
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validity</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># reliability</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># cronbach</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># omega</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># network_analys</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># measurement_invarian</span></span></code></pre></div>
 </div>
 </div>
 <div id="prevalence-by-subfield" class="section level1">
 <h1>Prevalence by subfield</h1>
-<div id="categories-1" class="section level2">
-<h2>Categories</h2>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;s_&quot;</span>), field) <span class="sc">|&gt;</span></span>
+<div id="all-1" class="section level2">
+<h2>All</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>results_prevalence_subfield <span class="ot">&lt;-</span> data_combined <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi, <span class="sc">-</span>journal) <span class="sc">|&gt;</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(field, <span class="at">reliability =</span> s_reliability, </span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">validity =</span> s_validity, </span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">factor_structure =</span> s_factor) <span class="sc">|&gt;</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(reliability)) <span class="sc">|&gt;</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">|&gt;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-field
-</th>
-<th style="text-align:right;">
-reliability
-</th>
-<th style="text-align:right;">
-validity
-</th>
-<th style="text-align:right;">
-factor_structure
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-health
-</td>
-<td style="text-align:right;">
-49.2
-</td>
-<td style="text-align:right;">
-30.2
-</td>
-<td style="text-align:right;">
-28.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-applied
-</td>
-<td style="text-align:right;">
-47.4
-</td>
-<td style="text-align:right;">
-50.2
-</td>
-<td style="text-align:right;">
-44.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-regional/diversity
-</td>
-<td style="text-align:right;">
-46.2
-</td>
-<td style="text-align:right;">
-33.6
-</td>
-<td style="text-align:right;">
-36.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-educational
-</td>
-<td style="text-align:right;">
-44.0
-</td>
-<td style="text-align:right;">
-30.6
-</td>
-<td style="text-align:right;">
-33.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personality/social
-</td>
-<td style="text-align:right;">
-43.1
-</td>
-<td style="text-align:right;">
-34.9
-</td>
-<td style="text-align:right;">
-35.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-clinical
-</td>
-<td style="text-align:right;">
-36.2
-</td>
-<td style="text-align:right;">
-35.2
-</td>
-<td style="text-align:right;">
-27.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-developmental
-</td>
-<td style="text-align:right;">
-32.9
-</td>
-<td style="text-align:right;">
-21.5
-</td>
-<td style="text-align:right;">
-23.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-other
-</td>
-<td style="text-align:right;">
-30.7
-</td>
-<td style="text-align:right;">
-23.7
-</td>
-<td style="text-align:right;">
-20.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-methods
-</td>
-<td style="text-align:right;">
-30.5
-</td>
-<td style="text-align:right;">
-22.1
-</td>
-<td style="text-align:right;">
-45.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-review
-</td>
-<td style="text-align:right;">
-11.4
-</td>
-<td style="text-align:right;">
-21.3
-</td>
-<td style="text-align:right;">
-24.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cognitive/experimental
-</td>
-<td style="text-align:right;">
-8.4
-</td>
-<td style="text-align:right;">
-6.7
-</td>
-<td style="text-align:right;">
-10.4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-general
-</td>
-<td style="text-align:right;">
-6.8
-</td>
-<td style="text-align:right;">
-13.0
-</td>
-<td style="text-align:right;">
-9.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-neuro
-</td>
-<td style="text-align:right;">
-4.9
-</td>
-<td style="text-align:right;">
-6.4
-</td>
-<td style="text-align:right;">
-8.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-history/philosophy
-</td>
-<td style="text-align:right;">
-1.3
-</td>
-<td style="text-align:right;">
-2.9
-</td>
-<td style="text-align:right;">
-3.7
-</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>n_articles <span class="ot">&lt;-</span> data_combined <span class="sc">|&gt;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;s_&quot;</span>), field) <span class="sc">|&gt;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(field)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;s_&quot;</span>), field) <span class="sc">|&gt;</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;health&quot;</span>, <span class="st">&quot;personality/social&quot;</span>, <span class="st">&quot;applied&quot;</span>, <span class="st">&quot;educational&quot;</span>, <span class="st">&quot;clinical&quot;</span>, <span class="st">&quot;developmental&quot;</span>, <span class="st">&quot;cognitive/experimental&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(n_articles, <span class="at">by =</span> <span class="st">&quot;field&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">Subfield =</span> field, </span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">N articles</span><span class="st">`</span> <span class="ot">=</span> n,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">Reliability =</span> s_reliability, </span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">Validity =</span> s_validity, </span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Factor structure</span><span class="st">`</span> <span class="ot">=</span> s_factor) <span class="sc">|&gt;</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(Reliability)) <span class="sc">|&gt;</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()<span class="sc">|&gt;</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">#column_to_rownames(var = &quot;field&quot;) |&gt;</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">3</span>))</span></code></pre></div>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>results_prevalence_subfield <span class="sc">|&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 <table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="empty-cells: hide;" colspan="2">
-</th>
-<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
-<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
-Percent of articles
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:left;">
-Subfield
-</th>
-<th style="text-align:right;">
-N articles
-</th>
-<th style="text-align:right;">
-Reliability
-</th>
-<th style="text-align:right;">
-Validity
-</th>
-<th style="text-align:right;">
-Factor structure
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-health
-</td>
-<td style="text-align:right;">
-2831
-</td>
-<td style="text-align:right;">
-49.2
-</td>
-<td style="text-align:right;">
-30.2
-</td>
-<td style="text-align:right;">
-28.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-applied
-</td>
-<td style="text-align:right;">
-2785
-</td>
-<td style="text-align:right;">
-47.4
-</td>
-<td style="text-align:right;">
-50.2
-</td>
-<td style="text-align:right;">
-44.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-educational
-</td>
-<td style="text-align:right;">
-2126
-</td>
-<td style="text-align:right;">
-44.0
-</td>
-<td style="text-align:right;">
-30.6
-</td>
-<td style="text-align:right;">
-33.3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personality/social
-</td>
-<td style="text-align:right;">
-4522
-</td>
-<td style="text-align:right;">
-43.1
-</td>
-<td style="text-align:right;">
-34.9
-</td>
-<td style="text-align:right;">
-35.7
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-clinical
-</td>
-<td style="text-align:right;">
-17225
-</td>
-<td style="text-align:right;">
-36.2
-</td>
-<td style="text-align:right;">
-35.2
-</td>
-<td style="text-align:right;">
-27.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-developmental
-</td>
-<td style="text-align:right;">
-3295
-</td>
-<td style="text-align:right;">
-32.9
-</td>
-<td style="text-align:right;">
-21.5
-</td>
-<td style="text-align:right;">
-23.8
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cognitive/experimental
-</td>
-<td style="text-align:right;">
-9236
-</td>
-<td style="text-align:right;">
-8.4
-</td>
-<td style="text-align:right;">
-6.7
-</td>
-<td style="text-align:right;">
-10.4
-</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;s_&quot;</span>), field) <span class="sc">|&gt;</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;health&quot;</span>, <span class="st">&quot;personality/social&quot;</span>, <span class="st">&quot;applied&quot;</span>, <span class="st">&quot;educational&quot;</span>, <span class="st">&quot;clinical&quot;</span>, <span class="st">&quot;developmental&quot;</span>, <span class="st">&quot;cognitive/experimental&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(n_articles, <span class="at">by =</span> <span class="st">&quot;field&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">Subfield =</span> field, </span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">N articles</span><span class="st">`</span> <span class="ot">=</span> n,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">Reliability =</span> s_reliability, </span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">Validity =</span> s_validity) <span class="sc">|&gt;</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(Reliability)) <span class="sc">|&gt;</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()<span class="sc">|&gt;</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">#column_to_rownames(var = &quot;field&quot;) |&gt;</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">2</span>))</span></code></pre></div>
-<table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="empty-cells: hide;" colspan="2">
-</th>
-<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
-<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
-Percent of articles
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:left;">
-Subfield
-</th>
-<th style="text-align:right;">
-N articles
-</th>
-<th style="text-align:right;">
-Reliability
-</th>
-<th style="text-align:right;">
-Validity
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-health
-</td>
-<td style="text-align:right;">
-2831
-</td>
-<td style="text-align:right;">
-49.2
-</td>
-<td style="text-align:right;">
-30.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-applied
-</td>
-<td style="text-align:right;">
-2785
-</td>
-<td style="text-align:right;">
-47.4
-</td>
-<td style="text-align:right;">
-50.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-educational
-</td>
-<td style="text-align:right;">
-2126
-</td>
-<td style="text-align:right;">
-44.0
-</td>
-<td style="text-align:right;">
-30.6
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-personality/social
-</td>
-<td style="text-align:right;">
-4522
-</td>
-<td style="text-align:right;">
-43.1
-</td>
-<td style="text-align:right;">
-34.9
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-clinical
-</td>
-<td style="text-align:right;">
-17225
-</td>
-<td style="text-align:right;">
-36.2
-</td>
-<td style="text-align:right;">
-35.2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-developmental
-</td>
-<td style="text-align:right;">
-3295
-</td>
-<td style="text-align:right;">
-32.9
-</td>
-<td style="text-align:right;">
-21.5
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-cognitive/experimental
-</td>
-<td style="text-align:right;">
-9236
-</td>
-<td style="text-align:right;">
-8.4
-</td>
-<td style="text-align:right;">
-6.7
-</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validity</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># reliability</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># alpha</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># cronbach</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># omega</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># network_analys</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># measurement_invarian</span></span></code></pre></div>
-</div>
-<div id="all-1" class="section level2">
-<h2>All</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi) <span class="sc">|&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#mutate_if(is.numeric, function(x)x*100) |&gt;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>() <span class="sc">|&gt;</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
-<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -2997,40 +2589,2292 @@ dimensionality
 unidimensionality
 </th>
 <th style="text-align:right;">
-journal
+icc
 </th>
 <th style="text-align:right;">
-s_validity
+replic
 </th>
 <th style="text-align:right;">
-s_factor
+robust
 </th>
 <th style="text-align:right;">
-s_reliability
+boundary_condition
+</th>
+<th style="text-align:right;">
+mediat
+</th>
+<th style="text-align:right;">
+moderat
+</th>
+<th style="text-align:right;">
+cause
+</th>
+<th style="text-align:right;">
+confound
+</th>
+<th style="text-align:right;">
+collider
+</th>
+<th style="text-align:right;">
+hypothesi
+</th>
+<th style="text-align:right;">
+theory
+</th>
+<th style="text-align:right;">
+model
+</th>
+<th style="text-align:right;">
+analys
+</th>
+<th style="text-align:right;">
+summary_reliability
+</th>
+<th style="text-align:right;">
+summary_validity
+</th>
+<th style="text-align:right;">
+summary_either
+</th>
+<th style="text-align:right;">
+summary_factor
+</th>
+<th style="text-align:right;">
+summary_any
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td style="text-align:left;">
+Applied
+</td>
+<td style="text-align:right;">
+71.8
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+8.6
+</td>
+<td style="text-align:right;">
+15.6
+</td>
+<td style="text-align:right;">
+22.2
+</td>
+<td style="text-align:right;">
+4.6
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+14.2
+</td>
+<td style="text-align:right;">
+5.9
+</td>
+<td style="text-align:right;">
+10.9
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+63.7
+</td>
+<td style="text-align:right;">
+2.4
+</td>
+<td style="text-align:right;">
+23.8
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+23.5
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+17.4
+</td>
+<td style="text-align:right;">
+20.8
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+3.3
+</td>
+<td style="text-align:right;">
+35.8
+</td>
+<td style="text-align:right;">
+7.4
+</td>
+<td style="text-align:right;">
+22.6
+</td>
+<td style="text-align:right;">
+2.0
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+17.1
+</td>
+<td style="text-align:right;">
+14.8
+</td>
+<td style="text-align:right;">
+7.6
+</td>
+<td style="text-align:right;">
+14.3
+</td>
+<td style="text-align:right;">
+48.4
+</td>
+<td style="text-align:right;">
+24.9
+</td>
+<td style="text-align:right;">
+11.6
+</td>
+<td style="text-align:right;">
+67.4
+</td>
+<td style="text-align:right;">
+71.5
+</td>
+<td style="text-align:right;">
+97.5
+</td>
+<td style="text-align:right;">
+24.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+78.8
+</td>
+<td style="text-align:right;">
+86.4
+</td>
+<td style="text-align:right;">
+90.9
+</td>
+<td style="text-align:right;">
+96.3
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+<td style="text-align:right;">
+55.5
+</td>
+<td style="text-align:right;">
+72.7
+</td>
+<td style="text-align:right;">
+39.5
+</td>
+<td style="text-align:right;">
+76.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Clinical
+</td>
+<td style="text-align:right;">
+56.8
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:right;">
+10.0
+</td>
+<td style="text-align:right;">
+15.3
+</td>
+<td style="text-align:right;">
+2.7
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+9.1
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+6.9
+</td>
+<td style="text-align:right;">
+51.6
+</td>
+<td style="text-align:right;">
+3.3
+</td>
+<td style="text-align:right;">
+26.9
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+4.6
+</td>
+<td style="text-align:right;">
+2.0
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+16.6
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+14.7
+</td>
+<td style="text-align:right;">
+9.2
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+21.5
+</td>
+<td style="text-align:right;">
+5.4
+</td>
+<td style="text-align:right;">
+10.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+15.2
+</td>
+<td style="text-align:right;">
+4.8
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+10.2
+</td>
+<td style="text-align:right;">
+39.8
+</td>
+<td style="text-align:right;">
+21.0
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+56.8
+</td>
+<td style="text-align:right;">
+49.5
+</td>
+<td style="text-align:right;">
+91.4
+</td>
+<td style="text-align:right;">
+18.5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+55.2
+</td>
+<td style="text-align:right;">
+73.0
+</td>
+<td style="text-align:right;">
+79.9
+</td>
+<td style="text-align:right;">
+89.3
+</td>
+<td style="text-align:right;">
+40.5
+</td>
+<td style="text-align:right;">
+37.4
+</td>
+<td style="text-align:right;">
+51.7
+</td>
+<td style="text-align:right;">
+25.8
+</td>
+<td style="text-align:right;">
+54.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cognitive/Experimental
+</td>
+<td style="text-align:right;">
+27.9
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+22.1
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+2.0
+</td>
+<td style="text-align:right;">
+3.2
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+67.8
+</td>
+<td style="text-align:right;">
+37.5
+</td>
+<td style="text-align:right;">
+6.3
+</td>
+<td style="text-align:right;">
+78.6
+</td>
+<td style="text-align:right;">
+28.9
+</td>
+<td style="text-align:right;">
+97.0
+</td>
+<td style="text-align:right;">
+31.5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+80.6
+</td>
+<td style="text-align:right;">
+85.2
+</td>
+<td style="text-align:right;">
+88.8
+</td>
+<td style="text-align:right;">
+96.7
+</td>
+<td style="text-align:right;">
+11.4
+</td>
+<td style="text-align:right;">
+11.6
+</td>
+<td style="text-align:right;">
+19.6
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+22.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Developmental
+</td>
+<td style="text-align:right;">
+42.8
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+8.0
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+2.5
+</td>
+<td style="text-align:right;">
+59.2
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+19.0
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:right;">
+2.2
+</td>
+<td style="text-align:right;">
+2.5
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+17.8
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+16.8
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+19.1
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+7.0
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:right;">
+7.9
+</td>
+<td style="text-align:right;">
+3.0
+</td>
+<td style="text-align:right;">
+3.6
+</td>
+<td style="text-align:right;">
+16.8
+</td>
+<td style="text-align:right;">
+50.2
+</td>
+<td style="text-align:right;">
+29.8
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+70.7
+</td>
+<td style="text-align:right;">
+52.0
+</td>
+<td style="text-align:right;">
+97.7
+</td>
+<td style="text-align:right;">
+27.5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+75.7
+</td>
+<td style="text-align:right;">
+80.3
+</td>
+<td style="text-align:right;">
+84.3
+</td>
+<td style="text-align:right;">
+97.2
+</td>
+<td style="text-align:right;">
+41.2
+</td>
+<td style="text-align:right;">
+24.7
+</td>
+<td style="text-align:right;">
+48.9
+</td>
+<td style="text-align:right;">
+20.9
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Educational
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+5.2
+</td>
+<td style="text-align:right;">
+14.3
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:right;">
+2.7
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+3.4
+</td>
+<td style="text-align:right;">
+60.7
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+24.1
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:right;">
+6.4
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+25.4
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+22.6
+</td>
+<td style="text-align:right;">
+9.2
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+27.6
+</td>
+<td style="text-align:right;">
+5.6
+</td>
+<td style="text-align:right;">
+14.2
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+<td style="text-align:right;">
+11.3
+</td>
+<td style="text-align:right;">
+8.6
+</td>
+<td style="text-align:right;">
+6.4
+</td>
+<td style="text-align:right;">
+7.7
+</td>
+<td style="text-align:right;">
+47.1
+</td>
+<td style="text-align:right;">
+23.2
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+72.2
+</td>
+<td style="text-align:right;">
+52.4
+</td>
+<td style="text-align:right;">
+97.5
+</td>
+<td style="text-align:right;">
+24.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+72.8
+</td>
+<td style="text-align:right;">
+84.0
+</td>
+<td style="text-align:right;">
+87.2
+</td>
+<td style="text-align:right;">
+96.4
+</td>
+<td style="text-align:right;">
+46.6
+</td>
+<td style="text-align:right;">
+35.4
+</td>
+<td style="text-align:right;">
+57.8
+</td>
+<td style="text-align:right;">
+29.3
+</td>
+<td style="text-align:right;">
+62.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+General
+</td>
+<td style="text-align:right;">
+30.0
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+3.6
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+3.4
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+17.5
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+4.1
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+2.0
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+6.8
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+3.6
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+5.0
+</td>
+<td style="text-align:right;">
+19.7
+</td>
+<td style="text-align:right;">
+9.8
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+41.8
+</td>
+<td style="text-align:right;">
+21.1
+</td>
+<td style="text-align:right;">
+77.8
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+30.0
+</td>
+<td style="text-align:right;">
+62.0
+</td>
+<td style="text-align:right;">
+61.7
+</td>
+<td style="text-align:right;">
+68.5
+</td>
+<td style="text-align:right;">
+10.8
+</td>
+<td style="text-align:right;">
+14.5
+</td>
+<td style="text-align:right;">
+20.0
+</td>
+<td style="text-align:right;">
+8.1
+</td>
+<td style="text-align:right;">
+22.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Health
+</td>
+<td style="text-align:right;">
+57.0
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+4.9
+</td>
+<td style="text-align:right;">
+6.7
+</td>
+<td style="text-align:right;">
+11.8
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+6.8
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+2.4
+</td>
+<td style="text-align:right;">
+54.0
+</td>
+<td style="text-align:right;">
+5.5
+</td>
+<td style="text-align:right;">
+26.8
+</td>
+<td style="text-align:right;">
+5.5
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+28.4
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+27.2
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+22.7
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+11.8
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+10.8
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+4.0
+</td>
+<td style="text-align:right;">
+8.4
+</td>
+<td style="text-align:right;">
+41.0
+</td>
+<td style="text-align:right;">
+20.2
+</td>
+<td style="text-align:right;">
+2.1
+</td>
+<td style="text-align:right;">
+73.7
+</td>
+<td style="text-align:right;">
+69.7
+</td>
+<td style="text-align:right;">
+95.9
+</td>
+<td style="text-align:right;">
+28.7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+74.9
+</td>
+<td style="text-align:right;">
+70.0
+</td>
+<td style="text-align:right;">
+88.9
+</td>
+<td style="text-align:right;">
+95.9
+</td>
+<td style="text-align:right;">
+52.5
+</td>
+<td style="text-align:right;">
+33.6
+</td>
+<td style="text-align:right;">
+62.3
+</td>
+<td style="text-align:right;">
+25.8
+</td>
+<td style="text-align:right;">
+66.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+History/Philosophy
+</td>
+<td style="text-align:right;">
+22.3
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+9.5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+3.1
+</td>
+<td style="text-align:right;">
+13.0
+</td>
+<td style="text-align:right;">
+7.5
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+51.5
+</td>
+<td style="text-align:right;">
+10.7
+</td>
+<td style="text-align:right;">
+85.7
+</td>
+<td style="text-align:right;">
+6.0
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+30.2
+</td>
+<td style="text-align:right;">
+84.5
+</td>
+<td style="text-align:right;">
+61.6
+</td>
+<td style="text-align:right;">
+77.5
+</td>
+<td style="text-align:right;">
+4.2
+</td>
+<td style="text-align:right;">
+4.2
+</td>
+<td style="text-align:right;">
+7.5
+</td>
+<td style="text-align:right;">
+2.2
+</td>
+<td style="text-align:right;">
+9.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Methods
+</td>
+<td style="text-align:right;">
+55.5
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+3.9
+</td>
+<td style="text-align:right;">
+10.6
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+3.6
+</td>
+<td style="text-align:right;">
+5.3
+</td>
+<td style="text-align:right;">
+6.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+40.5
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+11.6
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+2.2
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+17.0
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+8.3
+</td>
+<td style="text-align:right;">
+21.3
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+15.0
+</td>
+<td style="text-align:right;">
+37.6
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:right;">
+20.4
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+7.3
+</td>
+<td style="text-align:right;">
+10.6
+</td>
+<td style="text-align:right;">
+14.8
+</td>
+<td style="text-align:right;">
+15.3
+</td>
+<td style="text-align:right;">
+16.2
+</td>
+<td style="text-align:right;">
+55.2
+</td>
+<td style="text-align:right;">
+44.5
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+44.6
+</td>
+<td style="text-align:right;">
+57.8
+</td>
+<td style="text-align:right;">
+97.8
+</td>
+<td style="text-align:right;">
+29.6
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+79.2
+</td>
+<td style="text-align:right;">
+86.5
+</td>
+<td style="text-align:right;">
+93.9
+</td>
+<td style="text-align:right;">
+98.0
+</td>
+<td style="text-align:right;">
+41.2
+</td>
+<td style="text-align:right;">
+35.8
+</td>
+<td style="text-align:right;">
+58.8
+</td>
+<td style="text-align:right;">
+39.5
+</td>
+<td style="text-align:right;">
+69.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neuro
+</td>
+<td style="text-align:right;">
+20.3
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+<td style="text-align:right;">
+20.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+6.4
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+2.4
+</td>
+<td style="text-align:right;">
+0.9
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+9.4
+</td>
+<td style="text-align:right;">
+35.1
+</td>
+<td style="text-align:right;">
+27.9
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+84.6
+</td>
+<td style="text-align:right;">
+30.7
+</td>
+<td style="text-align:right;">
+96.0
+</td>
+<td style="text-align:right;">
+24.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+69.7
+</td>
+<td style="text-align:right;">
+47.7
+</td>
+<td style="text-align:right;">
+78.0
+</td>
+<td style="text-align:right;">
+96.6
+</td>
+<td style="text-align:right;">
+13.7
+</td>
+<td style="text-align:right;">
+7.5
+</td>
+<td style="text-align:right;">
+19.2
+</td>
+<td style="text-align:right;">
+7.5
+</td>
+<td style="text-align:right;">
+23.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Other
+</td>
+<td style="text-align:right;">
+44.9
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+4.8
+</td>
+<td style="text-align:right;">
+9.6
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+5.9
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+3.6
+</td>
+<td style="text-align:right;">
+3.3
+</td>
+<td style="text-align:right;">
+43.9
+</td>
+<td style="text-align:right;">
+3.5
+</td>
+<td style="text-align:right;">
+18.7
+</td>
+<td style="text-align:right;">
+5.8
+</td>
+<td style="text-align:right;">
+4.1
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+17.9
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+15.9
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+15.7
+</td>
+<td style="text-align:right;">
+3.3
+</td>
+<td style="text-align:right;">
+6.2
+</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+8.6
+</td>
+<td style="text-align:right;">
+3.1
+</td>
+<td style="text-align:right;">
+3.2
+</td>
+<td style="text-align:right;">
+9.1
+</td>
+<td style="text-align:right;">
+33.2
+</td>
+<td style="text-align:right;">
+16.7
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+57.5
+</td>
+<td style="text-align:right;">
+43.6
+</td>
+<td style="text-align:right;">
+90.8
+</td>
+<td style="text-align:right;">
+16.1
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+55.1
+</td>
+<td style="text-align:right;">
+66.8
+</td>
+<td style="text-align:right;">
+75.4
+</td>
+<td style="text-align:right;">
+87.1
+</td>
+<td style="text-align:right;">
+35.0
+</td>
+<td style="text-align:right;">
+26.1
+</td>
+<td style="text-align:right;">
+43.6
+</td>
+<td style="text-align:right;">
+18.6
+</td>
+<td style="text-align:right;">
+46.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Personality/Social
+</td>
+<td style="text-align:right;">
+61.1
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+7.9
+</td>
+<td style="text-align:right;">
+12.0
+</td>
+<td style="text-align:right;">
+14.2
+</td>
+<td style="text-align:right;">
+3.1
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+8.5
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+5.3
+</td>
+<td style="text-align:right;">
+1.6
+</td>
+<td style="text-align:right;">
+58.2
+</td>
+<td style="text-align:right;">
+5.4
+</td>
+<td style="text-align:right;">
+22.0
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+2.7
+</td>
+<td style="text-align:right;">
+2.5
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+25.9
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+21.6
+</td>
+<td style="text-align:right;">
+11.4
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+28.8
+</td>
+<td style="text-align:right;">
+4.2
+</td>
+<td style="text-align:right;">
+7.6
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+1.2
+</td>
+<td style="text-align:right;">
+14.3
+</td>
+<td style="text-align:right;">
+6.1
+</td>
+<td style="text-align:right;">
+5.9
+</td>
+<td style="text-align:right;">
+7.1
+</td>
+<td style="text-align:right;">
+73.4
+</td>
+<td style="text-align:right;">
+32.6
+</td>
+<td style="text-align:right;">
+6.1
+</td>
+<td style="text-align:right;">
+78.9
+</td>
+<td style="text-align:right;">
+76.3
+</td>
+<td style="text-align:right;">
+98.1
+</td>
+<td style="text-align:right;">
+33.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+89.3
+</td>
+<td style="text-align:right;">
+94.2
+</td>
+<td style="text-align:right;">
+91.3
+</td>
+<td style="text-align:right;">
+98.0
+</td>
+<td style="text-align:right;">
+46.0
+</td>
+<td style="text-align:right;">
+39.2
+</td>
+<td style="text-align:right;">
+60.0
+</td>
+<td style="text-align:right;">
+32.5
+</td>
+<td style="text-align:right;">
+65.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Regional/Diversity
+</td>
+<td style="text-align:right;">
+55.1
+</td>
+<td style="text-align:right;">
+2.7
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+8.1
+</td>
+<td style="text-align:right;">
+7.3
+</td>
+<td style="text-align:right;">
+18.6
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+1.8
+</td>
+<td style="text-align:right;">
+5.6
+</td>
+<td style="text-align:right;">
+2.3
+</td>
+<td style="text-align:right;">
+4.8
+</td>
+<td style="text-align:right;">
+8.4
+</td>
+<td style="text-align:right;">
+55.0
+</td>
+<td style="text-align:right;">
+7.8
+</td>
+<td style="text-align:right;">
+31.5
+</td>
+<td style="text-align:right;">
+3.7
+</td>
+<td style="text-align:right;">
+3.1
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+29.5
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+28.2
+</td>
+<td style="text-align:right;">
+9.5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+26.8
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:right;">
+12.6
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+17.9
+</td>
+<td style="text-align:right;">
+5.5
+</td>
+<td style="text-align:right;">
+7.8
+</td>
+<td style="text-align:right;">
+5.9
+</td>
+<td style="text-align:right;">
+30.3
+</td>
+<td style="text-align:right;">
+16.4
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+54.1
+</td>
+<td style="text-align:right;">
+57.3
+</td>
+<td style="text-align:right;">
+92.6
+</td>
+<td style="text-align:right;">
+15.2
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+63.4
+</td>
+<td style="text-align:right;">
+79.6
+</td>
+<td style="text-align:right;">
+84.4
+</td>
+<td style="text-align:right;">
+86.3
+</td>
+<td style="text-align:right;">
+48.4
+</td>
+<td style="text-align:right;">
+38.4
+</td>
+<td style="text-align:right;">
+57.1
+</td>
+<td style="text-align:right;">
+32.0
+</td>
+<td style="text-align:right;">
+61.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Review
+</td>
+<td style="text-align:right;">
+52.7
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+2.9
+</td>
+<td style="text-align:right;">
+4.8
+</td>
+<td style="text-align:right;">
+9.2
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+6.4
+</td>
+<td style="text-align:right;">
+2.6
+</td>
+<td style="text-align:right;">
+4.2
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+35.3
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+5.1
+</td>
+<td style="text-align:right;">
+1.5
+</td>
+<td style="text-align:right;">
+1.1
+</td>
+<td style="text-align:right;">
+0.8
+</td>
+<td style="text-align:right;">
+0.5
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+2.4
+</td>
+<td style="text-align:right;">
+3.9
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+4.6
+</td>
+<td style="text-align:right;">
+13.6
+</td>
+<td style="text-align:right;">
+1.9
+</td>
+<td style="text-align:right;">
+3.8
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+6.1
+</td>
+<td style="text-align:right;">
+8.2
+</td>
+<td style="text-align:right;">
+7.1
+</td>
+<td style="text-align:right;">
+13.3
+</td>
+<td style="text-align:right;">
+55.9
+</td>
+<td style="text-align:right;">
+40.3
+</td>
+<td style="text-align:right;">
+7.2
+</td>
+<td style="text-align:right;">
+75.8
+</td>
+<td style="text-align:right;">
+53.5
+</td>
+<td style="text-align:right;">
+97.2
+</td>
+<td style="text-align:right;">
+36.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+82.1
+</td>
+<td style="text-align:right;">
+93.9
+</td>
+<td style="text-align:right;">
+93.4
+</td>
+<td style="text-align:right;">
+94.7
+</td>
+<td style="text-align:right;">
+23.2
+</td>
+<td style="text-align:right;">
+29.9
+</td>
+<td style="text-align:right;">
+41.6
+</td>
+<td style="text-align:right;">
+15.6
+</td>
+<td style="text-align:right;">
+46.0
+</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi) <span class="sc">|&gt;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;health&quot;</span>, <span class="st">&quot;personality/social&quot;</span>, <span class="st">&quot;applied&quot;</span>, <span class="st">&quot;educational&quot;</span>, <span class="st">&quot;clinical&quot;</span>, <span class="st">&quot;developmental&quot;</span>, <span class="st">&quot;cognitive/experimental&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(field, </span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Cronbach&#39;s alpha</span><span class="st">`</span> <span class="ot">=</span> cronbach_alpha, </span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Split-half reliability</span><span class="st">`</span> <span class="ot">=</span> split_half) <span class="sc">|&gt;</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="st">`</span><span class="at">Cronbach&#39;s alpha</span><span class="st">`</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()<span class="sc">|&gt;</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#column_to_rownames(var = &quot;field&quot;) |&gt;</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">2</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>data_combined <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>doi) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Health&quot;</span>, <span class="st">&quot;Personality/Social&quot;</span>, <span class="st">&quot;Applied&quot;</span>, <span class="st">&quot;Educational&quot;</span>, <span class="st">&quot;Clinical&quot;</span>, <span class="st">&quot;Developmental&quot;</span>, <span class="st">&quot;Cognitive/Experimental&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(field, </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Cronbach&#39;s alpha</span><span class="st">`</span> <span class="ot">=</span> cronbach_alpha, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Split-half reliability</span><span class="st">`</span> <span class="ot">=</span> split_half) <span class="sc">|&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="st">`</span><span class="at">Cronbach&#39;s alpha</span><span class="st">`</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()<span class="sc">|&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#column_to_rownames(var = &quot;field&quot;) |&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">1</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">2</span>))</span></code></pre></div>
 <table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -3057,7 +4901,7 @@ Split-half reliability
 <tbody>
 <tr>
 <td style="text-align:left;">
-health
+Health
 </td>
 <td style="text-align:right;">
 27.2
@@ -3068,7 +4912,7 @@ health
 </tr>
 <tr>
 <td style="text-align:left;">
-educational
+Educational
 </td>
 <td style="text-align:right;">
 22.6
@@ -3079,7 +4923,7 @@ educational
 </tr>
 <tr>
 <td style="text-align:left;">
-personality/social
+Personality/Social
 </td>
 <td style="text-align:right;">
 21.6
@@ -3090,7 +4934,7 @@ personality/social
 </tr>
 <tr>
 <td style="text-align:left;">
-applied
+Applied
 </td>
 <td style="text-align:right;">
 17.4
@@ -3101,7 +4945,7 @@ applied
 </tr>
 <tr>
 <td style="text-align:left;">
-developmental
+Developmental
 </td>
 <td style="text-align:right;">
 16.8
@@ -3112,7 +4956,7 @@ developmental
 </tr>
 <tr>
 <td style="text-align:left;">
-clinical
+Clinical
 </td>
 <td style="text-align:right;">
 14.7
@@ -3123,7 +4967,7 @@ clinical
 </tr>
 <tr>
 <td style="text-align:left;">
-cognitive/experimental
+Cognitive/Experimental
 </td>
 <td style="text-align:right;">
 3.7
@@ -3135,13 +4979,378 @@ cognitive/experimental
 </tbody>
 </table>
 </div>
+<div id="categories-1" class="section level2">
+<h2>Categories</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>n_articles <span class="ot">&lt;-</span> data_combined <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;summary_&quot;</span>), field) <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(field)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>results_subfield_categories <span class="ot">&lt;-</span> data_combined <span class="sc">|&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;summary_&quot;</span>), field) <span class="sc">|&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(field <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Health&quot;</span>, <span class="st">&quot;Personality/Social&quot;</span>, <span class="st">&quot;Applied&quot;</span>, <span class="st">&quot;Educational&quot;</span>, <span class="st">&quot;Clinical&quot;</span>, <span class="st">&quot;Developmental&quot;</span>, <span class="st">&quot;Cognitive/Experimental&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(field) <span class="sc">|&gt;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize_all</span>(mean) <span class="sc">|&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, <span class="cf">function</span>(x)x<span class="sc">*</span><span class="dv">100</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_if</span>(is.numeric, round, <span class="at">digits =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(n_articles, <span class="at">by =</span> <span class="st">&quot;field&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">Subfield =</span> field, </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">N articles</span><span class="st">`</span> <span class="ot">=</span> n,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">Reliability =</span> summary_reliability, </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">Validity =</span> summary_validity, </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">Either =</span> summary_either,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Factor structure</span><span class="st">`</span> <span class="ot">=</span> summary_factor,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">Any =</span> summary_any) <span class="sc">|&gt;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>()</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># table for reliability, validity, and either</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>results_subfield_categories <span class="sc">|&gt;</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="st">`</span><span class="at">Factor structure</span><span class="st">`</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>         <span class="sc">-</span>Any) <span class="sc">|&gt;</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(Either)) <span class="sc">|&gt;</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">&quot;Subfield&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">3</span>))</span></code></pre></div>
+<table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="2">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="3">
+<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
+Percent of articles
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+N articles
+</th>
+<th style="text-align:right;">
+Reliability
+</th>
+<th style="text-align:right;">
+Validity
+</th>
+<th style="text-align:right;">
+Either
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Applied
+</td>
+<td style="text-align:right;">
+2785
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+<td style="text-align:right;">
+55.5
+</td>
+<td style="text-align:right;">
+72.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Health
+</td>
+<td style="text-align:right;">
+2831
+</td>
+<td style="text-align:right;">
+52.5
+</td>
+<td style="text-align:right;">
+33.6
+</td>
+<td style="text-align:right;">
+62.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Personality/Social
+</td>
+<td style="text-align:right;">
+4522
+</td>
+<td style="text-align:right;">
+46.0
+</td>
+<td style="text-align:right;">
+39.2
+</td>
+<td style="text-align:right;">
+60.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Educational
+</td>
+<td style="text-align:right;">
+2126
+</td>
+<td style="text-align:right;">
+46.6
+</td>
+<td style="text-align:right;">
+35.4
+</td>
+<td style="text-align:right;">
+57.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Clinical
+</td>
+<td style="text-align:right;">
+17225
+</td>
+<td style="text-align:right;">
+40.5
+</td>
+<td style="text-align:right;">
+37.4
+</td>
+<td style="text-align:right;">
+51.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Developmental
+</td>
+<td style="text-align:right;">
+3295
+</td>
+<td style="text-align:right;">
+41.2
+</td>
+<td style="text-align:right;">
+24.7
+</td>
+<td style="text-align:right;">
+48.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cognitive/Experimental
+</td>
+<td style="text-align:right;">
+9236
+</td>
+<td style="text-align:right;">
+11.4
+</td>
+<td style="text-align:right;">
+11.6
+</td>
+<td style="text-align:right;">
+19.6
+</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># table for reliability, valdiity, factor structure, and any of the three</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>results_subfield_categories <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Either) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(Any)) <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">&quot;Subfield&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_header_above</span>(<span class="fu">c</span>(<span class="st">&quot; &quot;</span> <span class="ot">=</span> <span class="dv">2</span>, <span class="st">&quot;Percent of articles&quot;</span> <span class="ot">=</span> <span class="dv">4</span>))</span></code></pre></div>
+<table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="empty-cells: hide;" colspan="2">
+</th>
+<th style="padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #111111; margin-bottom: -1px; ">
+Percent of articles
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+N articles
+</th>
+<th style="text-align:right;">
+Reliability
+</th>
+<th style="text-align:right;">
+Validity
+</th>
+<th style="text-align:right;">
+Factor structure
+</th>
+<th style="text-align:right;">
+Any
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Applied
+</td>
+<td style="text-align:right;">
+2785
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+<td style="text-align:right;">
+55.5
+</td>
+<td style="text-align:right;">
+39.5
+</td>
+<td style="text-align:right;">
+76.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Health
+</td>
+<td style="text-align:right;">
+2831
+</td>
+<td style="text-align:right;">
+52.5
+</td>
+<td style="text-align:right;">
+33.6
+</td>
+<td style="text-align:right;">
+25.8
+</td>
+<td style="text-align:right;">
+66.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Personality/Social
+</td>
+<td style="text-align:right;">
+4522
+</td>
+<td style="text-align:right;">
+46.0
+</td>
+<td style="text-align:right;">
+39.2
+</td>
+<td style="text-align:right;">
+32.5
+</td>
+<td style="text-align:right;">
+65.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Educational
+</td>
+<td style="text-align:right;">
+2126
+</td>
+<td style="text-align:right;">
+46.6
+</td>
+<td style="text-align:right;">
+35.4
+</td>
+<td style="text-align:right;">
+29.3
+</td>
+<td style="text-align:right;">
+62.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Clinical
+</td>
+<td style="text-align:right;">
+17225
+</td>
+<td style="text-align:right;">
+40.5
+</td>
+<td style="text-align:right;">
+37.4
+</td>
+<td style="text-align:right;">
+25.8
+</td>
+<td style="text-align:right;">
+54.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Developmental
+</td>
+<td style="text-align:right;">
+3295
+</td>
+<td style="text-align:right;">
+41.2
+</td>
+<td style="text-align:right;">
+24.7
+</td>
+<td style="text-align:right;">
+20.9
+</td>
+<td style="text-align:right;">
+52.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cognitive/Experimental
+</td>
+<td style="text-align:right;">
+9236
+</td>
+<td style="text-align:right;">
+11.4
+</td>
+<td style="text-align:right;">
+11.6
+</td>
+<td style="text-align:right;">
+5.7
+</td>
+<td style="text-align:right;">
+22.2
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div id="session-info" class="section level1">
 <h1>Session info</h1>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.2.1 (2022-06-23)
 ## Platform: aarch64-apple-darwin20 (64-bit)
-## Running under: macOS Monterey 12.6
+## Running under: macOS Ventura 13.0.1
 ## 
 ## Matrix products: default
 ## BLAS:   /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/lib/libRblas.0.dylib

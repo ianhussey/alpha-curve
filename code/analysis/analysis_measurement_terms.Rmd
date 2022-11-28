@@ -47,61 +47,42 @@ data_journals_and_fields <- read_rds("../../data/processed/psychology/data_journ
 
 data_combined <- 
   full_join(data_measurement_terms, data_journals_and_fields, by = "doi") |>
-  mutate(s_validity = ifelse(criterion_validity |
-                               structural_validity |
-                               convergent_validity |
-                               discriminant_validity |
-                               construct_validity |
-                               face_validity |
-                               content_validity |
-                               predictive_validity |
-                               internal_validity |
-                               external_validity |
-                               concurrent_validity, TRUE, FALSE),
-         s_factor = ifelse(factor_analys |
-                             exploratory_factor_analys |
-                             confirmatory_factor_analys |
-                             factor_structure |
-                             dimensionality |
-                             unidimensionality, TRUE, FALSE),
-         s_reliability = ifelse(internal_reliability |
-                                  internal_consistency |
-                                  test_retest |
-                                  test_retest_reliability |
-                                  split_half |
-                                  split_half_reliability |
-                                  cronbach_alpha |
-                                  coefficient_alpha |
-                                  mcdonalds_omega |
-                                  icc, TRUE, FALSE))
+  mutate(field = str_to_title(field)) |>
+  mutate(summary_reliability = ifelse(internal_reliability |
+                                        internal_consistency |
+                                        test_retest |
+                                        test_retest_reliability |
+                                        split_half |
+                                        split_half_reliability |
+                                        cronbach_alpha |
+                                        coefficient_alpha |
+                                        mcdonalds_omega |
+                                        icc, TRUE, FALSE),
+         summary_validity = ifelse(criterion_validity |
+                                     structural_validity |
+                                     convergent_validity |
+                                     discriminant_validity |
+                                     construct_validity |
+                                     face_validity |
+                                     content_validity |
+                                     predictive_validity |
+                                     internal_validity |
+                                     external_validity |
+                                     concurrent_validity |
+                                     dimensionality |
+                                     unidimensionality, TRUE, FALSE),
+         summary_either = ifelse(summary_reliability | summary_validity, 
+                                 TRUE, FALSE),
+         summary_factor = ifelse(factor_analys |
+                                   exploratory_factor_analys |
+                                   confirmatory_factor_analys |
+                                   factor_structure, TRUE, FALSE),
+         summary_any = ifelse(summary_reliability | summary_validity | summary_factor, 
+                              TRUE, FALSE))
 
 ```
 
 # Prevalence
-
-## Categories
-
-```{r}
-
-data_combined |>
-  select(starts_with("s_")) |>
-  summarize_all(mean) |>
-  mutate_all(round, digits = 2) |>
-  gather() |>
-  arrange(desc(value)) |>
-  drop_na() |>
-  kable() |>
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
-
-# validity
-# reliability
-# alpha
-# cronbach
-# omega
-# network_analys
-# measurement_invarian
-
-```
 
 ## All
 
@@ -118,73 +99,22 @@ results_prevalence_all <-
 
 results_prevalence_all |>
   kable() |>
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_classic(full_width = FALSE)
 
 ```
-
-# Prevalence by subfield
-
 ## Categories
 
 ```{r}
 
 data_combined |>
-  select(starts_with("s_"), field) |>
-  group_by(field) |>
+  select(starts_with("summary_")) |>
   summarize_all(mean) |>
-  mutate_if(is.numeric, function(x)x*100) |>
-  mutate_if(is.numeric, round, digits = 1) |>
-  select(field, 
-         reliability = s_reliability, 
-         validity = s_validity, 
-         factor_structure = s_factor) |>
-  arrange(desc(reliability)) |>
+  mutate_all(round, digits = 2) |>
+  gather() |>
+  arrange(desc(value)) |>
   drop_na() |>
   kable() |>
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
-
-n_articles <- data_combined |>
-  select(starts_with("s_"), field) |>
-  count(field)
-
-data_combined |>
-  select(starts_with("s_"), field) |>
-  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
-  group_by(field) |>
-  summarize_all(mean) |>
-  mutate_if(is.numeric, function(x)x*100) |>
-  mutate_if(is.numeric, round, digits = 1) |>
-  left_join(n_articles, by = "field") |>
-  select(Subfield = field, 
-         `N articles` = n,
-         Reliability = s_reliability, 
-         Validity = s_validity, 
-         `Factor structure` = s_factor) |>
-  arrange(desc(Reliability)) |>
-  drop_na()|>
-  #column_to_rownames(var = "field") |>
-  kable() |>
-  kable_classic(full_width = FALSE) |>
-  add_header_above(c(" " = 2, "Percent of articles" = 3))
-
-data_combined |>
-  select(starts_with("s_"), field) |>
-  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
-  group_by(field) |>
-  summarize_all(mean) |>
-  mutate_if(is.numeric, function(x)x*100) |>
-  mutate_if(is.numeric, round, digits = 1) |>
-  left_join(n_articles, by = "field") |>
-  select(Subfield = field, 
-         `N articles` = n,
-         Reliability = s_reliability, 
-         Validity = s_validity) |>
-  arrange(desc(Reliability)) |>
-  drop_na()|>
-  #column_to_rownames(var = "field") |>
-  kable() |>
-  kable_classic(full_width = FALSE) |>
-  add_header_above(c(" " = 2, "Percent of articles" = 2))
+  kable_classic(full_width = FALSE)
 
 # validity
 # reliability
@@ -195,6 +125,8 @@ data_combined |>
 # measurement_invarian
 
 ```
+
+# Prevalence by subfield
 
 ## All
 
@@ -210,11 +142,11 @@ results_prevalence_subfield <- data_combined |>
 
 results_prevalence_subfield |>
   kable() |>
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_classic(full_width = FALSE)
 
 data_combined |>
   select(-doi) |>
-  filter(field %in% c("health", "personality/social", "applied", "educational", "clinical", "developmental", "cognitive/experimental")) |>
+  filter(field %in% c("Health", "Personality/Social", "Applied", "Educational", "Clinical", "Developmental", "Cognitive/Experimental")) |>
   select(field, 
          `Cronbach's alpha` = cronbach_alpha, 
          `Split-half reliability` = split_half) |>
@@ -228,6 +160,52 @@ data_combined |>
   kable() |>
   kable_classic(full_width = FALSE) |>
   add_header_above(c(" " = 1, "Percent of articles" = 2))
+
+```
+
+## Categories
+
+```{r}
+
+n_articles <- data_combined |>
+  select(starts_with("summary_"), field) |>
+  count(field)
+
+results_subfield_categories <- data_combined |>
+  select(starts_with("summary_"), field) |>
+  filter(field %in% c("Health", "Personality/Social", "Applied", "Educational", "Clinical", "Developmental", "Cognitive/Experimental")) |>
+  group_by(field) |>
+  summarize_all(mean) |>
+  mutate_if(is.numeric, function(x)x*100) |>
+  mutate_if(is.numeric, round, digits = 1) |>
+  left_join(n_articles, by = "field") |>
+  select(Subfield = field, 
+         `N articles` = n,
+         Reliability = summary_reliability, 
+         Validity = summary_validity, 
+         Either = summary_either,
+         `Factor structure` = summary_factor,
+         Any = summary_any) |>
+  drop_na()
+
+# table for reliability, validity, and either
+results_subfield_categories |>
+  select(-`Factor structure`,
+         -Any) |>
+  arrange(desc(Either)) |>
+  column_to_rownames(var = "Subfield") |>
+  kable() |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 2, "Percent of articles" = 3))
+
+# table for reliability, valdiity, factor structure, and any of the three
+results_subfield_categories |>
+  select(-Either) |>
+  arrange(desc(Any)) |>
+  column_to_rownames(var = "Subfield") |>
+  kable() |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 2, "Percent of articles" = 4))
 
 ```
 
