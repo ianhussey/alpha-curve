@@ -38,6 +38,12 @@ library(coin)
 
 dir.create("plots")
 
+# disable scientific notation
+options(scipen=999)
+
+# set seed
+set.seed(42)
+
 ```
 
 # Get data
