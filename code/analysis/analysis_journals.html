@@ -1928,7 +1928,8 @@ div.tocify {
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span></code></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(qdapRegex)</span></code></pre></div>
 </div>
 <div id="data" class="section level1">
 <h1>Data</h1>
@@ -1937,11 +1938,15 @@ div.tocify {
 <div id="get-list-of-journals" class="section level1">
 <h1>Get list of journals</h1>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>list_journals <span class="ot">&lt;-</span> data_journals_and_fields <span class="sc">|&gt;</span> </span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(journal)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>list_journals <span class="sc">|&gt;</span> </span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) </span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(journal) <span class="sc">|&gt;</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">TC</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(list_journals, <span class="st">&quot;../../data/processed/psychology/list_journals.csv&quot;</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>list_journals <span class="sc">|&gt;</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_classic</span>(<span class="at">full_width =</span> <span class="cn">FALSE</span>) </span></code></pre></div>
 <table class=" lightable-classic" style="font-family: &quot;Arial Narrow&quot;, &quot;Source Sans Pro&quot;, sans-serif; width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -1953,418 +1958,418 @@ journal
 <tbody>
 <tr>
 <td style="text-align:left;">
-law and human behavior
+Law and Human Behavior
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of psychotherapy integration
+Journal of Psychotherapy Integration
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-dreaming
+Dreaming
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-american journal of orthopsychiatry
+American Journal of Orthopsychiatry
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-american psychologist
+American Psychologist
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-canadian journal of behavioural science
+Canadian Journal of Behavioural Science
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-canadian journal of experimental psychology
+Canadian Journal of Experimental Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-developmental psychology
+Developmental Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of abnormal psychology
+Journal of Abnormal Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of applied psychology
+Journal of Applied Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of consulting and clinical psychology
+Journal of Consulting and Clinical Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of counseling psychology
+Journal of Counseling Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of educational psychology
+Journal of Educational Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of personality and social psychology
+Journal of Personality and Social Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological bulletin
+Psychological Bulletin
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological review
+Psychological Review
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychotherapy: theory, research, practice, training
+Psychotherapy: Theory, Research, Practice, Training
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-rehabilitation psychology
+Rehabilitation Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of experimental psychology: human perception and performance
+Journal of Experimental Psychology: Human Perception and Performance
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of experimental psychology: general
+Journal of Experimental Psychology: General
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-health psychology
+Health Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of experimental psychology: learning, memory, and cognition
+Journal of Experimental Psychology: Learning, Memory, and Cognition
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-canadian psychology
+Canadian Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of comparative psychology
+Journal of Comparative Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-behavioral neuroscience
+Behavioral Neuroscience
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychoanalytic psychology
+Psychoanalytic Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-consulting psychology journal: practice and research
+Consulting Psychology Journal: Practice and Research
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of addictive behaviors
+Psychology of Addictive Behaviors
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of family psychology
+Journal of Family Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-neuropsychology
+Neuropsychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological assessment
+Psychological Assessment
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-school psychology quarterly
+School Psychology Quarterly
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-experimental and clinical psychopharmacology
+Experimental and Clinical Psychopharmacology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-international journal of stress management
+International Journal of Stress Management
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology, public policy, and law
+Psychology, Public Policy, and Law
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of experimental psychology: applied
+Journal of Experimental Psychology: Applied
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of occupational health psychology
+Journal of Occupational Health Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological methods
+Psychological Methods
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-review of general psychology
+Review of General Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-group dynamics: theory, research, and practice
+Group Dynamics: Theory, Research, and Practice
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-history of psychology
+History of Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-cultural diversity and mental health
+Cultural Diversity and Mental Health
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-cultural diversity and ethnic minority psychology
+Cultural Diversity and Ethnic Minority Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of men &amp; masculinities
+Psychology of Men &amp; Masculinities
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-emotion
+Emotion
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological services
+Psychological Services
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-international journal of play therapy
+International Journal of Play Therapy
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of aesthetics, creativity, and the arts
+Psychology of Aesthetics, Creativity, and the Arts
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-training and education in professional psychology
+Training and Education in Professional Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of religion and spirituality
+Psychology of Religion and Spirituality
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-personality disorders: theory, research, and treatment
+Personality Disorders: Theory, Research, and Treatment
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of violence
+Psychology of Violence
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-international perspectives in psychology: research, practice,
-consultation
+International Perspectives in Psychology: Research, Practice,
+Consultation
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-couple and family psychology: research and practice
+Couple and Family Psychology: Research and Practice
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of popular media culture
+Psychology of Popular Media Culture
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-decision
+Decision
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-qualitative psychology
+Qualitative Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-spirituality in clinical practice
+Spirituality in Clinical Practice
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of consciousness: theory, research, and practice
+Psychology of Consciousness: Theory, Research, and Practice
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-motivation science
+Motivation Science
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-stigma and health
+Stigma and Health
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychological trauma: theory, research, practice, and policy
+Psychological Trauma: Theory, Research, Practice, and Policy
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of theoretical and philosophical psychology
+Journal of Theoretical and Philosophical Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of neuroscience, psychology, and economics
+Journal of Neuroscience, Psychology, and Economics
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of diversity in higher education
+Journal of Diversity in Higher Education
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychotherapy
+Psychotherapy
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-sport, exercise, and performance psychology
+Sport, Exercise, and Performance Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-peace and conflict: journal of peace psychology
+Peace and Conflict: Journal of Peace Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychomusicology: music, mind, and brain
+Psychomusicology: Music, Mind, and Brain
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-clinical practice in pediatric psychology
+Clinical Practice in Pediatric Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-evolutionary behavioral sciences
+Evolutionary Behavioral Sciences
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-canadian journal of psychology
+Canadian Journal of Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-school psychology
+School Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychomusicology: music, mind and brain
+Psychomusicology: Music, Mind and Brain
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychomusicology: a journal of research in music cognition
+Psychomusicology: a Journal of Research in Music Cognition
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychiatric rehabilitation journal
+Psychiatric Rehabilitation Journal
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-military psychology
+Military Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychosocial rehabilitation journal
+Psychosocial Rehabilitation Journal
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of rural mental health
+Journal of Rural Mental Health
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of social, evolutionary, and cultural psychology
+Journal of Social, Evolutionary, and Cultural Psychology
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-journal of threat assessment and management
+Journal of Threat Assessment and Management
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-psychology of sexual orientation and gender diversity
+Psychology of Sexual Orientation and Gender Diversity
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-health: the journal of collaborative family healthcare
+Health: the Journal of Collaborative Family Healthcare
 </td>
 </tr>
 </tbody>
@@ -2390,9 +2395,10 @@ health: the journal of collaborative family healthcare
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] janitor_2.1.0    kableExtra_1.3.4 knitr_1.39       forcats_0.5.1   
-##  [5] stringr_1.4.0    dplyr_1.0.9      purrr_0.3.4      readr_2.1.2     
-##  [9] tidyr_1.2.0      tibble_3.1.7     ggplot2_3.3.6    tidyverse_1.3.1 
+##  [1] qdapRegex_0.7.5  janitor_2.1.0    kableExtra_1.3.4 knitr_1.39      
+##  [5] forcats_0.5.1    stringr_1.4.0    dplyr_1.0.9      purrr_0.3.4     
+##  [9] readr_2.1.2      tidyr_1.2.0      tibble_3.1.7     ggplot2_3.3.6   
+## [13] tidyverse_1.3.1 
 ## 
 ## loaded via a namespace (and not attached):
 ##  [1] svglite_2.1.0     lubridate_1.8.0   assertthat_0.2.1  digest_0.6.29    

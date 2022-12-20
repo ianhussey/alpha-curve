@@ -51,14 +51,10 @@ data_journals_and_fields <- read_rds("../../data/processed/psychology/data_journ
 
 list_journals <- data_journals_and_fields |> 
   distinct(journal) |> 
-  TC()
-
-list_journals <- data_journals_and_fields |> 
-  distinct(journal) |> 
-  as.character("journal") |> 
-  toTitleCase() |> 
+  TC() |> 
   as.data.frame()
-  
+
+write.csv(list_journals, "../../data/processed/psychology/list_journals.csv")
 
 list_journals |> 
   kable() |>
