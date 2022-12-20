@@ -1,0 +1,76 @@
+---
+title: "List of journals included"
+subtitle: "Psychology/APA dataset"
+author: "Ian Hussey, Taym Alsalti"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(janitor)
+library(qdapRegex)
+
+```
+
+# Data
+
+```{r}
+
+
+data_journals_and_fields <- read_rds("../../data/processed/psychology/data_journals_and_fields.rds")
+
+
+```
+
+# Get list of journals
+
+```{r}
+
+list_journals <- data_journals_and_fields |> 
+  distinct(journal) |> 
+  TC()
+
+list_journals <- data_journals_and_fields |> 
+  distinct(journal) |> 
+  as.character("journal") |> 
+  toTitleCase() |> 
+  as.data.frame()
+  
+
+list_journals |> 
+  kable() |>
+  kable_classic(full_width = FALSE) 
+
+```
+
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
