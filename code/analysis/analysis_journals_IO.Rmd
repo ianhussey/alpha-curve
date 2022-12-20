@@ -1,0 +1,114 @@
+---
+title: "List of journals included"
+subtitle: "IO dataset"
+author: "Ian Hussey, Taym Alsalti"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(janitor)
+library(qdapRegex)
+
+```
+
+# Data
+
+```{r}
+
+
+data_io <- read_rds("../../data/processed/IO/data_processed_io.rds")
+
+
+```
+
+# Get list of journals
+
+```{r}
+
+list_journals <- data_io |> 
+  distinct(journal) |> 
+  rename(journal_abb = "journal") |> 
+  mutate(journal = recode(journal_abb, 
+                          "EWOP" = "European Journal of Work and Organizational Psychology", 
+                          "ERRJ" = "Employee Responsibilities and Rights Journal", 
+                          "JMP" = "Journal of Managerial Psychology", 
+                          "BJM" = "British Journal of Management", 
+                          "AMJ" = "Academy of Management Journal", 
+                          "JASP" = "Journal of Applied Social Psychology", 
+                          "JPP" = "Journal of Personnel Psychology", 
+                          "PID" = "Personality and Individual Differences", 
+                          "JOHP" = "Journal of Occupational Health Psychology", 
+                          "HP" = "Human Performance", 
+                          "HR" = "Human Relations", 
+                          "HRM" = "Human Resource Management", 
+                          "HRMJ" = "Human Resource Management Journal", 
+                          "JVB" = "Journal of Vocational Behavior", 
+                          "JAP" = "Journal of Applied Psychology", 
+                          "IJHRM" = "The International Journal of Human Resource Management", 
+                          "JM" = "Journal of Management", 
+                          "AJOP" = "Australasian Journal of Organisational Psychology", 
+                          "IJSA" = "International Journal of Selection and Assessment", 
+                          "JOOP" = "Journal of Occupational and Organizational Psychology", 
+                          "OBHDP" = "Organizational Behavior and Human Decision Processes", 
+                          "LQ" = "The Leadership Quarterly ", 
+                          "JOB" = "Journal of Organizational Behavior", 
+                          "WS" = "Work & Stress", 
+                          "PPsych" = "Personnel Psychology", 
+                          "GOM" = "Group & Organization Management", 
+                          "JBP" = "Journal of Business and Psychology")) |> 
+  arrange(journal_abb) |> 
+  select(journal)
+
+
+
+# "JPIM" = "Journal of Product Innovation Management" in metaBUS but not in the dataset we have
+
+write.csv(list_journals, "../../data/processed/IO/list_journals.csv")
+
+list_journals |> 
+  kable() |>
+  kable_classic(full_width = FALSE) 
+
+```
+# number of alphas lost if we exclude the two overlapping journals
+```{r}
+data_io |> 
+  filter(journal == "JAP" | journal == "JOHP") |> 
+  nrow()
+
+print("out of 89544")
+```
+
+
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
