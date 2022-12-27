@@ -364,8 +364,8 @@ p_caliper_all_io <-
   data_caliper_all |>
   filter(alpha >= .50) |>
   mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off", 
-                          TRUE ~ "Other"),
-         type = fct_relevel(type, "Other", "Cut-off")) |>
+                          TRUE ~ "Non cut-off"),
+         type = fct_relevel(type, "Non cut-off", "Cut-off")) |>
   #mutate(type = ifelse(ratio > 1, "1", "2")) |>
   ggplot(aes(x = alpha, y = ratio, fill = type, color = type)) + 
   #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
