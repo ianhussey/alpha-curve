@@ -29,7 +29,6 @@ knitr::opts_chunk$set(message = FALSE,
 
 library(tidyverse)
 library(scales)
-library(ggtext)
 library(betareg)
 library(broom)
 library(extraDistr)
@@ -37,6 +36,8 @@ library(patchwork)
 library(coin)
 library(knitr)
 library(kableExtra)
+library(ggtext)
+
 
 dir.create("plots")
 
@@ -205,7 +206,7 @@ p1_kernel <-
   theme_bw() +
   labs(x = "", #"Cronbach's &alpha;",
        y = "Count") +
-  #theme(axis.title.x = element_markdown()) +
+  theme(axis.title.x = element_markdown()) +
   ylim(0, 1800)
 
 p2_kernel <- 
@@ -234,6 +235,85 @@ write_rds(p_kernel, "plots/p_kernel_psychology.rds")
 
 ggsave("plots/p_kernel_psychology.pdf", 
        plot = p_kernel, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+### Alt 
+
+```{r}
+
+# cbp1 <- c("grey", "#56B4E9", "#E69F00", "#009E73",
+#           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+# 
+# library(viridisLite)
+# 
+# viridis(n = 1, begin = 0.4, end = 0.4)
+
+cbp1 <- c("grey", "#2A788EFF")
+
+plot_data_psych <- data_processed_binned |>
+  mutate(n_total = n()) |>
+  group_by(alpha) |>
+  summarise(count = sum(!is.na(alpha))) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
+                          TRUE ~ "Non cut-off"),
+         type = fct_relevel(type, "Non cut-off", "Cut-off")) |>
+  right_join(data_frequency, by = "alpha") |>
+  drop_na()
+
+p1_kernel_alt_psych <-
+  ggplot(plot_data_psych, aes(alpha, y = count, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
+  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = "", # expression("Cronbach's" ~ alpha),
+       y = "Count",
+       fill = "") +
+  theme(axis.title.x = element_markdown()) +
+  ylim(0, 1800) +
+  theme(legend.position = "none")
+
+p2_kernel_alt_psych <- 
+  ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
+  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 25),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown())
+
+p_kernel_alt_psych <- 
+  p1_kernel_alt_psych + 
+  p2_kernel_alt_psych + 
+  plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel_alt_psych
+
+write_rds(p_kernel_alt_psych, "plots/p_kernel_alt_psychology.rds")
+
+ggsave("plots/p_kernel_alt_psychology.pdf",
+       plot = p_kernel_alt_psych,
        width = 6,
        height = 4,
        units = "in")
@@ -332,9 +412,10 @@ data_caliper_all <- data_caliper |>
 
 ```{r}
 
-cbp2 <- c("#999999", "#56B4E9")
+cbp2 <- c("grey", "#2A788EFF")
 
-data_caliper_all |>
+p_caliper_all_psychology <-
+  data_caliper_all |>
   filter(alpha >= .50) |>
   mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off", 
                           TRUE ~ "Other"),
@@ -364,6 +445,16 @@ data_caliper_all |>
   theme(legend.position = "bottom",
         axis.title.x = element_markdown(),
         axis.title.y = element_markdown())
+
+p_caliper_all_psychology
+
+write_rds(p_caliper_all_psychology, "plots/p_caliper_all_psychology.rds")
+
+ggsave("plots/p_caliper_all_psychology.pdf",
+       plot = p_caliper_all_psychology,
+       width = 6,
+       height = 4,
+       units = "in")
 
 ```
 
@@ -479,13 +570,15 @@ p2_beta <-
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -100, to = 100, by = 25),
+  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 50),
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
   labs(x = "Cronbach's &alpha;",
-       y = "Residual") +
-  theme(legend.position = "none")
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown())
 
 p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
@@ -545,6 +638,204 @@ independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_beta,
                   distribution = "exact",
                   alternative = "greater")
+
+```
+
+# Plots comparing kernel smoothing and caliper tests
+
+## Full range
+
+```{r}
+
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+plot_data <- data_processed_binned |>
+  mutate(n_total = n()) |>
+  group_by(alpha) |>
+  summarise(count = sum(!is.na(alpha))) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
+                          alpha %in% c(.69, .79, .89) ~ "Pre cut-off",
+                          TRUE ~ "Other"),
+         type = fct_relevel(type, "Other", "Pre cut-off", "Cut-off")) |>
+  right_join(data_frequency, by = "alpha") |>
+  drop_na()
+
+p1_kernel_alt <-
+  ggplot(plot_data, aes(alpha, y = count, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
+  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = "", # expression("Cronbach's" ~ alpha),
+       y = "Count",
+       fill = "") +
+  # theme(axis.title.x = element_markdown()) +
+  ylim(0, 1800) +
+  theme(legend.position = "none")
+
+p2_kernel_alt <- 
+  ggplot(plot_data, aes(alpha, residual_kernel * total_n, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
+  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown())
+
+p_kernel_alt <- p1_kernel_alt + p2_kernel_alt + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel_alt
+
+write_rds(p_kernel_alt, "plots/p_kernel_psychology_alt.rds")
+
+ggsave("plots/p_kernel_psychology_alt.pdf", 
+       plot = p_kernel_alt, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+## Zoomed
+
+```{r}
+
+p1_kernel_alt_zoom <-
+  ggplot(plot_data, aes(alpha, y = count, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(position = "stack") +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
+  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.01),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
+  theme_bw() +
+  labs(x = "", # "Cronbach's &alpha;",
+       y = "Count",
+       fill = "") +
+  ylim(0, 800) +
+  theme(legend.position = "none",
+        axis.title.x = element_markdown()) +
+  coord_cartesian(xlim = c(.6725, .7175)) +
+  annotate("text", 
+           x = .70, 
+           y = plot_data$count[plot_data$alpha == .70] + 120, 
+           label = "Kernel\nsmoothing\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .70, 
+           xend = .70, 
+           y = plot_data$count[plot_data$alpha == .70],  # observed counts
+           yend = total_n * plot_data$density_kernel[plot_data$alpha == .70], # predicted counts
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm"))) +
+  annotate("text", 
+           x = .69, 
+           y = plot_data$count[plot_data$alpha == .70] + 120, 
+           label = "Calliper\ntest\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .69, 
+           xend = .69, 
+           y = plot_data$count[plot_data$alpha == .70],  # observed counts .70
+           yend = plot_data$count[plot_data$alpha == .69], # observed counts .69
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm")))
+
+p2_kernel_alt_zoom <- 
+  ggplot(plot_data, aes(alpha, residual_kernel * total_n, fill = type)) + 
+  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_hline(yintercept = 0, size = 0.2) +
+  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  scale_fill_manual(values = cbp1) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.01),
+                     labels = label_number(accuracy = 0.01),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       y = "Residual",
+       fill = "") +
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown()) +
+  coord_cartesian(xlim = c(.6725, .7175), ylim = c(-80, 145)) +
+  annotate("text", 
+           x = .70, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .70] + 25, 
+           label = "Kernel\nsmoothing\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .70, 
+           xend = .70, 
+           y = 0,  
+           yend = total_n * plot_data$residual_kernel[plot_data$alpha == .70], # predicted counts
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm"))) +
+  annotate("text", 
+           x = .69, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .70] + 25, 
+           label = "Calliper\ntest\n",
+           size = 2.5) +
+  annotate("segment", 
+           x = .69, 
+           xend = .69, 
+           y = total_n * plot_data$residual_kernel[plot_data$alpha == .69],
+           yend = total_n * plot_data$residual_kernel[plot_data$alpha == .70], # residual .69
+           arrow = arrow(ends = "both", 
+                         angle = 45, 
+                         length = unit(1.5,"mm")))
+
+p_kernel_alt_zoom <- p1_kernel_alt_zoom + p2_kernel_alt_zoom + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+
+p_kernel_alt_zoom
+
+ggsave("plots/p_kernel_method_comparison.pdf", 
+       plot = p_kernel_alt_zoom, 
+       width = 6,
+       height = 4,
+       units = "in")
+
+```
+
+## Combined
+
+```{r}
+
+(p1_kernel_alt + ggtitle("Full range")) +
+  #(p1_kernel_alt_zoom + labs(title = "Subset around &alpha; = .70") + theme(plot.title = element_markdown())) +
+  (p1_kernel_alt_zoom + ggtitle("Subset")) +
+  p2_kernel_alt +
+  p2_kernel_alt_zoom + 
+  plot_layout(nrow = 2, ncol = 2,
+              widths = c(0.6, 0.4, 0.6, 0.4),
+              guides = "collect") &
+  theme(legend.position = 'bottom') 
 
 ```
 

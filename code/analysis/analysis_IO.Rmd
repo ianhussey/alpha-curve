@@ -187,26 +187,31 @@ ggsave("plots/p_kernel_IO.pdf",
 
 ```
 
-### Alt plot
+### Alt 
 
 ```{r}
 
-cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
-          "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+# cbp1 <- c("grey", "#56B4E9", "#E69F00", "#009E73",
+#           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+# 
+# library(viridisLite)
+# 
+# viridis(n = 1, begin = 0.4, end = 0.4)
 
-plot_data <- data_processed_binned |>
+cbp1 <- c("grey", "#2A788EFF")
+
+plot_data_io <- data_processed_binned |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
   mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
-                          alpha %in% c(.69, .79, .89) ~ "Pre cut-off",
-                          TRUE ~ "Other"),
-         type = fct_relevel(type, "Other", "Pre cut-off", "Cut-off")) |>
+                          TRUE ~ "Non cut-off"),
+         type = fct_relevel(type, "Non cut-off", "Cut-off")) |>
   right_join(data_frequency, by = "alpha") |>
   drop_na()
 
-p1_kernel_alt <-
-  ggplot(plot_data, aes(alpha, y = count, fill = type)) + 
+p1_kernel_alt_io <-
+  ggplot(plot_data_io, aes(alpha, y = count, fill = type)) + 
   #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(position = "stack") +
   geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
@@ -218,12 +223,14 @@ p1_kernel_alt <-
   # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
   labs(x = "", # expression("Cronbach's" ~ alpha),
-       y = "Count") +
+       y = "Count",
+       fill = "") +
+  # theme(axis.title.x = element_markdown()) +
   ylim(0, 4200) +
   theme(legend.position = "none")
 
-p2_kernel_alt <- 
-  ggplot(plot_data, aes(alpha, residual_kernel * total_n, fill = type)) + 
+p2_kernel_alt_io <- 
+  ggplot(plot_data_io, aes(alpha, residual_kernel * total_n, fill = type)) + 
   #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
   geom_hline(yintercept = 0, size = 0.2) +
@@ -236,19 +243,23 @@ p2_kernel_alt <-
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
-  labs(x = expression("Cronbach's" ~ alpha),
+  labs(x = "Cronbach's &alpha;",
        y = "Residual",
        fill = "") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        axis.title.x = element_markdown())
 
-p_kernel_alt <- p1_kernel_alt + p2_kernel_alt + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+p_kernel_alt_io <- 
+  p1_kernel_alt_io + 
+  p2_kernel_alt_io + 
+  plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
-p_kernel_alt
+p_kernel_alt_io
 
-write_rds(p_kernel_alt, "plots/p_kernel_IO_alt.rds")
+write_rds(p_kernel_alt_io, "plots/p_kernel_alt_io.rds")
 
-ggsave("plots/p_kernel_IO_alt.pdf", 
-       plot = p_kernel_alt, 
+ggsave("plots/p_kernel_alt_io.pdf",
+       plot = p_kernel_alt_io,
        width = 6,
        height = 4,
        units = "in")
@@ -347,9 +358,10 @@ data_caliper_all <- data_caliper |>
 
 ```{r}
 
-cbp2 <- c("#999999", "#56B4E9")
+cbp2 <- c("grey", "#2A788EFF")
 
-data_caliper_all |>
+p_caliper_all_io <- 
+  data_caliper_all |>
   filter(alpha >= .50) |>
   mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off", 
                           TRUE ~ "Other"),
@@ -379,6 +391,16 @@ data_caliper_all |>
   theme(legend.position = "bottom",
         axis.title.x = element_markdown(),
         axis.title.y = element_markdown())
+
+p_caliper_all_io
+
+write_rds(p_caliper_all_io, "plots/p_caliper_all_io.rds")
+
+ggsave("plots/p_caliper_all_io.pdf",
+       plot = p_caliper_all_io,
+       width = 6,
+       height = 4,
+       units = "in")
 
 ```
 
