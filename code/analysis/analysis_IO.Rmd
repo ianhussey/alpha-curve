@@ -321,7 +321,7 @@ See Gerber et al. (2010) "Publication Bias in Two Political Behavior Literatures
 
 Using alpha ± 0.01 calipers. 
 
-The usual null hypothesis of no differences cannot be tested against, so instead I calculate over/under ratios for each 0.01 and its neighbour, i.e., ratio = count($\alpha_x$) / count($\alpha_{x-0.01}$). Because very few counts are present in \alpha < .50, which makes the ratios very poorly estimated, I exclude these values. The hypothesis that the ratio for the cut-off score ratio being larger than the ratios calculated from non cut-offs is then tested via permuation test.
+The usual null hypothesis of no differences cannot be tested against, so instead I calculate over/under ratios for each 0.01 and its neighbor, i.e., ratio = count($\alpha_x$) / count($\alpha_{x-0.01}$). Because very few counts are present in \alpha < .50, which makes the ratios very poorly estimated, I exclude these values. The hypothesis that the ratio for the cut-off score ratio being larger than the ratios calculated from non cut-offs is then tested via permuation test.
 
 ## Quantify excess
 
