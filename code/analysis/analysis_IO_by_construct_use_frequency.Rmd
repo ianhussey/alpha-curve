@@ -54,24 +54,53 @@ data_processed_binned <- data_processed %>%
 
 ```
 
-# Descriptives
-
-```{r}
-
-# TODO descriptives to be added after we get access to dataset
-
-```
-
 # Kernel smoothing - by use of construct
 
 ## Data subsetting
 
 ```{r}
 
-data_processed_binned |>
+p_freq <- 
+  data_processed_binned |>
   count(Var1) |>
-  ggplot(aes(n)) +
-  geom_histogram() + scale_y_log10()
+  count(n) |>
+  ggplot(aes(n, nn * 10)) +
+  geom_col(color = "black", width = 0.01) + 
+  scale_y_log10(labels = function(y) y/10) +
+  theme_classic() +
+  ylab("Count (constructs)") +
+  xlab("Count (alpha estimates associated with that construct)") 
+
+p_freq
+
+ggsave("plots/p_frequency_of_construct_use_IO.pdf",
+       plot = p_freq,
+       width = 6,
+       height = 4,
+       units = "in")
+
+
+p_freq_log10 <- 
+  data_processed_binned |>
+  count(Var1) |>
+  count(n) |>
+  ggplot(aes(n, nn * 10)) +
+  geom_col(color = "black", width = 0.01) + 
+  scale_y_log10(labels = function(y) y/10) +
+  scale_x_log10() +
+  theme_classic() +
+  ylab("Count (constructs)") +
+  xlab("Count (alpha estimates associated with that construct)") 
+
+p_freq_log10
+
+ggsave("plots/p_frequency_of_construct_use_log10_IO.pdf",
+       plot = p_freq_log10,
+       width = 6,
+       height = 4,
+       units = "in")
+
+
 
 constructs_used_once <- data_processed_binned |>
   count(Var1) |>
@@ -228,6 +257,19 @@ data_inflation_kernel <- data_frequency %>%
 
 - There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $\alpha$ = .70 than predicted.
 
+### Permutation test
+
+.70 against the rest:
+
+```{r}
+
+independence_test(residual ~ group_1_cutoff,
+                  data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
 ## Constructs used more than once 
 
 ### Model and plot
@@ -360,6 +402,19 @@ data_inflation_kernel <- data_frequency %>%
 
 - There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $\alpha$ = .70 than predicted.
 
+### Permutation test
+
+.70 against the rest:
+
+```{r}
+
+independence_test(residual ~ group_1_cutoff,
+                  data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
+
 ## Constructs used 100 times or more  
 
 ### Model and plot
@@ -491,6 +546,19 @@ data_inflation_kernel <- data_frequency %>%
 ```
 
 - There were `r data_inflation_kernel$inflation_for_reporting[data_inflation_kernel$alpha == 0.70]`% more observations of Cronbach's $\alpha$ = .70 than predicted.
+
+### Permutation test
+
+.70 against the rest:
+
+```{r}
+
+independence_test(residual ~ group_1_cutoff,
+                  data = data_inflation_kernel,
+                  distribution = "exact",
+                  alternative = "greater")
+
+```
 
 # Session info
 
