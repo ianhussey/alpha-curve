@@ -27,7 +27,8 @@ knitr::opts_chunk$set(message = FALSE,
 
 ```{r}
 
-library(dplyr)
+library(tidyverse)
+library(janitor)
 
 ```
 
@@ -35,14 +36,32 @@ library(dplyr)
 
 ```{r}
 
-data_bosco <- read_rds("../../data/raw/IO/alphaDb_clean_metaBUS_2018_09_09.rds")
+# NB this file is not publicly available due to our data sharing agreement with the metaBUS team. The processed file, saved below, simply strips DOIs.
+data_bosco <- read_rds("../../data/raw/IO/alphaDb_clean_metaBUS_2018_09_09.rds") |>
+  rename(doi = DOI,
+         alpha = Var1RelValue)
 
-data_bosco |>
-  select(-DOI) |>
-  rename(alpha = Var1RelValue) |>
-  write_rds("../../data/processed/IO/data_processed_io.rds", compress = "gz")
+data_processed_io <- data_bosco |>
+  select(-doi)
+
+write_rds(data_processed_io, "../../data/processed/IO/data_processed_io.rds", compress = "gz")
+
+
+# remove overlap with psych dataset
+data_processed_psych <- read_csv("../../data/processed/psychology/data_processed_psychology.csv") |>
+  mutate(doi = str_replace(doi, "_", "/"))
+
+data_processed_io_no_overlap_with_psych <- data_bosco |>
+  anti_join(data_processed_psych, by = "doi") |>
+  select(-doi)
+
+write_rds(data_processed_io_no_overlap_with_psych, "../../data/processed/IO/data_processed_io_no_overlap_with_psych.rds", compress = "gz")
 
 ```
 
+- N rows data_processed_io = `r nrow(data_processed_io)`
+- N rows data_processed_io_no_overlap_with_psych = `r nrow(data_processed_io_no_overlap_with_psych)`
+- N rows excluded based on their DOIs already appearing in the psych dataset = `r nrow(data_processed_io) - nrow(data_processed_io_no_overlap_with_psych)`
+- % excluded = `r janitor::round_half_up((nrow(data_processed_io) - nrow(data_processed_io_no_overlap_with_psych))/nrow(data_processed_io)*100, 1)`%
 
 
