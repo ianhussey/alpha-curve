@@ -49,9 +49,12 @@ set.seed(42)
 
 # Get data
 
+Note that we originally used the full dataset extracted from metaBUS. Late in the analysis process we realised there was overlap between the two datasets: two journals (Journal of Applied Psychology and Journal of Occupational Health Psychology) were present in both datasets, although metaBUS contains a wider range of years. Initially we considered excluding these journals from the I/O dataset. However, inspection showed that a disproportionate number of articles came from JAP (roughly 20k of 90k). As such, we elected to exclude DOIs from the I/O dataset that had already been used in the psych dataset. This resulted in 9090 alpha estimates (10.1%) being excluded from the I/O dataset.
+
 ```{r}
 
-data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
+#data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
+data_processed <- read_rds("../../data/processed/IO/data_processed_io_no_overlap_with_psych.rds")
 
 data_processed_binned <- data_processed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
@@ -405,6 +408,8 @@ ggsave("plots/p_caliper_all_io.pdf",
 ```
 
 Note that $|\alpha_i|$ refers to cardinality (i.e., count) rather than absolute value. Unfortunately these are annotated in the same way using vertical bars. 
+
+Note excesses at .50 and .60 as well as .70.
 
 ## Permutation tests
 
