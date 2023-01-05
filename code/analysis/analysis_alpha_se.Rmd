@@ -1,0 +1,92 @@
+---
+title: "An excess of Cronbach's α values at rule-of-thumb cut-offs"
+subtitle: "Precision of Cronbach's alpha = .70 across sample size and number of items"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# TODO
+
+- NA
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Dependencies
+
+```{r}
+
+library(cocron)
+library(dplyr)
+library(tidyr)
+library(janitor)
+library(knitr)
+library(kableExtra)
+
+# disable scientific notation
+options(scipen=999)
+
+```
+
+# Standard Error of Cronbach's α = .70
+
+```{r}
+
+n <- c(50, 100, 250, 500, 1000, 2000, 5000)
+items <- c(3, 5, 10, 25, 50, 100)
+
+dat <- NULL
+
+for(i in n){
+  for(j in items){
+    CIs <- cronbach.alpha.CI(alpha = .70, n = i, items = j)
+    res <- tibble(n = i, items = j, CI_lower = CIs[1], CI_upper = CIs[2])
+    dat <- bind_rows(dat, res)
+  }
+}
+
+dat_reshaped <- dat |>
+  mutate(se = (CI_upper - CI_lower)/(1.96*2),
+         se = janitor::round_half_up(se, 3)) |>
+  select(n, items, se) |>
+  pivot_wider(names_from = items, 
+              values_from = se)
+
+dat_reshaped |>
+  kable(caption = "Standard Error of Cronbach's α = .70") |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 1, "Items" = ncol(dat_reshaped)-1))
+
+```
+
+# Minimum sample size required to detect differences between Cronbach's α .69 vs .70
+
+N found manually via experimentation
+
+```{r}
+
+n <- 14300
+
+cocron.two.coefficients(alpha = c(.69, .70), 
+                        n = c(n, n))
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
