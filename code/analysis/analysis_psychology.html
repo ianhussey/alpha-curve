@@ -12,7 +12,7 @@
 <meta name="author" content="Ian Hussey" />
 
 
-<title>A excess of Cronbach’s α values at rule-of-thumb cut-offs</title>
+<title>An excess of Cronbach’s α values at rule-of-thumb cut-offs</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1890,11 +1890,11 @@ border-radius: 0px;
 
 
 
-<h1 class="title toc-ignore">A excess of Cronbach’s α values at
+<h1 class="title toc-ignore">An excess of Cronbach’s α values at
 rule-of-thumb cut-offs</h1>
 <h3 class="subtitle">Analyses of Psychology/APA dataset</h3>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">27 December, 2022</h4>
+<h4 class="date">05 January, 2023</h4>
 
 </div>
 
@@ -2234,12 +2234,13 @@ rule-of-thumb cut-offs</h1>
 Literatures”</p>
 <p>Using alpha ± 0.01 calipers.</p>
 <p>The usual null hypothesis of no differences cannot be tested against,
-so instead I calculate over/under ratios for each 0.01 and its
-neighbour, i.e., ratio = count(<span class="math inline">\(\alpha_x\)</span>) / count(<span class="math inline">\(\alpha_{x-0.01}\)</span>). Because very few counts
-are present in &lt; .50, which makes the ratios very poorly estimated, I
-exclude these values. The hypothesis that the ratio for the cut-off
-score ratio being larger than the ratios calculated from non cut-offs is
-then tested via permuation test.</p>
+so instead I calculate over/under ratios for each 0.01 and its neighbor,
+i.e., ratio = count(<span class="math inline">\(\alpha_x\)</span>) /
+count(<span class="math inline">\(\alpha_{x-0.01}\)</span>). Because
+very few counts are present in &lt; .50, which makes the ratios very
+poorly estimated, I exclude these values. The hypothesis that the ratio
+for the cut-off score ratio being larger than the ratios calculated from
+non cut-offs is then tested via permuation test.</p>
 <div id="quantify-excess-1" class="section level2">
 <h2>Quantify excess</h2>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>data_caliper <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span> </span>
@@ -2756,7 +2757,7 @@ in favor of kernel smoothing. It is reported here for transparency.</p>
 ## LAPACK: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/lib/libRlapack.dylib
 ## 
 ## locale:
-## [1] en_IE.UTF-8/en_IE.UTF-8/en_IE.UTF-8/C/en_IE.UTF-8/en_IE.UTF-8
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     

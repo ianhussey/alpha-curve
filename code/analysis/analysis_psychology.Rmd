@@ -1,5 +1,5 @@
 ---
-title: "A excess of Cronbach's α values at rule-of-thumb cut-offs"
+title: "An excess of Cronbach's α values at rule-of-thumb cut-offs"
 subtitle: "Analyses of Psychology/APA dataset"
 author: "Ian Hussey"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
