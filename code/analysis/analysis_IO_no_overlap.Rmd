@@ -14,10 +14,6 @@ output:
 
 Late in the analysis process we realised there was overlap between the two datasets: two journals (Journal of Applied Psychology and Journal of Occupational Health Psychology) were present in both datasets, although metaBUS contains a wider range of years. As such, we also present analyses that excluded DOIs from the I/O dataset that had already been used in the psych dataset. This resulted in 9090 alpha estimates (10.1%) being excluded from the I/O dataset.
 
-# TODO
-
-- NA
-
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(message = FALSE, 
@@ -259,124 +255,6 @@ independence_test(residual ~ group_3_cutoffs,
 
 independence_test(residual ~ group_1_cutoff,
                   data = data_inflation_kernel,
-                  distribution = "exact",
-                  alternative = "greater")
-
-```
-
-# Caliper tests
-
-See Gerber et al. (2010) "Publication Bias in Two Political Behavior Literatures"
-
-Using alpha ± 0.01 calipers. 
-
-The usual null hypothesis of no differences cannot be tested against, so instead I calculate over/under ratios for each 0.01 and its neighbor, i.e., ratio = count($\alpha_x$) / count($\alpha_{x-0.01}$). Because very few counts are present in \alpha < .50, which makes the ratios very poorly estimated, I exclude these values. The hypothesis that the ratio for the cut-off score ratio being larger than the ratios calculated from non cut-offs is then tested via permuation test.
-
-## Quantify excess
-
-```{r}
-
-data_caliper <- data_processed_binned %>% 
-  mutate(n_total = n()) %>% 
-  group_by(alpha) %>% 
-  summarise(count = sum(!is.na(alpha)))
-
-data_caliper |>
-  filter(alpha %in% c(.69, .70, .79, .80, .89, .90)) |>
-  mutate(type = ifelse(alpha %in% c(.70, .80, .90), "threshold", "nonthreshold"),
-         cutoff = case_when(alpha %in% c(.69, .70) ~ .70,
-                            alpha %in% c(.79, .80) ~ .80,
-                            alpha %in% c(.89, .90) ~ .90)) |>
-  select(-alpha) |>
-  pivot_wider(names_from = type, 
-              values_from = count) |>
-  mutate(ratio = janitor::round_half_up(threshold/nonthreshold, 2)) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
-
-data_caliper_all <- data_caliper |>
-  mutate(ratio = count/lag(count),
-         group_3_cutoffs = as.factor(case_when(alpha %in% c(.70, .80, .90) ~ "cutoff",
-                                               TRUE ~ "non cutoff")),
-         group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
-                                              TRUE ~ "non cutoff")))
-
-```
-
-## Plot
-
-```{r}
-
-cbp2 <- c("grey", "#2A788EFF")
-
-p_caliper_all_io <- 
-  data_caliper_all |>
-  filter(alpha >= .50) |>
-  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off", 
-                          TRUE ~ "Non cut-off"),
-         type = fct_relevel(type, "Non cut-off", "Cut-off")) |>
-  #mutate(type = ifelse(ratio > 1, "1", "2")) |>
-  ggplot(aes(x = alpha, y = ratio, fill = type, color = type)) + 
-  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  #geom_col(position = "stack") +
-  geom_segment(aes(x = alpha,
-                   xend = alpha,
-                   y = 1, 
-                   yend = ratio), size = 3) +
-  #scale_color_viridis_d(direction = -1, begin = 0.2, end = 0.6, option = "plasma") +
-  #scale_color_viridis_d(direction = -1, begin = 0.2, end = 0.55, option = "magma") +
-  scale_color_manual(values = cbp2) +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.05),
-                     labels = label_number(accuracy = 0.01),
-                     minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = 0, to = 2, by = 0.2),
-                     labels = label_number(accuracy = 0.01),
-                     minor_breaks = NULL) +
-  theme_bw() +
-  labs(x = "Cronbach's &alpha;",
-       #y = "Ratio<br />n(&alpha;<sub>i</sub>) / n(&alpha;<sub>i-0.01</sub>)",
-       y = "Calliper test ratio<br />(|&alpha;<sub>i</sub>| / |&alpha;<sub>i-0.01</sub>|)",
-       color = "") +
-  theme(legend.position = "bottom",
-        axis.title.x = element_markdown(),
-        axis.title.y = element_markdown())
-
-p_caliper_all_io
-
-write_rds(p_caliper_all_io, "plots/p_caliper_all_io_no_overlap.rds")
-
-ggsave("plots/p_caliper_all_io_no_overlap.pdf",
-       plot = p_caliper_all_io,
-       device = cairo_pdf,
-       width = 6,
-       height = 4,
-       units = "in")
-
-```
-
-Note that $|\alpha_i|$ refers to cardinality (i.e., count) rather than absolute value. Unfortunately these are annotated in the same way using vertical bars. 
-
-Note excesses at .50 and .60 as well as .70.
-
-## Permutation tests
-
-.70/.69, .80/.79, and .90/.89 against the rest:
-
-```{r}
-
-independence_test(ratio ~ group_3_cutoffs,
-                  data = filter(data_caliper_all, alpha >= .50),
-                  distribution = "exact",
-                  alternative = "greater")
-
-```
-
-.70/.69 against the rest:
-
-```{r}
-
-independence_test(ratio ~ group_1_cutoff,
-                  data = filter(data_caliper_all, alpha >= .50),
                   distribution = "exact",
                   alternative = "greater")
 
