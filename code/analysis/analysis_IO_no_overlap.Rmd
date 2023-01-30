@@ -12,6 +12,8 @@ output:
     toc_float: yes
 ---
 
+Late in the analysis process we realised there was overlap between the two datasets: two journals (Journal of Applied Psychology and Journal of Occupational Health Psychology) were present in both datasets, although metaBUS contains a wider range of years. As such, we also present analyses that excluded DOIs from the I/O dataset that had already been used in the psych dataset. This resulted in 9090 alpha estimates (10.1%) being excluded from the I/O dataset.
+
 # TODO
 
 - NA
@@ -51,7 +53,8 @@ set.seed(42)
 
 ```{r}
 
-data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
+#data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
+data_processed <- read_rds("../../data/processed/IO/data_processed_io_no_overlap_with_psych.rds")
 
 data_processed_binned <- data_processed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
@@ -201,9 +204,9 @@ p_kernel_io <-
 
 p_kernel_io
 
-write_rds(p_kernel_io, "plots/p_kernel_io.rds")
+write_rds(p_kernel_io, "plots/p_kernel_io_no_overlap.rds")
 
-ggsave("plots/p_kernel_io.pdf",
+ggsave("plots/p_kernel_io_no_overlap.pdf",
        plot = p_kernel_io,
        device = cairo_pdf,
        width = 6,
@@ -340,9 +343,9 @@ p_caliper_all_io <-
 
 p_caliper_all_io
 
-write_rds(p_caliper_all_io, "plots/p_caliper_all_io.rds")
+write_rds(p_caliper_all_io, "plots/p_caliper_all_io_no_overlap.rds")
 
-ggsave("plots/p_caliper_all_io.pdf",
+ggsave("plots/p_caliper_all_io_no_overlap.pdf",
        plot = p_caliper_all_io,
        device = cairo_pdf,
        width = 6,

@@ -67,13 +67,6 @@ data_processed_binned <- data_processed_trimmed %>%
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) 
 
-# dat <- data_processed_trimmed |>
-#   filter(exclude_master == FALSE) |>
-#   group_by(doi) |>
-#   mutate(n_estimates = n()) |>
-#   ungroup() |>
-#   select(doi, n_estimates, exemplar, alpha, all)
-
 ```
 
 # Descriptives
@@ -180,77 +173,7 @@ data_diff <- data_frequency %>%
                c(frequency_without_residual_kernel, residual_kernel))
 
 
-color_1 <- scales::viridis_pal()(11)[3]
-color_2 <- scales::viridis_pal()(11)[7]
-
 total_n <- nrow(data_processed_binned)/100
-
-p1_kernel <-
-  data_diff %>%  
-  mutate(type = factor(case_when(
-    type == "frequency_without_residual_kernel" ~ "3",
-    pos_resid_kernel ~ "2",
-    TRUE ~ "1"))
-  ) %>% 
-  ggplot(., aes(alpha, y = residual_kernel * total_n, fill = type)) + 
-  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col(position = "stack") +
-  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2) +
-  #ggrepel::geom_text_repel(aes(y = residual_kernel * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_kernel*total_n), NA_real_)), position = "stack") +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = label_number(accuracy = 0.1),
-                     minor_breaks = NULL) +
-  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
-                    guide = "none") +
-  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
-  theme_bw() +
-  labs(x = "", #"Cronbach's &alpha;",
-       y = "Count") +
-  theme(axis.title.x = element_markdown()) +
-  ylim(0, 1800)
-
-p2_kernel <- 
-  ggplot(data_frequency, aes(alpha, residual_kernel * total_n, fill = residual_kernel > 0)) + 
-  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col() +
-  geom_hline(yintercept = 0, size = 0.2) +
-  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = label_number(accuracy = 0.1),
-                     minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -100, to = 100, by = 25),
-                     labels = label_number(accuracy = 1),
-                     minor_breaks = NULL) +
-  theme_bw() +
-  labs(x = "Cronbach's &alpha;",
-       y = "Residual") +
-  theme(legend.position = "none",
-        axis.title.x = element_markdown())
-
-p_kernel <- p1_kernel + p2_kernel + plot_layout(nrow = 2, heights = c(0.5, 0.5))
-
-p_kernel
-
-write_rds(p_kernel, "plots/p_kernel_psychology.rds")
-
-ggsave("plots/p_kernel_psychology.pdf", 
-       plot = p_kernel, 
-       width = 6,
-       height = 4,
-       units = "in")
-
-```
-
-### Alt 
-
-```{r}
-
-# cbp1 <- c("grey", "#56B4E9", "#E69F00", "#009E73",
-#           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-# 
-# library(viridisLite)
-# 
-# viridis(n = 1, begin = 0.4, end = 0.4)
 
 cbp1 <- c("grey", "#2A788EFF")
 
@@ -264,7 +187,7 @@ plot_data_psych <- data_processed_binned |>
   right_join(data_frequency, by = "alpha") |>
   drop_na()
 
-p1_kernel_alt_psych <-
+p1_kernel_psych <-
   ggplot(plot_data_psych, aes(alpha, y = count, fill = type)) + 
   #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(position = "stack") +
@@ -283,7 +206,7 @@ p1_kernel_alt_psych <-
   ylim(0, 1800) +
   theme(legend.position = "none")
 
-p2_kernel_alt_psych <- 
+p2_kernel_psych <- 
   ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = type)) + 
   #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
@@ -303,17 +226,18 @@ p2_kernel_alt_psych <-
   theme(legend.position = "bottom",
         axis.title.x = element_markdown())
 
-p_kernel_alt_psych <- 
-  p1_kernel_alt_psych + 
-  p2_kernel_alt_psych + 
+p_kernel_psych <- 
+  p1_kernel_psych + 
+  p2_kernel_psych + 
   plot_layout(nrow = 2, heights = c(0.5, 0.5))
 
-p_kernel_alt_psych
+p_kernel_psych
 
-write_rds(p_kernel_alt_psych, "plots/p_kernel_alt_psychology.rds")
+write_rds(p_kernel_psych, "plots/p_kernel_psychology.rds")
 
-ggsave("plots/p_kernel_alt_psychology.pdf",
-       plot = p_kernel_alt_psych,
+ggsave("plots/p_kernel_psychology.pdf",
+       plot = p_kernel_psych,
+       device = cairo_pdf,
        width = 6,
        height = 4,
        units = "in")
@@ -452,6 +376,7 @@ write_rds(p_caliper_all_psychology, "plots/p_caliper_all_psychology.rds")
 
 ggsave("plots/p_caliper_all_psychology.pdf",
        plot = p_caliper_all_psychology,
+       device = cairo_pdf,
        width = 6,
        height = 4,
        units = "in")
@@ -586,6 +511,7 @@ p_beta
 
 # ggsave("plots/p_beta_psychology.pdf", 
 #        plot = p_beta, 
+#        device = cairo_pdf,
 #        width = 6,
 #        height = 4,
 #        units = "in")
@@ -708,6 +634,7 @@ write_rds(p_kernel_alt, "plots/p_kernel_psychology_alt.rds")
 
 ggsave("plots/p_kernel_psychology_alt.pdf", 
        plot = p_kernel_alt, 
+       device = cairo_pdf,
        width = 6,
        height = 4,
        units = "in")
@@ -817,6 +744,7 @@ p_kernel_alt_zoom
 
 ggsave("plots/p_kernel_method_comparison.pdf", 
        plot = p_kernel_alt_zoom, 
+       device = cairo_pdf,
        width = 6,
        height = 4,
        units = "in")
