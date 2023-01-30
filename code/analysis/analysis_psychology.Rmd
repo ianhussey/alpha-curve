@@ -632,12 +632,12 @@ p_kernel_alt
 
 write_rds(p_kernel_alt, "plots/p_kernel_psychology_alt.rds")
 
-ggsave("plots/p_kernel_psychology_alt.pdf", 
-       plot = p_kernel_alt, 
-       device = cairo_pdf,
-       width = 6,
-       height = 4,
-       units = "in")
+# ggsave("plots/p_kernel_psychology_alt.pdf", 
+#        plot = p_kernel_alt, 
+#        device = cairo_pdf,
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
