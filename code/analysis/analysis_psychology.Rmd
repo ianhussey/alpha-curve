@@ -12,10 +12,6 @@ output:
     toc_float: yes
 ---
 
-# TODO
-
-- NA
-
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(message = FALSE, 
@@ -172,47 +168,45 @@ data_diff <- data_frequency %>%
                values_to = "residual_kernel",
                c(frequency_without_residual_kernel, residual_kernel))
 
-
 total_n <- nrow(data_processed_binned)/100
-
-cbp1 <- c("grey", "#2A788EFF")
 
 plot_data_psych <- data_processed_binned |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
-  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
-                          TRUE ~ "Non cut-off"),
-         type = fct_relevel(type, "Non cut-off", "Cut-off")) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Common reliability threshold",
+                          TRUE ~ "Non-threshold"),
+         type = fct_relevel(type, "Non-threshold", "Common reliability threshold")) |>
   right_join(data_frequency, by = "alpha") |>
   drop_na()
 
+cbp1 <- c("grey", "#2A788EFF")
+
 p1_kernel_psych <-
-  ggplot(plot_data_psych, aes(alpha, y = count, fill = type)) + 
-  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  ggplot(plot_data_psych, aes(alpha, y = count, fill = type)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(position = "stack") +
-  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.3) +
-  #scale_fill_viridis_d(direction = -1, begin = 0.2, end = 0.65) +
-  scale_fill_manual(values = cbp1) +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2) +
+  scale_fill_manual(values = cbp1,
+                    name = element_blank()) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  # scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
   theme_bw() +
-  labs(x = "", # expression("Cronbach's" ~ alpha),
-       y = "Count",
-       fill = "") +
+  labs(x = "", 
+       y = "Count") +
   theme(axis.title.x = element_markdown()) +
   ylim(0, 1800) +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        legend.background = element_blank())
 
 p2_kernel_psych <- 
   ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = type)) + 
-  #geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
   geom_hline(yintercept = 0, size = 0.2) +
-  #scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
-  scale_fill_manual(values = cbp1) +
+  scale_fill_manual(values = cbp1,
+                    guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
@@ -221,15 +215,15 @@ p2_kernel_psych <-
                      minor_breaks = NULL) +
   theme_bw() +
   labs(x = "Cronbach's &alpha;",
-       y = "Residual",
-       fill = "") +
-  theme(legend.position = "bottom",
-        axis.title.x = element_markdown())
+       y = "Residual") +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_markdown(),
+        legend.position = "none") # c(0.23, 0.77), legend.background = element_blank()
 
 p_kernel_psych <- 
   p1_kernel_psych + 
   p2_kernel_psych + 
-  plot_layout(nrow = 2, heights = c(0.5, 0.5))
+  plot_layout(nrow = 2, heights = c(1.5, 1))
 
 p_kernel_psych
 
@@ -239,7 +233,7 @@ ggsave("plots/p_kernel_psychology.pdf",
        plot = p_kernel_psych,
        device = cairo_pdf,
        width = 6,
-       height = 4,
+       height = 4.5,
        units = "in")
 
 ```
