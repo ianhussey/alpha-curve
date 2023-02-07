@@ -153,21 +153,6 @@ data_frequency <-
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-data_diff <- data_frequency %>%
-  mutate(frequency = freq*100,
-         frequency_without_residual_kernel = if_else(residual_kernel > 0, frequency - residual_kernel, frequency),
-         pos_resid_kernel = residual_kernel > 0,
-         residual_kernel = if_else(residual_kernel > 0, residual_kernel, -1 * residual_kernel)) %>%
-  dplyr::select(alpha,
-                #fitted,
-                density_kernel,
-                pos_resid_kernel,
-                frequency_without_residual_kernel,
-                residual_kernel) %>%
-  pivot_longer(names_to = "type",
-               values_to = "residual_kernel",
-               c(frequency_without_residual_kernel, residual_kernel))
-
 total_n <- nrow(data_processed_binned)/100
 
 plot_data_psych <- data_processed_binned |>
@@ -187,7 +172,7 @@ c_line <- "black"
 c_lpbg <- "white"
 c_grid <- "#F0F0F0AA"
 
-(p1_kernel_psych <-
+p1_kernel_psych <-
   ggplot(plot_data_psych, aes(alpha, y = count, fill = excess)) +
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
@@ -205,9 +190,9 @@ c_grid <- "#F0F0F0AA"
   ylim(0, 1800) +
   theme(legend.position = "none",
         legend.background = element_blank(),
-        panel.grid = element_line(color = c_grid)))
+        panel.grid = element_line(color = c_grid))
 
-(p2_kernel_psych <- 
+p2_kernel_psych <- 
   ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = excess)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(aes(color = excess), size = 0.2) +
@@ -228,7 +213,7 @@ c_grid <- "#F0F0F0AA"
         axis.title.x = element_markdown(),
         legend.position = "none",
         panel.background = element_rect(fill = c_lpbg),
-        panel.grid = element_line(color = c_grid)))  # c(0.23, 0.77), legend.background = element_blank()
+        panel.grid = element_line(color = c_grid))  # c(0.23, 0.77), legend.background = element_blank()
 
 p_kernel_psych <- 
   p1_kernel_psych + 
@@ -428,6 +413,12 @@ model_beta <- data_processed_binned %>%
           link = "logit",
           data = .)
 
+# print model parameters
+broom::tidy(model_beta) |>
+  mutate_if(is.numeric, janitor::round_half_up, digits = 3) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
 beta_mu_intercept <- model_beta %>%
   tidy() %>%
   filter(component == "mean", term == "(Intercept)") %>%
@@ -448,77 +439,76 @@ data_frequency <- data_frequency %>%
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-data_diff <- data_frequency %>%
-  mutate(frequency = 100*freq,
-         frequency_without_residual_beta = if_else(residual_beta > 0, frequency - residual_beta, frequency),
-         pos_resid_beta = residual_beta > 0,
-         residual_beta = if_else(residual_beta > 0, residual_beta, -1 * residual_beta)) %>%
-  dplyr::select(alpha,
-                density_beta,
-                pos_resid_beta,
-                frequency_without_residual_beta,
-                residual_beta) %>%
-  pivot_longer(names_to = "type",
-               values_to = "residual_beta",
-               c(frequency_without_residual_beta, residual_beta))
+plot_data_psych_beta <- data_processed_binned |>
+  mutate(n_total = n()) |>
+  group_by(alpha) |>
+  summarise(count = sum(!is.na(alpha))) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Common reliability threshold",
+                          TRUE ~ "Non-threshold"),
+         type = fct_relevel(type, "Non-threshold", "Common reliability threshold")) |>
+  right_join(data_frequency, by = "alpha") |>
+  mutate(excess = if_else(residual_beta > 0, "excess", "deficit")) %>% 
+  drop_na()
 
-
-color_1 <- scales::viridis_pal()(11)[3]
-color_2 <- scales::viridis_pal()(11)[7]
-
-total_n <- nrow(data_processed_binned)/100
+c_excess <- "#2A788EFF"
+c_data <- "lightgrey"
+c_line <- "black"
+c_lpbg <- "white"
+c_grid <- "#F0F0F0AA"
 
 p1_beta <-
-  data_diff %>%  
-  mutate(type = factor(case_when(
-    type == "frequency_without_residual_beta" ~ "3",
-    pos_resid_beta ~ "2",
-    TRUE ~ "1"))
-  ) %>%
-  ggplot(., aes(alpha, y = residual_beta * total_n, fill = type)) +
-  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col(position = "stack") +
-  geom_step(aes(y = density_beta * total_n, group = 1), direction = "mid", size = 0.2) +
-  #ggrepel::geom_text_repel(aes(y = residual_beta * total_n, label = if_else(type %in% c("2", "1") & alpha %in% c(0.7, 0.8, 0.9), round(residual_beta*total_n), NA_real_)), position = "stack") +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
-                     labels = label_number(accuracy = 0.1),
-                     minor_breaks = NULL) +
-  scale_fill_manual(values = c("3" = "darkgray", "2" = color_2, "1" = color_1),
-                    guide = "none") +
-  scale_alpha_manual(values = c("3" = 0.35, "2" = 1, "1" = 1)) +
-  theme_bw() +
-  labs(x = "", #"Cronbach's &alpha;",
-       y = "Count")
-
-p2_beta <-
-  ggplot(data_frequency, aes(alpha, residual_beta * total_n, fill = residual_beta > 0)) +
+  ggplot(plot_data_psych_beta, aes(alpha, y = count, fill = excess)) +
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
-  geom_hline(yintercept = 0, size = 0.2) +
-  scale_fill_manual(values = c("TRUE" = color_2, "FALSE" = color_1), guide = "none") +
+  geom_col(aes(y = count - if_else(residual_beta > 0, residual_beta * total_n, 0)), fill = c_data) +
+  geom_step(aes(y = density_beta * total_n, group = 1), direction = "mid", size = 0.2, color = c_line) +
+  scale_fill_manual(values = c(c_data, c_excess),
+                    name = element_blank()) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 50),
+  theme_bw() +
+  labs(x = "", 
+       y = "Count") +
+  theme(axis.title.x = element_markdown()) +
+  #ylim(0, 1800) +
+  theme(legend.position = "none",
+        legend.background = element_blank(),
+        panel.grid = element_line(color = c_grid))
+
+p2_beta <- 
+  ggplot(plot_data_psych_beta, aes(alpha, residual_beta * total_n, fill = excess)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(aes(color = excess), size = 0.2) +
+  scale_color_manual(values = c(c_line, "#FFFFFF00")) +
+  geom_segment(x = 0.005, xend = 0.995, y = 0,yend=0, size = 0.2, color = c_line) +
+  scale_fill_manual(values = c("white", c_excess),
+                    guide = guide_legend(reverse = TRUE)) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 500, by = 100),
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
   labs(x = "Cronbach's &alpha;",
-       y = "Residual",
-       fill = "") +
-  theme(legend.position = "bottom",
-        axis.title.x = element_markdown())
+       y = "Residual") +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_markdown(),
+        legend.position = "none",
+        panel.background = element_rect(fill = c_lpbg),
+        panel.grid = element_line(color = c_grid))  # c(0.23, 0.77), legend.background = element_blank()
 
-p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(1.5, 0.5))
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(1.5, 1))
 
 p_beta
 
-# ggsave("plots/p_beta_psychology.pdf", 
-#        plot = p_beta, 
-#        device = cairo_pdf,
-#        width = 6,
-#        height = 4,
-#        units = "in")
+ggsave("plots/p_beta_psychology.pdf",
+       plot = p_beta,
+       device = cairo_pdf,
+       width = 6,
+       height = 4.5,
+       units = "in")
 
 ```
 
@@ -584,10 +574,10 @@ plot_data <- data_processed_binned |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
-  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Cut-off",
-                          alpha %in% c(.69, .79, .89) ~ "Pre cut-off",
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Threshold",
+                          alpha %in% c(.69, .79, .89) ~ "Pre-Threshold",
                           TRUE ~ "Other"),
-         type = fct_relevel(type, "Other", "Pre cut-off", "Cut-off")) |>
+         type = fct_relevel(type, "Other", "Pre-threshold", "Threshold")) |>
   right_join(data_frequency, by = "alpha") |>
   drop_na()
 

@@ -158,7 +158,7 @@ c_line <- "black"
 c_lpbg <- "white"
 c_grid <- "#F0F0F0AA"
 
-(p1_kernel_io <-
+p1_kernel_io <-
   ggplot(plot_data_io, aes(alpha, y = count, fill = excess)) +
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col() +
@@ -176,9 +176,9 @@ c_grid <- "#F0F0F0AA"
   ylim(0, 4200) +
   theme(legend.position = "none",
         legend.background = element_blank(),
-        panel.grid = element_line(color = c_grid)))
+        panel.grid = element_line(color = c_grid))
 
-(p2_kernel_io <- 
+p2_kernel_io <- 
   ggplot(plot_data_io, aes(alpha, residual_kernel * total_n, fill = excess)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
   geom_col(aes(color = excess), size = 0.2) +
@@ -199,7 +199,7 @@ c_grid <- "#F0F0F0AA"
         axis.title.x = element_markdown(),
         legend.position = "none",
         panel.background = element_rect(fill = c_lpbg),
-        panel.grid = element_line(color = c_grid))) # c(0.23, 0.77), legend.background = element_blank()
+        panel.grid = element_line(color = c_grid)) # c(0.23, 0.77), legend.background = element_blank()
 
 p_kernel_io <- 
   p1_kernel_io + 
