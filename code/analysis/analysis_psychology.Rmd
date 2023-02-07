@@ -178,16 +178,22 @@ plot_data_psych <- data_processed_binned |>
                           TRUE ~ "Non-threshold"),
          type = fct_relevel(type, "Non-threshold", "Common reliability threshold")) |>
   right_join(data_frequency, by = "alpha") |>
+  mutate(excess = if_else(residual_kernel > 0, "excess", "deficit")) %>% 
   drop_na()
 
-cbp1 <- c("grey", "#2A788EFF")
+c_excess <- "#2A788EFF"
+c_data <- "lightgrey"
+c_line <- "black"
+c_lpbg <- "white"
+c_grid <- "#F0F0F0AA"
 
-p1_kernel_psych <-
-  ggplot(plot_data_psych, aes(alpha, y = count, fill = type)) +
+(p1_kernel_psych <-
+  ggplot(plot_data_psych, aes(alpha, y = count, fill = excess)) +
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col(position = "stack") +
-  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2) +
-  scale_fill_manual(values = cbp1,
+  geom_col() +
+  geom_col(aes(y = count - if_else(residual_kernel > 0, residual_kernel * total_n, 0)), fill = c_data) +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2, color = c_line) +
+  scale_fill_manual(values = c(c_data, c_excess),
                     name = element_blank()) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
@@ -198,19 +204,21 @@ p1_kernel_psych <-
   theme(axis.title.x = element_markdown()) +
   ylim(0, 1800) +
   theme(legend.position = "none",
-        legend.background = element_blank())
+        legend.background = element_blank(),
+        panel.grid = element_line(color = c_grid)))
 
-p2_kernel_psych <- 
-  ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = type)) + 
+(p2_kernel_psych <- 
+  ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = excess)) + 
   geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
-  geom_col() +
-  geom_hline(yintercept = 0, size = 0.2) +
-  scale_fill_manual(values = cbp1,
+  geom_col(aes(color = excess), size = 0.2) +
+  scale_color_manual(values = c(c_line, "#FFFFFF00")) +
+  geom_segment(x = 0.005, xend = 0.995, y = 0,yend=0, size = 0.2, color = c_line) +
+  scale_fill_manual(values = c("white", c_excess),
                     guide = guide_legend(reverse = TRUE)) +
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 25),
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
@@ -218,7 +226,9 @@ p2_kernel_psych <-
        y = "Residual") +
   theme(legend.title = element_blank(),
         axis.title.x = element_markdown(),
-        legend.position = "none") # c(0.23, 0.77), legend.background = element_blank()
+        legend.position = "none",
+        panel.background = element_rect(fill = c_lpbg),
+        panel.grid = element_line(color = c_grid)))  # c(0.23, 0.77), legend.background = element_blank()
 
 p_kernel_psych <- 
   p1_kernel_psych + 
@@ -418,11 +428,6 @@ model_beta <- data_processed_binned %>%
           link = "logit",
           data = .)
 
-broom::tidy(model_beta) |>
-  mutate_if(is.numeric, janitor::round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
-
 beta_mu_intercept <- model_beta %>%
   tidy() %>%
   filter(component == "mean", term == "(Intercept)") %>%
@@ -494,7 +499,7 @@ p2_beta <-
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 100),
+  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 50),
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
@@ -504,16 +509,16 @@ p2_beta <-
   theme(legend.position = "bottom",
         axis.title.x = element_markdown())
 
-p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(1.5, 1))
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(1.5, 0.5))
 
 p_beta
 
-ggsave("plots/p_beta_psychology.pdf",
-       plot = p_beta,
-       device = cairo_pdf,
-       width = 6,
-       height = 4.5,
-       units = "in")
+# ggsave("plots/p_beta_psychology.pdf", 
+#        plot = p_beta, 
+#        device = cairo_pdf,
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
