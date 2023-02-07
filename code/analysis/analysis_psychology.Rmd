@@ -418,6 +418,11 @@ model_beta <- data_processed_binned %>%
           link = "logit",
           data = .)
 
+broom::tidy(model_beta) |>
+  mutate_if(is.numeric, janitor::round_half_up, digits = 2) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
 beta_mu_intercept <- model_beta %>%
   tidy() %>%
   filter(component == "mean", term == "(Intercept)") %>%
@@ -489,7 +494,7 @@ p2_beta <-
   scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
                      labels = label_number(accuracy = 0.1),
                      minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 50),
+  scale_y_continuous(breaks = seq(from = -300, to = 300, by = 100),
                      labels = label_number(accuracy = 1),
                      minor_breaks = NULL) +
   theme_bw() +
@@ -499,16 +504,16 @@ p2_beta <-
   theme(legend.position = "bottom",
         axis.title.x = element_markdown())
 
-p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(0.5, 0.5))
+p_beta <- p1_beta + p2_beta + plot_layout(nrow = 2, heights = c(1.5, 1))
 
 p_beta
 
-# ggsave("plots/p_beta_psychology.pdf", 
-#        plot = p_beta, 
-#        device = cairo_pdf,
-#        width = 6,
-#        height = 4,
-#        units = "in")
+ggsave("plots/p_beta_psychology.pdf",
+       plot = p_beta,
+       device = cairo_pdf,
+       width = 6,
+       height = 4.5,
+       units = "in")
 
 ```
 
