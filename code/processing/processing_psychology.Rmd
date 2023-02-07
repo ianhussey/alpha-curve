@@ -1,6 +1,15 @@
 ---
-title: "Data extraction"
-output: html_document
+title: "An excess of Cronbach's α values at rule-of-thumb cut-offs"
+subtitle: "Extract alphas"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
 ---
 
 # TODO
@@ -272,13 +281,14 @@ data_estimates <- data_extracted |>
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
     # exclusion variables
-    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|minimum)"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
     exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
     exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
-    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria"),
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria|is considered|threshold"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
+    exclude_range_present_2 = str_detect(all, "(.70s|.80s|.90s)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
     exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
     exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
@@ -287,7 +297,8 @@ data_estimates <- data_extracted |>
     # something about references to this journal keep getting confused for alpha values
     exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
     exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
-    exclude_kappa = str_detect(all, "(kappa|κ)")
+    exclude_kappa = str_detect(all, "(kappa|κ)"),
+    exclude_icc = str_detect(all, "icc")
     ) |>
   mutate(
     # master exclusion variable
@@ -299,6 +310,7 @@ data_estimates <- data_extracted |>
         exclude_comparison_present_after_estimate == TRUE |
         exclude_cutoff_present == TRUE |
         exclude_range_present == TRUE |
+        exclude_range_present_2 == TRUE |
         exclude_p_present == TRUE |
         exclude_r_present == TRUE |
         exclude_significance_present == TRUE |
@@ -307,7 +319,8 @@ data_estimates <- data_extracted |>
         exclude_psychometrika_present == TRUE |
         exclude_odd_string_present == TRUE |
         exclude_kappa == TRUE |
-        exclude_s == TRUE,
+        exclude_s == TRUE |
+        exclude_icc == TRUE,
       TRUE, 
       FALSE
     ),
@@ -441,7 +454,7 @@ data_processed |>
 
 dir.create("../../data/processed")
 
-write_csv(data_processed, "../../data/processed/psycholgoy/data_processed_psychology.csv")
+write_csv(data_processed, "../../data/processed/psychology/data_processed_psychology.csv")
 #data_processed <- read_csv("../../data/processed/psychology/data_processed_psychology.csv")
 
 ```
