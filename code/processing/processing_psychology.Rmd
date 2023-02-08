@@ -281,12 +281,12 @@ data_estimates <- data_extracted |>
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
     # exclusion variables
-    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of)"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of|under|within|around|surpass)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
     exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
     exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
-    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria|is considered|threshold"),
+    exclude_cutoff_present = str_detect(all, "cut(\\s|-)off|criteria|is considered|is generally considered|threshold"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
     exclude_range_present_2 = str_detect(all, "(.70s|.80s|.90s)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
@@ -297,8 +297,12 @@ data_estimates <- data_extracted |>
     # something about references to this journal keep getting confused for alpha values
     exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
     exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
+    exclude_odd_string_present_2 = str_detect(all, "test-retest reliaiblity and alpha"),
     exclude_kappa = str_detect(all, "(kappa|κ)"),
-    exclude_icc = str_detect(all, "icc")
+    exclude_theta = str_detect(all, "(theta|θ)"),
+    exclude_rho = str_detect(all, "(rho|ρ)"),
+    exclude_icc = str_detect(all, "icc"),
+    exclude_raa = str_detect(all, "raa")
     ) |>
   mutate(
     # master exclusion variable
@@ -318,9 +322,13 @@ data_estimates <- data_extracted |>
         exclude_doi_string_present == TRUE |
         exclude_psychometrika_present == TRUE |
         exclude_odd_string_present == TRUE |
+        exclude_odd_string_present_2 == TRUE |
         exclude_kappa == TRUE |
+        exclude_theta == TRUE |
+        exclude_rho == TRUE |
         exclude_s == TRUE |
-        exclude_icc == TRUE,
+        exclude_icc == TRUE |
+        exclude_raa == TRUE,
       TRUE, 
       FALSE
     ),
@@ -350,16 +358,26 @@ data_estimates <- data_extracted |>
                 substring_immediately_after_estimate,
                 exclude_master, 
                 exclude_comparison_present,
-                exclude_comparison_present_immediately_before_estimate,
                 exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_immediately_before_estimate,
                 exclude_comparison_present_after_estimate,
                 exclude_cutoff_present,
                 exclude_range_present,
+                exclude_range_present_2,
                 exclude_p_present,
+                exclude_r_present,
                 exclude_significance_present,
                 exclude_doi_present,
+                exclude_doi_string_present,
                 exclude_psychometrika_present,
-                exclude_odd_string_present) |>
+                exclude_odd_string_present,
+                exclude_odd_string_present_2,
+                exclude_kappa,
+                exclude_theta,
+                exclude_rho,
+                exclude_s,
+                exclude_icc,
+                exclude_raa) |>
   arrange(doi, regex_label)
 
 ```

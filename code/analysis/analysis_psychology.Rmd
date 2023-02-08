@@ -54,13 +54,6 @@ data_processed <- read_csv("../../data/processed/psychology/data_processed_psych
 data_processed_trimmed <- data_processed |>
   filter(!is.na(alpha) & exclude_master == FALSE)
 
-temp <- data_processed_trimmed |>
-  select(alpha, all) |>
-  arrange(alpha) 
-
-temp2 <- temp |>
-  filter(alpha %in% c(.70, .80, .90))
-
 data_processed_binned <- data_processed_trimmed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression

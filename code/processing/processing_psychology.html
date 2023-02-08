@@ -1670,7 +1670,7 @@ border-radius: 0px;
 rule-of-thumb cut-offs</h1>
 <h3 class="subtitle">Extract alphas</h3>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">07 February, 2023</h4>
+<h4 class="date">08 February, 2023</h4>
 
 </div>
 
@@ -1931,12 +1931,12 @@ exclusions</li>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">substring_immediately_before_estimate =</span> <span class="fu">str_sub</span>(post, <span class="at">start =</span> location_alpha_start<span class="dv">-3</span>, <span class="at">end =</span> location_alpha_start),</span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">substring_immediately_after_estimate =</span> <span class="fu">str_sub</span>(post, <span class="at">start =</span> location_alpha_end, <span class="at">end =</span> location_alpha_end<span class="sc">+</span><span class="dv">6</span>),</span>
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># exclusion variables</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_comparison_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot;([&lt;&gt;≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of)&quot;</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_comparison_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot;([&lt;&gt;≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of|under|within|around|surpass)&quot;</span>),</span>
 <span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_comparison_present_immediately_after_estimate =</span> <span class="fu">str_detect</span>(substring_immediately_after_estimate, <span class="st">&quot;(to|–|−|–)&quot;</span>),</span>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_comparison_present_immediately_before_estimate =</span> <span class="fu">str_detect</span>(substring_immediately_before_estimate, <span class="st">&quot;(to|–|−|–)&quot;</span>),</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_comparison_present_after_estimate =</span> <span class="fu">str_detect</span>(post, <span class="st">&quot;(or above|or higher|or more|or greater|or below|or less|or lower)&quot;</span>),</span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_s =</span> <span class="fu">str_starts</span>(exclude_comparison_present_after_estimate, <span class="st">&quot;s&quot;</span>), <span class="co"># eg &quot;in the .70s&quot;</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_cutoff_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot;cut(</span><span class="sc">\\</span><span class="st">s|-)off|criteria|is considered|threshold&quot;</span>),</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_cutoff_present =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;cut(</span><span class="sc">\\</span><span class="st">s|-)off|criteria|is considered|is generally considered|threshold&quot;</span>),</span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_range_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot;(range|ranging|between|from)&quot;</span>),</span>
 <span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_range_present_2 =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;(.70s|.80s|.90s)&quot;</span>),</span>
 <span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_p_present =</span> <span class="fu">str_detect</span>(post, <span class="st">&quot;p</span><span class="sc">\\</span><span class="st">s*[=&lt;&gt;≥≤]&quot;</span>),</span>
@@ -1947,70 +1947,88 @@ exclusions</li>
 <span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># something about references to this journal keep getting confused for alpha values</span></span>
 <span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_psychometrika_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot;psychometrika&quot;</span>),</span>
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_odd_string_present =</span> <span class="fu">str_detect</span>(substring_between_cronbach_and_estimate, <span class="st">&quot; d s &quot;</span>),</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_kappa =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;(kappa|κ)&quot;</span>),</span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_icc =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;icc&quot;</span>)</span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># master exclusion variable</span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_master =</span> <span class="fu">ifelse</span>(</span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>      <span class="co">#alpha == &quot;.&quot; |</span></span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>      exclude_comparison_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_immediately_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_immediately_before_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>        exclude_cutoff_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        exclude_range_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>        exclude_range_present_2 <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>        exclude_p_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>        exclude_r_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>        exclude_significance_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>        exclude_doi_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        exclude_doi_string_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>        exclude_psychometrika_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>        exclude_odd_string_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>        exclude_kappa <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>        exclude_s <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
-<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>        exclude_icc <span class="sc">==</span> <span class="cn">TRUE</span>,</span>
-<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span>, </span>
-<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>      <span class="cn">FALSE</span></span>
-<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_master =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(exclude_master), <span class="cn">TRUE</span>, exclude_master),</span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># extract the estimate</span></span>
-<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha_string =</span> </span>
-<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(</span>
-<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>        <span class="fu">str_extract</span>(post, regex_string), </span>
-<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>        regex_string_subset</span>
-<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fu">ifelse</span>(exclude_master, <span class="cn">NA</span>, <span class="fu">as.numeric</span>(alpha_string))</span>
-<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(doi, </span>
-<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>                regex_label,</span>
-<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>                exemplar, </span>
-<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>                alpha, </span>
-<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>                pre, </span>
-<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>                post, </span>
-<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>                all,</span>
-<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>                regex_inclusion, </span>
-<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>                regex_exclusion,</span>
-<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>                location_start, </span>
-<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>                location_end,</span>
-<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>                alpha_string,</span>
-<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>                substring_between_cronbach_and_estimate,</span>
-<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>                substring_immediately_before_estimate,</span>
-<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>                substring_immediately_after_estimate,</span>
-<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a>                exclude_master, </span>
-<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present,</span>
-<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_immediately_before_estimate,</span>
-<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_immediately_after_estimate,</span>
-<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_after_estimate,</span>
-<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>                exclude_cutoff_present,</span>
-<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>                exclude_range_present,</span>
-<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a>                exclude_p_present,</span>
-<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>                exclude_significance_present,</span>
-<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>                exclude_doi_present,</span>
-<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>                exclude_psychometrika_present,</span>
-<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>                exclude_odd_string_present) <span class="sc">|&gt;</span></span>
-<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(doi, regex_label)</span></code></pre></div>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_odd_string_present_2 =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;test-retest reliaiblity and alpha&quot;</span>),</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_kappa =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;(kappa|κ)&quot;</span>),</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_theta =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;(theta|θ)&quot;</span>),</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_rho =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;(rho|ρ)&quot;</span>),</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_icc =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;icc&quot;</span>),</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_raa =</span> <span class="fu">str_detect</span>(all, <span class="st">&quot;raa&quot;</span>)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># master exclusion variable</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_master =</span> <span class="fu">ifelse</span>(</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>      <span class="co">#alpha == &quot;.&quot; |</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>      exclude_comparison_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_immediately_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_immediately_before_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>        exclude_comparison_present_after_estimate <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>        exclude_cutoff_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>        exclude_range_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>        exclude_range_present_2 <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        exclude_p_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>        exclude_r_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>        exclude_significance_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>        exclude_doi_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>        exclude_doi_string_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>        exclude_psychometrika_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>        exclude_odd_string_present <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>        exclude_odd_string_present_2 <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>        exclude_kappa <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>        exclude_theta <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>        exclude_rho <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>        exclude_s <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>        exclude_icc <span class="sc">==</span> <span class="cn">TRUE</span> <span class="sc">|</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>        exclude_raa <span class="sc">==</span> <span class="cn">TRUE</span>,</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span>, </span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>      <span class="cn">FALSE</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">exclude_master =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(exclude_master), <span class="cn">TRUE</span>, exclude_master),</span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>    <span class="co"># extract the estimate</span></span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha_string =</span> </span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_extract</span>(</span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>        <span class="fu">str_extract</span>(post, regex_string), </span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>        regex_string_subset</span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fu">ifelse</span>(exclude_master, <span class="cn">NA</span>, <span class="fu">as.numeric</span>(alpha_string))</span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(doi, </span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>                regex_label,</span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>                exemplar, </span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>                alpha, </span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>                pre, </span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>                post, </span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>                all,</span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a>                regex_inclusion, </span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>                regex_exclusion,</span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>                location_start, </span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>                location_end,</span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>                alpha_string,</span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>                substring_between_cronbach_and_estimate,</span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>                substring_immediately_before_estimate,</span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a>                substring_immediately_after_estimate,</span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>                exclude_master, </span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present,</span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_immediately_after_estimate,</span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_immediately_before_estimate,</span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>                exclude_comparison_present_after_estimate,</span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a>                exclude_cutoff_present,</span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a>                exclude_range_present,</span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a>                exclude_range_present_2,</span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>                exclude_p_present,</span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>                exclude_r_present,</span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>                exclude_significance_present,</span>
+<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>                exclude_doi_present,</span>
+<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>                exclude_doi_string_present,</span>
+<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a>                exclude_psychometrika_present,</span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>                exclude_odd_string_present,</span>
+<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>                exclude_odd_string_present_2,</span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>                exclude_kappa,</span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a>                exclude_theta,</span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a>                exclude_rho,</span>
+<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a>                exclude_s,</span>
+<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a>                exclude_icc,</span>
+<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>                exclude_raa) <span class="sc">|&gt;</span></span>
+<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(doi, regex_label)</span></code></pre></div>
 </div>
 <div id="exclusions" class="section level2">
 <h2>Exclusions</h2>
@@ -2074,25 +2092,26 @@ exclusions</li>
 <span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        doi,</span>
 <span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        psychometrika) <span class="sc">|&gt;</span></span>
 <span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n))</span></code></pre></div>
-<pre><code>## # A tibble: 16 × 8
+<pre><code>## # A tibble: 17 × 8
 ##    comp  comp_after cutoff range p     doi   psychometrika     n
 ##    &lt;lgl&gt; &lt;lgl&gt;      &lt;lgl&gt;  &lt;lgl&gt; &lt;lgl&gt; &lt;lgl&gt; &lt;lgl&gt;         &lt;int&gt;
-##  1 FALSE FALSE      FALSE  FALSE FALSE FALSE FALSE         36863
-##  2 FALSE FALSE      FALSE  TRUE  FALSE FALSE FALSE          3236
-##  3 TRUE  FALSE      FALSE  FALSE FALSE FALSE FALSE          1097
-##  4 TRUE  FALSE      FALSE  TRUE  FALSE FALSE FALSE           343
+##  1 FALSE FALSE      FALSE  FALSE FALSE FALSE FALSE         36774
+##  2 FALSE FALSE      FALSE  TRUE  FALSE FALSE FALSE          3230
+##  3 TRUE  FALSE      FALSE  FALSE FALSE FALSE FALSE          1119
+##  4 TRUE  FALSE      FALSE  TRUE  FALSE FALSE FALSE           347
 ##  5 FALSE FALSE      FALSE  FALSE TRUE  FALSE FALSE           108
-##  6 FALSE TRUE       FALSE  FALSE FALSE FALSE FALSE            87
-##  7 TRUE  TRUE       FALSE  FALSE FALSE FALSE FALSE            20
-##  8 FALSE FALSE      FALSE  FALSE FALSE FALSE TRUE             15
-##  9 TRUE  FALSE      FALSE  FALSE TRUE  FALSE FALSE             9
-## 10 FALSE FALSE      FALSE  FALSE FALSE TRUE  FALSE             5
-## 11 FALSE FALSE      TRUE   FALSE FALSE FALSE FALSE             3
-## 12 FALSE FALSE      TRUE   TRUE  FALSE FALSE FALSE             1
-## 13 FALSE TRUE       FALSE  TRUE  FALSE FALSE FALSE             1
-## 14 TRUE  FALSE      FALSE  TRUE  TRUE  FALSE FALSE             1
-## 15 TRUE  FALSE      TRUE   FALSE FALSE FALSE FALSE             1
-## 16 TRUE  TRUE       FALSE  TRUE  FALSE FALSE FALSE             1</code></pre>
+##  6 FALSE TRUE       FALSE  FALSE FALSE FALSE FALSE            83
+##  7 FALSE FALSE      TRUE   FALSE FALSE FALSE FALSE            46
+##  8 TRUE  TRUE       FALSE  FALSE FALSE FALSE FALSE            19
+##  9 FALSE FALSE      FALSE  FALSE FALSE FALSE TRUE             15
+## 10 TRUE  FALSE      FALSE  FALSE TRUE  FALSE FALSE             9
+## 11 FALSE FALSE      FALSE  FALSE FALSE TRUE  FALSE             5
+## 12 TRUE  FALSE      TRUE   FALSE FALSE FALSE FALSE             5
+## 13 FALSE TRUE       TRUE   FALSE FALSE FALSE FALSE             3
+## 14 FALSE FALSE      TRUE   TRUE  FALSE FALSE FALSE             1
+## 15 FALSE TRUE       FALSE  TRUE  FALSE FALSE FALSE             1
+## 16 TRUE  FALSE      FALSE  TRUE  TRUE  FALSE FALSE             1
+## 17 TRUE  TRUE       FALSE  TRUE  FALSE FALSE FALSE             1</code></pre>
 <ul>
 <li>Biggest exclusion is for range, then comparison, then both range and
 comparison, then comparison after the estimate.</li>
@@ -2106,16 +2125,16 @@ comparison, then comparison after the estimate.</li>
 <pre><code>## # A tibble: 1 × 1
 ##       n
 ##   &lt;int&gt;
-## 1 33705</code></pre>
+## 1 33581</code></pre>
 <div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>data_processed <span class="sc">|&gt;</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(exclude_master <span class="sc">==</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(regex_label)</span></code></pre></div>
 <pre><code>## # A tibble: 3 × 2
 ##   regex_label                                             n
 ##   &lt;chr&gt;                                               &lt;int&gt;
-## 1 consistency|reliability, alpha, !cronbach            9254
-## 2 cronbach&#39;s alpha                                    21017
-## 3 internal consistency|reliability, !alpha, !cronbach  3434</code></pre>
+## 1 consistency|reliability, alpha, !cronbach            9230
+## 2 cronbach&#39;s alpha                                    20945
+## 3 internal consistency|reliability, !alpha, !cronbach  3406</code></pre>
 </div>
 </div>
 <div id="write-to-disk" class="section level2">
