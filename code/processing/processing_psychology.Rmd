@@ -282,13 +282,13 @@ data_estimates <- data_extracted |>
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
     # exclusion variables
     exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|in the region of|approximately|minimum|in excess of|under|within|around|surpass)"),
-    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–|\\+)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
-    exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_comparison_present_after_estimate = str_detect(post, "(and above|or above|and higher|or higher|and more|or more|and greater|or greater|and below|or below|and less|or less|and lower|or lower)"),
     exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
-    exclude_cutoff_present = str_detect(all, "cut(\\s|-)off|criteria|is considered|is generally considered|threshold"),
+    exclude_cutoff_present = str_detect(all, "cut(\\s|-)off|cutoff|criteria|is considered|is generally considered|threshold|the minimum considered acceptable|general rule of thumb"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
-    exclude_range_present_2 = str_detect(all, "(.70s|.80s|.90s)"),
+    exclude_range_present_2 = str_detect(all, "(.70s|.80s|.90s|mid to high|exceeded α =)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
     exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
     exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
@@ -299,10 +299,13 @@ data_estimates <- data_extracted |>
     exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
     exclude_odd_string_present_2 = str_detect(all, "test-retest reliaiblity and alpha"),
     exclude_kappa = str_detect(all, "(kappa|κ)"),
+    exclude_splithalf = str_detect(all, "(split-half|split half|splithalf|spearman-brown)"),
+    exclude_r2 = str_detect(substring_between_cronbach_and_estimate, "r2"),
     exclude_theta = str_detect(all, "(theta|θ)"),
     exclude_rho = str_detect(all, "(rho|ρ)"),
     exclude_icc = str_detect(all, "icc"),
-    exclude_raa = str_detect(all, "raa")
+    exclude_raa = str_detect(all, "raa"),
+    exclude_specific_exclusions = str_detect(all, "based on internal consistency reliability values of .70, .80, and .90.")
     ) |>
   mutate(
     # master exclusion variable
@@ -324,11 +327,14 @@ data_estimates <- data_extracted |>
         exclude_odd_string_present == TRUE |
         exclude_odd_string_present_2 == TRUE |
         exclude_kappa == TRUE |
+        exclude_splithalf == TRUE |
+        exclude_r2 == TRUE |
         exclude_theta == TRUE |
         exclude_rho == TRUE |
         exclude_s == TRUE |
         exclude_icc == TRUE |
-        exclude_raa == TRUE,
+        exclude_raa == TRUE |
+        exclude_specific_exclusions == TRUE,
       TRUE, 
       FALSE
     ),
@@ -373,11 +379,14 @@ data_estimates <- data_extracted |>
                 exclude_odd_string_present,
                 exclude_odd_string_present_2,
                 exclude_kappa,
+                exclude_splithalf,
+                exclude_r2,
                 exclude_theta,
                 exclude_rho,
                 exclude_s,
                 exclude_icc,
-                exclude_raa) |>
+                exclude_raa,
+                exclude_specific_exclusions) |>
   arrange(doi, regex_label)
 
 ```
