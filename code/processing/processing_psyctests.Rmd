@@ -372,6 +372,7 @@ data_estimates <- data_extracted |>
                 location_alpha_start,
                 location_alpha_end,
                 alpha_string,
+                alpha_all,
                 substring_between_cronbach_and_estimate,
                 substring_immediately_before_estimate,
                 substring_immediately_after_estimate,
