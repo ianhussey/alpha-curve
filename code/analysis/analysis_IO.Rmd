@@ -14,7 +14,7 @@ output:
 
 # TODO
 
-- NA
+- Add magnifcation plot? https://github.com/hughjonesd/ggmagnify
 
 ```{r setup, include=FALSE}
 
