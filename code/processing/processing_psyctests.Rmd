@@ -157,7 +157,7 @@ data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>%
   rowwise() |>
   mutate(locations = list(
     as.data.frame(
-      str_locate_all(string = text, pattern = "(consistenc|(?<!interrater) reliabilit)")
+      str_locate_all(string = text, pattern = "(consistenc|(?<!interrater|retest|half) reliabilit)")
     ) |>
       rownames_to_column(var = "exemplar")
   )) |>
