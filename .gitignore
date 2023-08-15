@@ -16,3 +16,6 @@ data/raw/psychology/data_fulltexts.rds
 data/raw/IO/alphaDb_clean_metaBUS_2018_09_09.rds
 .Rproj.user
 communication/AMPPS submission/draft_Proof_hi.pdf
+data/raw/psycTests/preprocessed_records.rds
+data/raw/psycTests/copy of essential files from sober_rubric/*
+data/raw/psycTests/copy of essential files from sober_rubric.zip
