@@ -306,6 +306,7 @@ data_estimates <- data_extracted |>
     substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
     substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
+    alpha_string = str_sub(post, start = location_alpha_start, end = location_alpha_end),
     # exclusion variables
     exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
     exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of)"),
@@ -348,13 +349,14 @@ data_estimates <- data_extracted |>
       FALSE
     ),
     exclude_master = ifelse(is.na(exclude_master), TRUE, exclude_master),
-    # extract the estimate
-    alpha_string = 
-      str_extract(
-        str_extract(post, regex_string), 
-        regex_string_subset
-      ),
-    alpha = ifelse(exclude_master, NA, as.numeric(alpha_string))
+    # # extract the estimate
+    # alpha_string = 
+    #   str_extract(
+    #     str_extract(post, regex_string), 
+    #     regex_string_subset
+    #   ),
+    alpha_all = as.numeric(str_replace_all(alpha_string, "[^.0-9]", "")),
+    alpha = ifelse(exclude_master, NA_real_, alpha_all)
   ) |>
   dplyr::select(doi, 
                 regex_label,
@@ -448,12 +450,18 @@ df <- data_processed |>
 
 df
 
+## how many alphas occur twice for one test
+alphas_twice <- data_processed |>
+  filter(!is.na(alpha)) |>
+  dplyr::select(doi, regex_label, exemplar, alpha, all) |>
+  group_by(doi, alpha) |> 
+  filter(n() > 1)
+
 ```
 
 ## Count exclusions
 
 ```{r}
-
 data_processed |>
   mutate(
     exclude_comparison_present = exclude_comparison_present |
@@ -510,13 +518,12 @@ data_processed |>
 ```{r}
 
 data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) %>% 
   filter(exclude_comparison_present | 
            exclude_comparison_present_immediately_before_estimate |
            exclude_comparison_present_immediately_after_estimate |
            exclude_comparison_present_after_estimate) %>% 
-  select(doi, alpha, all) %>% 
-  pull(alpha) %>% qplot(binwidth = .01)
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
 
 ```
 
@@ -524,10 +531,9 @@ data_processed %>%
 ```{r}
 
 data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) %>% 
   filter(exclude_quant_comparison_present) %>% 
-  select(doi, alpha, all) %>% 
-  pull(alpha) %>% qplot(binwidth = .01)
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
 
 ```
 
@@ -536,13 +542,12 @@ data_processed %>%
 
 
 data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) %>% 
   filter(!exclude_cutoff_present & (exclude_comparison_present |
                                       exclude_comparison_present_immediately_before_estimate |
                                       exclude_comparison_present_immediately_after_estimate |
                                       exclude_comparison_present_after_estimate)) %>% 
-  select(doi, alpha, all) %>% 
-  pull(alpha) %>% qplot(binwidth = .01)
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
 
 ```
 
@@ -550,10 +555,9 @@ data_processed %>%
 ```{r}
 
 data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) %>% 
   filter(exclude_cutoff_present) %>% 
-  select(doi, alpha, all) %>% 
-  pull(alpha) %>% qplot(binwidth = .01)
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
 
 ```
 
@@ -561,13 +565,12 @@ data_processed %>%
 ```{r}
 
 data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) %>% 
   mutate(exclude_comparison_present = exclude_comparison_present |
            exclude_comparison_present_immediately_before_estimate |
            exclude_comparison_present_immediately_after_estimate |
            exclude_comparison_present_after_estimate) %>% 
   filter(exclude_comparison_present) %>% 
-  select(doi, alpha, all) %>% View()
+  select(doi, alpha_all, all) %>% View()
 
 ```
 
@@ -643,7 +646,7 @@ data_processed %>%
 ```{r}
 
 data_included <- data_processed %>% 
-  mutate(alpha = as.numeric(alpha_string)) |>
+  mutate(alpha = alpha_all) |>
   filter(exclude_master == FALSE) 
 
 ```
