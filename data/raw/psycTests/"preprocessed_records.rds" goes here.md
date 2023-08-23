@@ -1,1 +1,0 @@
-preprocessed_records.rds is produced by the 2_preprocessing.Rmd script, originally from the sober_rubric repo. These are not publicly distributed due to the APA's copyright of that database and our data sharing agreement with the APA. 
