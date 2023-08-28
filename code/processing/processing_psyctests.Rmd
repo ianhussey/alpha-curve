@@ -13,6 +13,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
 ```
 
 # Dependencies
@@ -297,8 +298,7 @@ data_estimates <- data_extracted |>
   ungroup() |>
   unnest(locations) |>
   rename(location_alpha_start = start,
-         location_alpha_end = end) |>
-  mutate(
+         location_alpha_end = end) |> mutate(
     # substrings
     substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
     substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
@@ -645,8 +645,205 @@ for_review2 <- for_review %>%
 ```
 
 ```{r}
-df <- readRDS("for_review.rds") #only for manual review purpose
+for_review <- readRDS("for_review.rds") #only for manual review purpose
 ```
+
+
+### filter to .7 and sample
+```{r}
+for_review %>% filter(alpha == .7) %>% nrow() # 1281
+
+
+epiR::epi.sssimpleestb(N = 1281, # population size
+                       Py = .5, # expected proportion
+                       epsilon = .2, # precision bound (.2 * .5 ==> .1 ==> prevalence 40-60%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+```
+
+This gives the same result as inputting the following parameters in the [online sample size calculation tool](https://sampsize.sourceforge.net/iface/index.html):
+Precision = 10%, Prevalence = 50%, Population = 1281, CI = 95%.
+
+#### sample 1
+```{r}
+set.seed(14)
+for_review_sample_1 <- for_review %>% 
+  filter(alpha == .7000) %>% 
+  sample_n(size = 90)
+
+rio::export(for_review_sample_1, "for_review_sample_1.xlsx")
+```
+
+9/90 found to be non-alphas, see issues.
+
+```{r}
+prop.test(x = 9, n = 90, p = .5, conf.level = .95)
+```
+
+### filter to not .7, .8, .9 and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% nrow() # 63457
+
+
+epiR::epi.sssimpleestb(N = 63457, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+```
+
+#### sample 2
+```{r}
+set.seed(14)
+for_review_sample_2 <- for_review %>% 
+  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% 
+  sample_n(size = 382)
+  
+  
+rio::export(for_review_sample_2, "for_review_sample_2.xlsx")
+```
+
+
+```{r}
+
+set.seed(14)
+for_review_sample_3 <- for_review %>% 
+  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% 
+  sample_n(size = 72)
+```
+
+8/72
+
+```{r}
+prop.test(x = 8, n = 72, p = .2, conf.level = .95)
+```
+
+
+```{r}
+d <- data_extracted |>
+  rowwise() %>% 
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = post, pattern = regex_string)
+    ) |>
+      rownames_to_column(var = "exemplar_alpha")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_alpha_start = start,
+         location_alpha_end = end)
+  
+data_estimates <- d %>%   
+  mutate(
+    # substrings
+    substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
+    substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
+    substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
+    alpha_string = str_sub(post, start = location_alpha_start, end = location_alpha_end),
+    # exclusion variables
+    exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|bellow|smaller|less|at least|between|the order of|increase|decrease)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
+    exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criterion|criteria|threshold|minimum"),
+    exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
+    exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=)"),
+    exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
+    exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
+    exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
+    exclude_doi_present = str_detect(post, regex_string_doi),
+    exclude_doi_string_present = str_detect(all, "doi"),
+    # something about references to this journal keep getting confused for alpha values
+    exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
+    exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
+    exclude_kappa = str_detect(all, "(kappa|κ)")
+  ) |>
+  mutate(
+    # master exclusion variable
+    exclude_master = ifelse(
+      #alpha == "." |
+      exclude_comparison_present == TRUE |
+        exclude_comparison_present_immediately_after_estimate == TRUE |
+        exclude_comparison_present_immediately_before_estimate == TRUE |
+        exclude_comparison_present_after_estimate == TRUE |
+        exclude_cutoff_present == TRUE |
+        exclude_range_present == TRUE |
+        exclude_nonalphas_present == TRUE |
+        exclude_p_present == TRUE |
+        exclude_r_present == TRUE |
+        exclude_significance_present == TRUE |
+        exclude_doi_present == TRUE |
+        exclude_doi_string_present == TRUE |
+        exclude_psychometrika_present == TRUE |
+        exclude_odd_string_present == TRUE |
+        exclude_kappa == TRUE |
+        exclude_s == TRUE,
+      TRUE, 
+      FALSE
+    ),
+    exclude_master = ifelse(is.na(exclude_master), TRUE, exclude_master),
+    # # extract the estimate
+    # alpha_string = 
+    #   str_extract(
+    #     str_extract(post, regex_string), 
+    #     regex_string_subset
+    #   ),
+    alpha_all = as.numeric(str_replace_all(alpha_string, "[^.0-9]", "")),
+    alpha = ifelse(exclude_master, NA_real_, alpha_all)
+  ) |>
+  dplyr::select(doi, 
+                regex_label,
+                exemplar, 
+                alpha, 
+                pre, 
+                post, 
+                all,
+                regex_inclusion, 
+                regex_exclusion,
+                location_start, 
+                location_end,
+                location_alpha_start,
+                location_alpha_end,
+                alpha_string,
+                alpha_all,
+                substring_between_cronbach_and_estimate,
+                substring_immediately_before_estimate,
+                substring_immediately_after_estimate,
+                exclude_master, 
+                exclude_quant_comparison_present,
+                exclude_comparison_present,
+                exclude_comparison_present_immediately_before_estimate,
+                exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_after_estimate,
+                exclude_cutoff_present,
+                exclude_range_present,
+                exclude_nonalphas_present,
+                exclude_p_present,
+                exclude_significance_present,
+                exclude_doi_present,
+                exclude_psychometrika_present,
+                exclude_odd_string_present,
+                exclude_kappa,
+                exclude_s) |>
+  arrange(doi, regex_label) %>% 
+  mutate(location_alpha_start = location_end + location_alpha_start - 1)
+```
+
+
+
+
+
+
+
+
+
 
 ## Issues found
 
@@ -689,6 +886,11 @@ done until row 214
 -   "the split-half reliabilities of the test itself have been uniformly high. for three studies, these reliabilities (corrected by the spearman-brown formula) were respectively .94, .95, and .93. a median interscorer reliability of .97 was found in an investigation involving 10 scorers, and in other, smaller projects, the results were comparable." - extracted as "0.970"
 -   "m =", "sd =" - maybe too general? already added above, but could be limited to immediately prior to the alpha string instead of general.
 -   "internal consistency: the alpha for the 23-item pscd (excluding the odd item) total score was .80. the mic values were acceptable for factors of gm (.17), cu (.16), di (.26), and cd (.27). the omega coefficients ranged from .69 to .81. the omega coefficient for the total scale was .90." returned .17.
+
+### icc
+- 10.1037/t38111-000	consistency|reliability, alpha, !cronbach	0.7	reliability: phase i - interrater agreement on assignment of each descriptor to a level of loss was examined. forty-eight of the descriptors met the criterion of assignment to the same level by at least 4 of the 6 judges (67% agreement). phase ii - interrater reliability was determined by calculating the intraclass correlation coefficient (icc) of ratings using a two-way random effects model that adjusts for residual error. results of analysis of interrater agreement indicated icc r = .65 for stl and .70 for ltl. both icc's were significant at the level of p < .001 when f ratios were calculated. these values meet or approach the reliability criterion of .70. interrater reliability was again measured two weeks later. on the second testing, icc's remained near the same levels as before (r = .69 and .72 for stl and ltl respectively) and continued to be significant (p < .001).
+
+- 
 
 
 # plot - eventually to be moved to analysis script
