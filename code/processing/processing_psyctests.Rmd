@@ -108,6 +108,8 @@ non_cron <- c(
   # "(kr-reliabilit|kuder|k-r-reliabilit)", # kuder-richardson
   "(ω|omega)", # omega
   "(ρ|spearman)", # rho/spearman
+  "inter-?correlation", # item intercorrelation
+  "spearman-?brown", # spearman-brown prediction coefficient
   "(pearson product-moment correlation|pearson's correlation|pearson correlation|product-moment correlation|pearson's r)" # pearson_cors
 )
 
@@ -278,7 +280,7 @@ data_extracted_internal_consistency <- records_wide_modified %>%
 # combine
 data_extracted <-
   bind_rows(data_extracted_cronbach_alpha,
-            # data_extracted_consistency_or_reliability_and_alpha,
+            data_extracted_consistency_or_reliability_and_alpha,
             data_extracted_internal_consistency)
             #data_extracted_alpha)
 
@@ -310,12 +312,12 @@ data_estimates <- data_extracted |>
     alpha_string = str_sub(post, start = location_alpha_start, end = location_alpha_end),
     # exclusion variables
     exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
-    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|smaller|less|at least|between|the order of|increase|decrease)"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over |larger|exceed|above|upper|greater|higher|more |lower|below|bellow|smaller|less |at least|between|the order of|increase|decrease)"),
     exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
     exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
     exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
     exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
-    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteria|threshold|minimum"),
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criteri[oa]|threshold|minimum|reference value"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
     exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=)"),
     exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
@@ -433,7 +435,9 @@ data_estimates <- data_extracted |>
 #             data_processed_alpha_regex)
 
 data_processed <- data_estimates %>%
-  distinct(doi, alpha_string, location_alpha_start, .keep_all = TRUE)
+  distinct(doi, alpha_string, 
+           # location_alpha_start, 
+           .keep_all = TRUE) 
 
 
 dir.create("../../data/processed/psycTests")
@@ -706,19 +710,10 @@ epiR::epi.sssimpleestb(N = 63457, # population size
 set.seed(14)
 for_review_sample_2 <- for_review %>% 
   filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% 
-  sample_n(size = 382)
+  sample_n(size = 72)
   
   
 rio::export(for_review_sample_2, "for_review_sample_2.xlsx")
-```
-
-
-```{r}
-
-set.seed(14)
-for_review_sample_3 <- for_review %>% 
-  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% 
-  sample_n(size = 72)
 ```
 
 8/72
@@ -727,106 +722,6 @@ for_review_sample_3 <- for_review %>%
 prop.test(x = 8, n = 72, p = .2, conf.level = .95)
 ```
 
-
-```{r}
-data_processed_2 <- data_processed %>%   
-  mutate(
-    # substrings
-    # substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
-    # substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
-    # substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
-    # alpha_string = str_sub(post, start = location_alpha_start, end = location_alpha_end),
-    # # exclusion variables
-    # exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
-    # exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|over|larger|exceed|above|upper|greater|higher|more|lower|below|bellow|smaller|less|at least|between|the order of|increase|decrease)"),
-    # exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–)"),
-    # exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–)"),
-    # exclude_comparison_present_after_estimate = str_detect(post, "(or above|or higher|or more|or greater|or below|or less|or lower)"),
-    # exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
-    # exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-)off|criterion|criteria|threshold|minimum"),
-    # exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
-    # exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=)"),
-    # exclude_p_present = str_detect(post, "p\\s*[=<>≥≤]"),
-    # exclude_r_present = str_detect(post, "r\\s*[=<>≥≤]"),
-    # exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
-    # exclude_doi_present = str_detect(post, regex_string_doi),
-    # exclude_doi_string_present = str_detect(all, "doi"),
-    # # something about references to this journal keep getting confused for alpha values
-    # exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
-    # exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
-    # exclude_kappa = str_detect(all, "(kappa|κ)")
-    
-  ) |>
-  mutate(
-    # master exclusion variable
-    exclude_master = ifelse(
-      #alpha == "." |
-      exclude_comparison_present == TRUE |
-        exclude_comparison_present_immediately_after_estimate == TRUE |
-        exclude_comparison_present_immediately_before_estimate == TRUE |
-        exclude_comparison_present_after_estimate == TRUE |
-        exclude_cutoff_present == TRUE |
-        exclude_range_present == TRUE |
-        exclude_nonalphas_present == TRUE |
-        exclude_p_present == TRUE |
-        exclude_r_present == TRUE |
-        exclude_significance_present == TRUE |
-        exclude_doi_present == TRUE |
-        exclude_doi_string_present == TRUE |
-        exclude_psychometrika_present == TRUE |
-        exclude_odd_string_present == TRUE |
-        exclude_kappa == TRUE |
-        exclude_s == TRUE,
-      TRUE, 
-      FALSE
-    ),
-    exclude_master = ifelse(is.na(exclude_master), TRUE, exclude_master),
-    # # extract the estimate
-    # alpha_string = 
-    #   str_extract(
-    #     str_extract(post, regex_string), 
-    #     regex_string_subset
-    #   ),
-    alpha_all = as.numeric(str_replace_all(alpha_string, "[^.0-9]", "")),
-    alpha = ifelse(exclude_master, NA_real_, alpha_all)
-  ) |>
-  dplyr::select(doi, 
-                regex_label,
-                exemplar, 
-                alpha, 
-                pre, 
-                post, 
-                all,
-                regex_inclusion, 
-                regex_exclusion,
-                location_start, 
-                location_end,
-                location_alpha_start,
-                location_alpha_end,
-                alpha_string,
-                alpha_all,
-                substring_between_cronbach_and_estimate,
-                substring_immediately_before_estimate,
-                substring_immediately_after_estimate,
-                exclude_master, 
-                exclude_quant_comparison_present,
-                exclude_comparison_present,
-                exclude_comparison_present_immediately_before_estimate,
-                exclude_comparison_present_immediately_after_estimate,
-                exclude_comparison_present_after_estimate,
-                exclude_cutoff_present,
-                exclude_range_present,
-                exclude_nonalphas_present,
-                exclude_p_present,
-                exclude_significance_present,
-                exclude_doi_present,
-                exclude_psychometrika_present,
-                exclude_odd_string_present,
-                exclude_kappa,
-                exclude_s) |>
-  arrange(doi, regex_label) %>% 
-  mutate(location_alpha_start = location_end + location_alpha_start - 1)
-```
 
 
 
@@ -854,6 +749,7 @@ done until row 214
 -   "reliability: z = (0.087)(hsg) + (0.283)(gatv) + (0.222)(gatq) + (0.163)(saat)." returned .163
 -   "the reliabilities of the metaperspective version of the cart-q with the athlete sample was .86 for metacloseness, .86 for metacommitment, and .84 for metacomplementarity. in the coach sample: metacloseness was .78, metacommitment was .69, and metacomplementarity was .75." - extracted as "0.860", "0.860", "0.840" and "0.780", "0.780", "0.690" and "0.750" --\> Not clear how to treat these cases
 -   "internal reliability: the range of reliability coefficients found was between .639 ± .015 and .891 ± .023 (as cited in brill, 1935). the average coefficient of reliability for ages five to ten years, taken separately, was found to be .77. test-retest reliability: goodenough reported a reliability coefficient of .937 ± .006 by re-testing for first grade children (as cited in brill, 1935)." - extracted as "0.937"
+- 10.1037/t59589-000
 
 ### standard errors
 
@@ -879,10 +775,16 @@ done until row 214
 -   "m =", "sd =" - maybe too general? already added above, but could be limited to immediately prior to the alpha string instead of general.
 -   "internal consistency: the alpha for the 23-item pscd (excluding the odd item) total score was .80. the mic values were acceptable for factors of gm (.17), cu (.16), di (.26), and cd (.27). the omega coefficients ranged from .69 to .81. the omega coefficient for the total scale was .90." returned .17.
 
-### icc
-- 10.1037/t38111-000	consistency|reliability, alpha, !cronbach	0.7	reliability: phase i - interrater agreement on assignment of each descriptor to a level of loss was examined. forty-eight of the descriptors met the criterion of assignment to the same level by at least 4 of the 6 judges (67% agreement). phase ii - interrater reliability was determined by calculating the intraclass correlation coefficient (icc) of ratings using a two-way random effects model that adjusts for residual error. results of analysis of interrater agreement indicated icc r = .65 for stl and .70 for ltl. both icc's were significant at the level of p < .001 when f ratios were calculated. these values meet or approach the reliability criterion of .70. interrater reliability was again measured two weeks later. on the second testing, icc's remained near the same levels as before (r = .69 and .72 for stl and ltl respectively) and continued to be significant (p < .001).
+### other reliability metrics
 
-- 
+- spearman-brown
+- 10.1037/t77873-000	consistency|reliability, alpha, !cronbach	0.76	internal consistency: the composite reliability coefficient for monitoring is 0.76, whereas for stakeholder relationship is 0.87, indicating that the construct was measured in a consistent way.
+
+
+### cut off
+- bellow
+- "reference value"
+- "criterion"
 
 
 # plot - eventually to be moved to analysis script
