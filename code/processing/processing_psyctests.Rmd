@@ -100,7 +100,7 @@ pre_window_size <- 50
 non_cron <- c(
   "\\bps? ?(<|=|>) ?\\d+", # p value,
   "(loadings?|item-total correlation|inter-?item)", # loadings,
-  "(test(/|-| ))?retest (reliability|stability|correlation)", # retest,
+  "(test(/|-| ))?retest", # retest,
   "split(-| )half", # split half
   "(icc|intraclass correlation)", # ICC
   "inter-?rater", # interrater
@@ -677,7 +677,7 @@ Precision = 10%, Prevalence = 50%, Population = 1281, CI = 95%.
 ```{r}
 set.seed(14)
 for_review_sample_1 <- for_review %>% 
-  filter(alpha == .7000) %>% 
+  filter(alpha == .7) %>% 
   sample_n(size = 90)
 
 rio::export(for_review_sample_1, "for_review_sample_1.xlsx")
@@ -693,7 +693,7 @@ prop.test(x = 9, n = 90, p = .5, conf.level = .95)
 ```{r}
 set.seed(14)
 for_review %>% 
-  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% nrow() # 63457
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 63457
 
 
 epiR::epi.sssimpleestb(N = 63457, # population size
@@ -709,7 +709,7 @@ epiR::epi.sssimpleestb(N = 63457, # population size
 ```{r}
 set.seed(14)
 for_review_sample_2 <- for_review %>% 
-  filter(alpha != .7000 & alpha != .8000 & alpha != .9000) %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
   sample_n(size = 72)
   
   
@@ -723,11 +723,70 @@ prop.test(x = 8, n = 72, p = .2, conf.level = .95)
 ```
 
 
+#### sample 3 (after fixing most issues found in previous samples)
+
+```{r}
+epiR::epi.sssimpleestb(N = 68272, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+```
 
 
+```{r}
+set.seed(14)
+for_review_sample_3 <- for_review  %>% 
+  sample_n(size = 62)
+  
+  
+rio::export(for_review_sample_3, "for_review_sample_3.xlsx")
+```
+
+only 1 non further specified internal consistency found, otherwise no non-alphas.
+```{r}
+prop.test(x = 0, n = 62, p = .2, conf.level = .95)
+
+prop.test(c(8, 0), c(72,62), conf.level = .95)
+```
+
+#### sample 4
+
+remove instances which were already reviewed
+```{r}
+exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") %>% 
+  bind_rows(rio::import("for_review_sample_2_reviewed.xlsx"),
+            rio::import("for_review_sample_3_reviewed.xlsx")) %>% 
+  distinct(doi, alpha, .keep_all = T)
 
 
+for_review_2 <- for_review %>% 
+  anti_join(exclude_from_further_review, by = c("doi", "alpha"))
 
+nrow(for_review_2) # 68063
+```
+
+
+```{r}
+epiR::epi.sssimpleestb(N = 68063, # population size
+                       Py = .02, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+```
+
+
+```{r}
+
+rio::export(for_review_2 %>% 
+  filter(alpha == .7), "all_.7.xlsx")
+
+
+for_review_2 %>% 
+  filter(alpha == .7)
+```
 
 
 
@@ -775,16 +834,7 @@ done until row 214
 -   "m =", "sd =" - maybe too general? already added above, but could be limited to immediately prior to the alpha string instead of general.
 -   "internal consistency: the alpha for the 23-item pscd (excluding the odd item) total score was .80. the mic values were acceptable for factors of gm (.17), cu (.16), di (.26), and cd (.27). the omega coefficients ranged from .69 to .81. the omega coefficient for the total scale was .90." returned .17.
 
-### other reliability metrics
 
-- spearman-brown
-- 10.1037/t77873-000	consistency|reliability, alpha, !cronbach	0.76	internal consistency: the composite reliability coefficient for monitoring is 0.76, whereas for stakeholder relationship is 0.87, indicating that the construct was measured in a consistent way.
-
-
-### cut off
-- bellow
-- "reference value"
-- "criterion"
 
 
 # plot - eventually to be moved to analysis script
