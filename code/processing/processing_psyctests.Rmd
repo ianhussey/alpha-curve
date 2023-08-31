@@ -189,22 +189,90 @@ data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>%
   unnest(locations) |>
   rename(location_start_alpha = start, 
          location_end_alpha = end) |>
-  mutate(pre  = str_sub(text,
-                        start = location_end + location_end_alpha - 50,
-                        end   = location_end + location_end_alpha - 1),
-         post = str_sub(text,
-                        start = location_end + location_end_alpha,
-                        end   = location_end + location_end_alpha + 50),
-         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
-         regex_label = "consistency|reliability, alpha, !cronbach",
-         regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
-         regex_exclusion = "(cronbach('|’)?s?|coefficient)") |>
+  mutate(
+    location_start = location_end + location_end_alpha - 10,
+    location_end = location_end + location_end_alpha,
+    pre  = str_sub(text,
+                      start = location_end + location_end_alpha - 50,
+                      end   = location_end + location_end_alpha - 1),
+    post = str_sub(text,
+                  start = location_end + location_end_alpha,
+                  end   = location_end + location_end_alpha + 50),
+    all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+    regex_label = "consistency|reliability, alpha, !cronbach",
+    regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
+    regex_exclusion = "(cronbach('|’)?s?|coefficient)") |>
   filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)")) |>
   select(doi, 
          regex_label, regex_inclusion, regex_exclusion, 
          exemplar, location_start, location_end, 
          pre, post, all)
 ```
+
+```{r}
+str_sub("the internal consistency reliability estimate (alpha) was .92.", 53)
+```
+
+
+```{r}
+data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>% 
+  # filter(DOI == "10.1037/t00030-000") %>% 
+  select(doi = DOI, text = Reliability) |>
+  # first find reference to internal consistency
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "(consistenc|(?<!interrater|retest|half).* reliabilit)")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(first_subst_location_start = start, 
+         first_subst_location_end = end) |>
+  mutate(pre_ic  = str_sub(text,
+                           start = first_subst_location_end - pre_window_size,
+                           end   = first_subst_location_end - 1),
+         different_stat_mention = first_subst_location_end + str_locate(str_sub(text,
+                                                                    start = first_subst_location_end), non_crons)[,"start"],
+         post_ic = str_sub(text, start = first_subst_location_end,
+                           end = coalesce(
+                             different_stat_mention,
+                             str_length(text)))) |>  
+  # then find reference to alpha within the result
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate(string = post_ic, pattern = "(alpha|α|a =|a=)")
+    ) 
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start_alpha = start, 
+         location_end_alpha = end) |>
+  mutate(
+    location_start = first_subst_location_end + location_end_alpha - 10,
+    location_end = first_subst_location_end + location_end_alpha,
+    pre  = str_sub(text,
+                      start = location_end - 50,
+                      end   = location_end - 1),
+    post = str_sub(text,
+                  start = location_end,
+                  end   = location_end + 50),
+    all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+    regex_label = "consistency|reliability, alpha, !cronbach",
+    regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
+    regex_exclusion = "(cronbach('|’)?s?|coefficient)") |>
+  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)")) |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion, 
+         exemplar, location_start, location_end, 
+         pre, post, all)
+
+d2 <- data_extracted_internal_consistency %>% 
+  filter(doi == "10.1037/t00030-000")
+```
+
 
 
 ```{r}
@@ -398,7 +466,7 @@ data_estimates <- data_extracted |>
                 exclude_kappa,
                 exclude_s) |>
   arrange(doi, regex_label) %>% 
-  mutate(location_alpha_start = location_end + location_alpha_start - 1)
+  mutate(location_alpha_absolute = location_end + location_alpha_start - 1)
 
 ```
 
@@ -436,13 +504,14 @@ data_estimates <- data_extracted |>
 
 data_processed <- data_estimates %>%
   distinct(doi, alpha_string, 
-           # location_alpha_start, 
+            location_alpha_absolute, 
            .keep_all = TRUE) 
 
+# data_processed %>% group_by(doi, alpha_string) %>% filter(n()>1) %>% arrange(doi, alpha_string) %>% select(doi,regex_label , location_alpha_start, alpha_string, post, all) %>% left_join(records_wide %>% select(doi = DOI, Reliability)) %>% mutate(alpha2 = str_sub(Reliability, location_alpha_start)) %>%  View()
 
 dir.create("../../data/processed/psycTests")
 write_rds(data_processed, "../../data/processed/psycTests/data_processed_psyctests.rds", compress = "gz")
-
+str_length("the internal consistency reliability estimate (alpha) was ")
 ```
 
 # Tests
@@ -748,10 +817,10 @@ only 1 non further specified internal consistency found, otherwise no non-alphas
 ```{r}
 prop.test(x = 0, n = 62, p = .2, conf.level = .95)
 
-prop.test(c(8, 0), c(72,62), conf.level = .95)
+prop.test(c(8, 0), c(72,62), conf.level = .95) # compare samples before and after fixing the errors
 ```
 
-#### sample 4
+#### all .7
 
 remove instances which were already reviewed
 ```{r}
@@ -764,18 +833,9 @@ exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") 
 for_review_2 <- for_review %>% 
   anti_join(exclude_from_further_review, by = c("doi", "alpha"))
 
-nrow(for_review_2) # 68063
 ```
 
 
-```{r}
-epiR::epi.sssimpleestb(N = 68063, # population size
-                       Py = .02, # expected proportion
-                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
-                       conf.level = .95, 
-                       se = 1, # sensitivity
-                       sp = 1) # specificity
-```
 
 
 ```{r}
@@ -787,11 +847,13 @@ rio::export(for_review_2 %>%
 for_review_2 %>% 
   filter(alpha == .7)
 ```
-
+looked at a 100 so far. besides not-further specified internal consistencies, found 2 instances of "test/retest reliabilities". previously not caught because the non_crons regex only caught the singular form. fixed now, will look at more alphas later.
 
 
 
 ## Issues found
+
+
 
 -   10.1037/t81225-000 consistency\|reliability, alpha, !cronbach 0.0600 "Internal Consistency: The BSWAI-T maintained high internal consistency (.92) and was reduced by a measure of .06 when compared with the full-scale SWAI-T."
 -   remove "increased" and "decreased"
