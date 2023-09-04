@@ -35,9 +35,7 @@ records_wide <- readRDS("../../data/raw/psycTests/preprocessed_records.rds") |>
 ## Define regex
 
 ```{r}
-"([a-zA-Z]|[\\(,\\),0,=+]| )\\.[0-9]{2,} \\(([a-zA-Z]|[\\(,\\),0,=+]| )\\.[0-9]{2,}, "
 
-"([a-zA-Z]|[\\(,\\),0,=+]| )\\.[0-9]{2,} \\(" # lower bound of a CI
 regex_string             <- "([a-zA-Z]|[\\(,\\),0,=+]| )\\.[0-9]{2,}"
 regex_string_subset      <- "\\.\\d*"
 regex_string_doi         <- "\\.[0-9]{1,}\\.[0-9]{1,}"
@@ -207,9 +205,7 @@ data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>%
     pre  = str_sub(text,
                       start = location_end + location_end_alpha - 50,
                       end   = location_end + location_end_alpha - 1),
-    post = str_sub(text,
-                  start = location_end + location_end_alpha,
-                  end   = location_end + location_end_alpha + 50),
+    post = post_ic,
     all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
     regex_label = "consistency|reliability, alpha, !cronbach",
     regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
@@ -220,7 +216,9 @@ data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>%
          exemplar, location_start, location_end, 
          pre, post, all)
 ```
-
+post = str_sub(text,
+                  start = location_end + location_end_alpha,
+                  end   = location_end + location_end_alpha + 50),
 
 ```{r}
 ### 3
@@ -445,7 +443,7 @@ data_estimates <- data_extracted  %>%
 
 data_processed <- data_estimates %>%
   distinct(doi, alpha_string, 
-            location_alpha_absolute, 
+            substring_immediately_after_estimate, 
            .keep_all = TRUE) 
 
 # data_processed %>% group_by(doi, alpha_string) %>% filter(n()>1) %>% arrange(doi, alpha_string) %>% select(doi,regex_label , location_alpha_start, alpha_string, post, all) %>% left_join(records_wide %>% select(doi = DOI, Reliability)) %>% mutate(alpha2 = str_sub(Reliability, location_alpha_start)) %>%  View()
