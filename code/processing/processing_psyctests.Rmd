@@ -124,8 +124,6 @@ non_cron <- c(
 
 non_crons <- paste0("(", non_cron, ")", collapse = "|")
 
-str_detect("intercorrelated", non_crons)
-
 # we extract chunks of text that signify the text is about reliability
 
 
@@ -216,9 +214,7 @@ data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>%
          exemplar, location_start, location_end, 
          pre, post, all)
 ```
-post = str_sub(text,
-                  start = location_end + location_end_alpha,
-                  end   = location_end + location_end_alpha + 50),
+
 
 ```{r}
 ### 3
@@ -281,11 +277,18 @@ non_cron_quant <- c(
 )
   
 
+
 non_crons_quant <- paste0("(", non_cron_quant, ")", collapse = "|")
 
+alpha <- "(cronbach('|’)?s?|\\balpha(s)?\\b|\\bα(s)?\\s*|\\ba(s)?\\s*)"
 
-data_estimates <- data_extracted  %>% 
-  #filter(doi == "10.1037/t39334-000") %>% 
+str_detect("alpha was ", alpha)
+str_detect("internal consistency was a ", alpha)
+str_detect("internal consistency were  as = ", alpha)
+str_detect("internal consistency was ", alpha)
+str_detect("alphas where ", alpha)
+
+data_estimates <- data_extracted %>% 
   rowwise() %>% 
   mutate(locations = list(
     as.data.frame(
@@ -326,7 +329,8 @@ data_estimates <- data_extracted  %>%
     # something about references to this journal keep getting confused for alpha values
     exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
     exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
-    exclude_kappa = str_detect(all, "(kappa|κ)")
+    exclude_kappa = str_detect(all, "(kappa|κ)"),
+    exclude_no_alpha = str_detect(all, alpha)
   ) |>
   mutate(
     # master exclusion variable
@@ -349,7 +353,8 @@ data_estimates <- data_extracted  %>%
         exclude_psychometrika_present == TRUE |
         exclude_odd_string_present == TRUE |
         exclude_kappa == TRUE |
-        exclude_s == TRUE,
+        exclude_s == TRUE |
+        exclude_no_alpha == FALSE,
       TRUE, 
       FALSE
     ),
@@ -400,7 +405,8 @@ data_estimates <- data_extracted  %>%
                 exclude_psychometrika_present,
                 exclude_odd_string_present,
                 exclude_kappa,
-                exclude_s) |>
+                exclude_s,
+                exclude_no_alpha) |>
   arrange(doi, regex_label) %>% 
   mutate(location_alpha_absolute = location_end + location_alpha_start - 1)
 
@@ -890,11 +896,58 @@ for_review_sample_5 <- for_review_3  %>%
 rio::export(for_review_sample_5, "for_review_sample_5.xlsx")
 ```
 
-lots of occurrences of two main problem that i now fixed. one issue remains in the second extraction: non_crons estimates being extracted despite the `different_stat_mention` variable.
+lots of occurrences of two main problem that i now fixed. 
+
+### sample 6
+filter to thresholds and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% nrow() # 6006
 
 
+epiR::epi.sssimpleestb(N = 6006, # population size
+                       Py = .015, # expected proportion
+                       epsilon = 1, # # precision bound (0.015 * 1 ==> 0.015 ==> prevalence 0-3%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
 
 
+set.seed(14)
+for_review_sample_6 <- for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% 
+  sample_n(size = 72)
+  
+  
+rio::export(for_review_sample_6, "for_review_sample_6.xlsx")
+```
+
+
+### sample 7
+filter to non thresholds and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 61090
+
+
+epiR::epi.sssimpleestb(N = 61090, # population size
+                       Py = .02, # expected proportion
+                       epsilon = 1, # # precision bound (.02 * 1 ==> .02 ==> prevalence 0-4%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+set.seed(14)
+for_review_sample_7 <- for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
+  sample_n(size = 188)
+  
+  
+rio::export(for_review_sample_7, "for_review_sample_7.xlsx")
+```
 
 
 ## Issues found
@@ -956,7 +1009,7 @@ done until row 214
 data_included <- data_processed %>% 
   mutate(alpha = alpha_all) |>
   filter(exclude_master == FALSE) 
-
+  
 ```
 
 ```{r}
