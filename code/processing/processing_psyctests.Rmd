@@ -411,9 +411,6 @@ data_estimates <- data_extracted %>%
 
 ```
 
-
-
-
 ## Exclusions
 
 ```{r}
@@ -458,6 +455,7 @@ data_processed <- data_estimates %>%
 dir.create("../../data/processed/psycTests")
 write_rds(data_processed, "../../data/processed/psycTests/data_processed_psyctests.rds", compress = "gz")
 str_length("the internal consistency reliability estimate (alpha) was ")
+
 ```
 
 # Tests
@@ -656,9 +654,7 @@ for_review <- data_processed %>%
   left_join(records_wide_modified %>%
               select(doi = DOI, Reliability))
 
-browseURL("https://youtu.be/U_ugnhUFBE8?t=16")
-
-write_rds(for_review, "for_review.rds")
+# write_rds(for_review, "for_review.rds")
 
 for_review2 <- for_review %>%
   filter(alpha == .70) 
