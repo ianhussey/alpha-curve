@@ -101,7 +101,7 @@ pre_window_size <- 50
 
 non_cron <- c(
   "p\\s*-?\\s*value", # p-values
-  "(loadings?|item-total correlation|inter-?item)", # loadings
+  "(load(|s|ed|ing|ings)|item-total correlation|inter-?item)", # loadings
   "(test(/|-| ))?retest", # retest,
   "split(-| )half", # split half
   "(icc|intraclass)", # ICC
@@ -309,14 +309,14 @@ data_estimates <- data_extracted %>%
     # exclusion variables
     exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
     exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|\\bover\\b|larger|\\bexceed\\b|above|upper|greater|higher|\\bmore\\b|lower|below|bellow|smaller|\\bless\\b|at least|between|the order of|increase|decrease)"),
-    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–|-)"),
-    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–|-)"),
-    exclude_comparison_present_before_estimate = str_detect(pre, "(bound(s)?|exceed|above|higher|more|greater|below|less|lower)"),
-    exclude_comparison_present_after_estimate = str_detect(post, "(bound(s)?|exceed|or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–|-|\\+)"),
+    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–|-|\\+)"),
+    exclude_comparison_present_before_estimate = str_detect(pre, "(bound(s)?|surpass|exceed|above|higher|more|greater|below|less|lower)"),
+    exclude_comparison_present_after_estimate = str_detect(post, "(bound(s)?|surpass|exceed|or above|or higher|or more|or greater|or below|or less|or lower)"),
     exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
     exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-|)off|criteri[oa]|threshold|minimum|reference value"),
     exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
-    exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=)"),
+    exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=|ci ?=)"),
     exclude_non_cron_mention_after_estimate = str_detect(substring_a_bit_after_estimate, non_crons),
     exclude_non_cron_mention_before_estimate = str_detect(substring_a_bit_before_estimate, 
                                                           non_crons_quant), 
@@ -892,6 +892,19 @@ for_review_sample_6 <- for_review %>%
   
 rio::export(for_review_sample_6, "for_review_sample_6.xlsx")
 ```
+
+4 non-alphas:
+- 2 "surpassed" - fixed
+- 1 item loading - fixed
+- 1 range ".80+" - fixed
+
+1 0.706 but 0.7 extracted
+
+
+```{r}
+prop.test(x = 4, n = 243, p = .015, conf.level = .95)
+```
+
 
 
 ### sample 7
