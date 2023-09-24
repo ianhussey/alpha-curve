@@ -1,0 +1,1122 @@
+---
+title: "Alpha Hacking PsycTests"
+author: "Ruben Arslan & Ian Hussey & Taym Alsalti"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+library(patchwork)
+library(scales)
+library(ggtext)
+
+records_wide <- readRDS("../../data/raw/psycTests/preprocessed_records.rds") |>
+  mutate(Reliability = str_to_lower(Reliability))
+
+```
+
+# Extract strings from psychTest records
+
+## Define regex
+
+```{r}
+
+regex_string             <- "([a-zA-Z]|[\\(,\\),0,=+]| )\\.[0-9]{2,}"
+regex_string_subset      <- "\\.\\d*"
+regex_string_doi         <- "\\.[0-9]{1,}\\.[0-9]{1,}"
+
+
+```
+
+### Tests
+
+Test some of the regex that is used below. NB leading spaces in strings don't print correctly.
+
+Repeat estimates only return the first estimate.
+
+```{r}
+
+regex_tests <- 
+  tibble(string = c("in the current sample was 0.70", "= 0.70", "= .70", "=.70", " 0.70", " .70", "alpha of.70", "alphas of .70 and .80", "(.70)", "0.7", "-0.7", "-.7", "section 2.70", "doi 0.0.70", ". 70"),
+         required_result = c(".70", ".70",".70",".70",".70",".70",".70",".70", ".70", NA, NA, NA, NA, NA, NA)) |>
+  mutate(
+    result = str_extract(str_extract(string, regex_string), regex_string_subset),
+    #result = str_extract(string, regex_string),
+    test_passed = if_else(result == required_result | (is.na(result) & is.na(required_result)), TRUE, FALSE, FALSE)
+  )
+
+regex_tests
+
+```
+
+
+## Extract strings
+
+```{r}
+records_wide_modified <- records_wide %>% 
+  mutate(
+    no_reliability = Reliability == "No reliability indicated.",
+    Reliability = str_replace_all(Reliability, "[[:space:]]+", " "),
+    first_reliability_match = as.numeric(str_extract(str_extract(Reliability, regex_string), regex_string_subset)),
+    all_reliabilities = str_extract_all(Reliability, regex_string) %>% map(~ str_extract(., regex_string_subset)) %>% map(as.numeric),
+    reliability_mentions_alpha = str_detect(string = Reliability, pattern = "(cronbach('|’)?s? (alpha|α|a)|(coefficient) (alpha|α|a =|a=))"),
+    reliability_mentions_internal_consistency = str_detect(string = Reliability, pattern = "internal consistenc"),
+    reliability_mentions_p_value = str_detect(string = Reliability, pattern = "(\\bps? ?(<|=|>) ?\\d+|p ?<|p ?=)"),
+    reliability_mentions_loadings_or_item_correlations = str_detect(string = Reliability, pattern = "(loadings?|item-total correlation|inter-item correlation)"),
+    reliability_mentions_nunnally = str_detect(string = Reliability, pattern = "nunn?all?y"),
+    reliability_mentions_threshold = str_detect(string = Reliability, pattern = "threshold"),
+    reliability_mentions_test_retest = str_detect(string = Reliability, pattern = "test(/|-| )retest (reliability|stability|correlation)"),
+    reliability_mentions_omega = str_detect(string = Reliability, pattern = "omega|ω"),
+    reliability_mentions_split_half = str_detect(string = Reliability, pattern = "split(-| )half"),
+    reliability_mentions_interrater = str_detect(string = Reliability, pattern = "interrater reliability"),
+    reliability_mentions_pearson = str_detect(string = Reliability, pattern = "(pearson product-moment correlation|pearson's correlation|pearson correlation|product-moment correlation|pearson's r)"),
+  ) %>% 
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = Reliability, pattern = regex_string)
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup()
+
+
+
+pre_window_size <- 50
+
+non_cron <- c(
+  "p\\s*-?\\s*value", # p-values
+  "(load(|s|ed|ing|ings)|item-total correlation|inter-?item)", # loadings
+  "(test(/|-| ))?retest", # retest,
+  "split(-| )half", # split half
+  "(icc|intraclass)", # ICC
+  "inter-?rater", # interrater
+  "\\b(congruenc[ey])\\b", # congruence reliability/coefficient (harman 1976)
+  # "(kr-reliabilit|kuder|k-r-reliabilit)", # kuder-richardson
+  "(spearman)", # spearman
+  "(minimally important change|mic)", # MIC values
+  "omega|ω", 
+  "(\\bκ\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bκ\\s*[=<>≥≤]|\\bkappa\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bkappa\\s*[=<>≥≤])", # κ/kappa 
+  "(\\bρ\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bρ\\s*[=<>≥≤]|\\broh\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\broh\\s*[=<>≥≤])",  # ρ/roh
+  "(\\bp\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bp\\s*[=<>≥≤])", # p-value,
+  "(\\br\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\br\\s*[=<>≥≤]|\\b𝑟\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\b𝑟\\s*[=<>≥≤])", # r/𝑟
+  "composite reliabilit(y|ies)", 
+  "(item reliabilit(y|ies)|person reliabilit(y|ies))",
+  "inter-?correlation", # item intercorrelation
+  "(person separat(e|ion) index|psi)", # person separate index
+  "(correlat(e|es|ed|ion|ions))" # correlation of any kind
+)
+
+non_crons <- paste0("(", non_cron, ")", collapse = "|")
+
+# we extract chunks of text that signify the text is about reliability
+
+
+### 1
+data_extracted_cronbach_alpha <- records_wide_modified %>% 
+  select(doi = DOI, text = Reliability) |>
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "(cronbach('|’)?s? (alpha|α|a)|(coefficient) (alpha|α|a =|a=))")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start, 
+         location_end = end) |>
+  mutate(pre  = str_sub(text,
+                        start = location_end - pre_window_size,
+                        end   = location_end - 1),
+         different_stat_mention = location_end + str_locate(str_sub(text,
+                                                                    start = location_end), non_crons)[,"end"],
+         post = str_sub(text, start = location_end,
+                        end = coalesce(
+                          different_stat_mention,
+                          str_length(text))),
+         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+         regex_label = "cronbach's alpha",
+         regex_inclusion = "(cronbach('|’)?s? (alpha|α|a)|(coefficient) (alpha|α|a =|a=))",
+         regex_exclusion = "none") |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion,
+         exemplar, location_start, location_end, different_stat_mention,
+         pre, post, all)
+```
+
+
+```{r}
+### 2
+data_extracted_consistency_or_reliability_and_alpha <- records_wide_modified %>% 
+  #filter(DOI == "10.1037/t67763-000") %>% 
+  select(doi = DOI, text = Reliability) |>
+  # first find reference to internal consistency
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "(consistenc|(?<!interrater|retest|half).* reliabilit)")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start, 
+         location_end = end) |>
+  mutate(pre_ic  = str_sub(text,
+                           start = location_end - pre_window_size,
+                           end   = location_end - 1),
+         different_stat_mention = location_end + str_locate(str_sub(text,
+                                                                    start = location_end), non_crons)[,"end"],
+         post_ic = str_sub(text, start = location_end,
+                           end = coalesce(
+                             different_stat_mention,
+                             str_length(text)))) |>  
+  # then find reference to alpha within the result
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate(string = post_ic, pattern = "(alpha|α|a =|a=)")
+    ) 
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start_alpha = start, 
+         location_end_alpha = end) |>
+  mutate(
+    location_start = location_end + location_end_alpha - 10,
+    location_end = location_end + location_end_alpha - 1,
+    pre  = str_sub(text,
+                      start = location_end - 50,
+                      end   = location_end - 1),
+    post = str_sub(post_ic, 
+                   start = location_end_alpha, 
+                   end = location_end_alpha + 50),
+    all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+    regex_label = "consistency|reliability, alpha, !cronbach",
+    regex_inclusion = "c('consistenc|reliabilit', '(alpha|α|a =|a=)')",
+    regex_exclusion = "(cronbach('|’)?s?|coefficient)") |>
+  filter(!str_detect(all, "(cronbach('|’)?s?|coefficient)")) |>
+  select(doi, 
+         regex_label, regex_inclusion, regex_exclusion, 
+         exemplar, location_start, location_end, 
+         pre, post, all)
+```
+
+
+```{r}
+### 3
+data_extracted_internal_consistency <- records_wide_modified %>% 
+  select(doi = DOI, text = Reliability) |>
+  # first find reference to internal consistency
+  rowwise() |>
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = text, pattern = "internal (consistenc|reliabilit)")
+    ) |>
+      rownames_to_column(var = "exemplar")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_start = start,
+         location_end = end) |>
+  mutate(pre  = str_sub(text,
+                        start = location_end - pre_window_size,
+                        end   = location_end - 1),
+         different_stat_mention = location_end + str_locate(str_sub(text,
+                                                                    start = location_end), non_crons)[,"end"],
+         post = str_sub(text, start = location_end,
+                        end = coalesce(
+                          different_stat_mention,
+                          str_length(text))),
+         all = ifelse(!is.na(pre) & !is.na(post), paste(pre, post, sep = ""), NA),
+         regex_label = "internal consistency|reliability, !alpha, !cronbach",
+         regex_inclusion = "internal (consistenc|reliabilit)",
+         regex_exclusion = "c('cronbach('|’)?s?', '(alpha|α|a =|a=)')") |>
+  select(doi,
+         regex_label, regex_inclusion, regex_exclusion,
+         exemplar, location_start, location_end,
+         pre, post, all)
+
+
+# combine
+data_extracted <-
+  bind_rows(data_extracted_cronbach_alpha,
+            data_extracted_consistency_or_reliability_and_alpha,
+            data_extracted_internal_consistency)
+            #data_extracted_alpha)
+
+```
+
+# Extract estimates
+
+## Extract using regex
+
+
+
+```{r}
+# exclude the estimates if they occur 10 characters after any of these, see substring_abit_before_estimate
+# will detect parentheses between p,r etc. and value e.g., "r(sample size) = xx". 
+non_cron_quant <- c( 
+  "(\\bκ\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bκ\\s*[=<>≥≤]|\\bkappa\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bkappa\\s*[=<>≥≤])", # κ/kappa 
+  "(\\bρ\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bρ\\s*[=<>≥≤]|\\broh\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\broh\\s*[=<>≥≤])",  # ρ/roh
+  "(\\bp\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\bp\\s*[=<>≥≤])", # p-value,
+  "(\\br\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\br\\s*[=<>≥≤]|\\b𝑟\\s*\\(\\d+\\)\\s*[=<>≥≤]|\\b𝑟\\s*[=<>≥≤])" # r/𝑟
+)
+  
+
+
+non_crons_quant <- paste0("(", non_cron_quant, ")", collapse = "|")
+
+# alpha <- "(cronbach('|’)?s?|\\balpha(s)?\\b|\\bα(s)?\\s*|\\ba(s)?\\s*)"
+
+
+data_estimates <- data_extracted %>% 
+  rowwise() %>% 
+  mutate(locations = list(
+    as.data.frame(
+      str_locate_all(string = post, pattern = regex_string)
+    ) |>
+      rownames_to_column(var = "exemplar_alpha")
+  )) |>
+  ungroup() |>
+  unnest(locations) |>
+  rename(location_alpha_start = start,
+         location_alpha_end = end) |> 
+  mutate(
+    # substrings
+    substring_between_cronbach_and_estimate = str_sub(post, start = 1, end = location_alpha_start),
+    substring_immediately_before_estimate = str_sub(post, start = location_alpha_start-3, end = location_alpha_start),
+    substring_a_bit_before_estimate = str_sub(post, start = location_alpha_start-10, end = location_alpha_start),
+    substring_immediately_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+6),
+    substring_a_bit_after_estimate = str_sub(post, start = location_alpha_end, end = location_alpha_end+14),
+    alpha_string = str_sub(post, start = location_alpha_start, end = location_alpha_end),
+    # exclusion variables
+    exclude_quant_comparison_present = str_detect(substring_between_cronbach_and_estimate, "[<>≥≤±≈]"),
+    exclude_comparison_present = str_detect(substring_between_cronbach_and_estimate, "([<>≥≤±≈]|\\bover\\b|larger|\\bexceed\\b|above|upper|greater|higher|\\bmore\\b|lower|below|bellow|smaller|\\bless\\b|at least|between|the order of|increase|decrease)"),
+    exclude_comparison_present_immediately_after_estimate = str_detect(substring_immediately_after_estimate, "(to|–|−|–|-|\\+)"),
+    exclude_comparison_present_immediately_before_estimate = str_detect(substring_immediately_before_estimate, "(to|–|−|–|-|\\+)"),
+    exclude_comparison_present_before_estimate = str_detect(pre, "(bound(s)?|surpass|exceed|above|higher|more|greater|below|less|lower)"),
+    exclude_comparison_present_after_estimate = str_detect(post, "(bound(s)?|surpass|exceed|or above|or higher|or more|or greater|or below|or less|or lower)"),
+    exclude_s = str_starts(exclude_comparison_present_after_estimate, "s"), # eg "in the .70s"
+    exclude_cutoff_present = str_detect(substring_between_cronbach_and_estimate, "cut(\\s|-|)off|criteri[oa]|threshold|minimum|reference value"),
+    exclude_range_present = str_detect(substring_between_cronbach_and_estimate, "(range|ranging|between|from)"),
+    exclude_nonalphas_present = str_detect(substring_between_cronbach_and_estimate, "(m ?=|sd ?=|se ?=|ci ?=)"),
+    exclude_non_cron_mention_after_estimate = str_detect(substring_a_bit_after_estimate, non_crons),
+    exclude_non_cron_mention_before_estimate = str_detect(substring_a_bit_before_estimate, 
+                                                          non_crons_quant), 
+    exclude_significance_present = str_detect(all, "(significan|type I|level|two-?tailed|one-?tailed|power|null hypothes|effect-?size|differ reliably)"),
+    exclude_doi_present = str_detect(post, regex_string_doi),
+    exclude_doi_string_present = str_detect(all, "doi"),
+    exclude_CI = str_detect(substring_a_bit_before_estimate, paste0("(", regex_string, " \\(|\\(", regex_string, ",)")),
+    # something about references to this journal keep getting confused for alpha values
+    exclude_psychometrika_present = str_detect(substring_between_cronbach_and_estimate, "psychometrika"),
+    exclude_odd_string_present = str_detect(substring_between_cronbach_and_estimate, " d s "),
+    exclude_kappa = str_detect(all, "(kappa|κ)"),
+    # exclude_no_alpha = str_detect(all, alpha)
+  ) |>
+  mutate(
+    # master exclusion variable
+    exclude_master = ifelse(
+      #alpha == "." |
+      exclude_comparison_present == TRUE |
+        exclude_comparison_present_immediately_after_estimate == TRUE |
+        exclude_comparison_present_immediately_before_estimate == TRUE |
+        exclude_comparison_present_before_estimate == TRUE |
+        exclude_comparison_present_after_estimate == TRUE |
+        exclude_cutoff_present == TRUE |
+        exclude_range_present == TRUE |
+        exclude_nonalphas_present == TRUE |
+        exclude_non_cron_mention_after_estimate == TRUE |
+        exclude_non_cron_mention_before_estimate == TRUE |
+        exclude_significance_present == TRUE |
+        exclude_doi_present == TRUE |
+        exclude_doi_string_present == TRUE |
+        exclude_CI == TRUE |
+        exclude_psychometrika_present == TRUE |
+        # exclude_no_alpha == FALSE |
+        exclude_odd_string_present == TRUE |
+        exclude_kappa == TRUE |
+        exclude_s == TRUE,
+      TRUE, 
+      FALSE
+    ),
+    exclude_master = ifelse(is.na(exclude_master), TRUE, exclude_master),
+    # # extract the estimate
+    # alpha_string = 
+    #   str_extract(
+    #     str_extract(post, regex_string), 
+    #     regex_string_subset
+    #   ),
+    alpha_all = as.numeric(str_replace_all(alpha_string, "[^.0-9]", "")),
+    alpha = ifelse(exclude_master, NA_real_, alpha_all)
+  ) |>
+  dplyr::select(doi,
+                regex_label,
+                exemplar, 
+                alpha, 
+                pre, 
+                post, 
+                all,
+                regex_inclusion, 
+                regex_exclusion,
+                location_start, 
+                location_end,
+                location_alpha_start,
+                location_alpha_end,
+                alpha_string,
+                alpha_all,
+                substring_between_cronbach_and_estimate,
+                substring_immediately_before_estimate,
+                substring_a_bit_before_estimate,
+                substring_immediately_after_estimate,
+                substring_a_bit_after_estimate,
+                exclude_master, 
+                exclude_quant_comparison_present,
+                exclude_comparison_present,
+                exclude_comparison_present_immediately_before_estimate,
+                exclude_comparison_present_immediately_after_estimate,
+                exclude_comparison_present_after_estimate,
+                exclude_cutoff_present,
+                exclude_range_present,
+                exclude_nonalphas_present,
+                exclude_non_cron_mention_after_estimate,
+                exclude_non_cron_mention_before_estimate,
+                exclude_significance_present,
+                exclude_doi_present,
+                exclude_CI,
+                exclude_psychometrika_present,
+                exclude_odd_string_present,
+                exclude_kappa,
+                exclude_s,
+                # exclude_no_alpha
+                ) |>
+  arrange(doi, regex_label) %>% 
+  mutate(location_alpha_absolute = location_end + location_alpha_start - 1)
+
+```
+
+## Exclusions
+
+```{r}
+
+# data_processed_cronbach_alpha_regex <- data_estimates |>
+#   filter(regex_label == "cronbach's alpha")
+# 
+# nrow(data_processed_cronbach_alpha_regex)
+# 
+# data_processed_ic_alpha_regex <- data_estimates |>
+#   filter(regex_label == "consistency|reliability, alpha, !cronbach") %>%
+#   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha", "location_alpha_start"))
+# 
+# nrow(data_processed_ic_alpha_regex)
+# 
+# data_processed_ic_regex <- data_estimates |>
+#   filter(regex_label == "internal consistency|reliability, !alpha, !cronbach") %>%
+#   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha", "location_alpha_start")) %>%
+#   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha", "location_alpha_start"))
+# 
+# data_processed_alpha_regex <- data_estimates |>
+#   filter(regex_label == "alpha") %>%
+#   anti_join(data_processed_cronbach_alpha_regex, by = c("doi", "alpha", "location_alpha_start")) %>%
+#   anti_join(data_processed_ic_alpha_regex,       by = c("doi", "alpha", "location_alpha_start")) %>%
+#   anti_join(data_processed_ic_regex,             by = c("doi", "alpha", "location_alpha_start"))
+# 
+# data_processed <-
+#   bind_rows(data_processed_cronbach_alpha_regex,
+#             data_processed_ic_alpha_regex,
+#             data_processed_ic_regex,
+#             data_processed_alpha_regex)
+
+data_processed <- data_estimates %>%
+  distinct(doi, alpha_string, 
+            location_alpha_absolute, 
+           .keep_all = TRUE) 
+
+# data_processed %>% group_by(doi, alpha_string) %>% filter(n()>1) %>% arrange(doi, alpha_string) %>% select(doi,regex_label , location_alpha_absolute, alpha_string, post, all) %>% left_join(records_wide %>% select(doi = DOI, Reliability)) %>% mutate(alpha2 = str_sub(Reliability, location_alpha_absolute)) %>%  View()
+
+
+
+dir.create("../../data/processed/psycTests")
+write_rds(data_processed, "../../data/processed/psycTests/data_processed_psyctests.rds", compress = "gz")
+str_length("the internal consistency reliability estimate (alpha) was ")
+
+```
+
+# Tests
+
+```{r}
+
+data_processed <- read_rds("../../data/processed/psycTests/data_processed_psyctests.rds")
+
+# check there are no cases where duplicates seem to still be present
+df <- data_processed |>
+  dplyr::select(doi, regex_label, exemplar, alpha_string, all, location_alpha_start) |>
+  group_by(doi, alpha_string, location_alpha_start) %>% 
+  filter(n() > 1)
+
+df
+
+## how many alphas occur twice for one test
+alphas_twice <- data_processed |>
+  filter(!is.na(alpha)) |>
+  dplyr::select(doi, regex_label, exemplar, alpha, all) |>
+  group_by(doi, alpha) |> 
+  filter(n() > 1)
+
+```
+
+## Count exclusions
+
+```{r}
+
+data_processed |>
+  mutate(
+    exclude_comparison_present = exclude_comparison_present |
+      exclude_comparison_present_immediately_before_estimate |
+      exclude_comparison_present_immediately_after_estimate |
+      exclude_comparison_present_after_estimate
+  ) %>% 
+  dplyr::select(
+    quant_comp =  exclude_quant_comparison_present,
+    comparison_present = exclude_comparison_present,
+    cutoff_present = exclude_cutoff_present,
+    range_present = exclude_range_present,
+    #nonalpha_present = exclude_nonalphas_present,
+    p_present = exclude_p_present,
+    significance_present = exclude_significance_present,
+    doi_present = exclude_doi_present,
+    psychometrika_present = exclude_psychometrika_present,
+    odd_string_present = exclude_odd_string_present,
+    kappa = exclude_kappa,
+    s = exclude_s) %>% 
+  drop_na() |>
+  count(comparison_present,
+        cutoff_present,
+        range_present,
+        #nonalpha_present,
+        p_present,
+        significance_present,
+        doi_present,
+        psychometrika_present,
+        odd_string_present,
+        kappa,
+        s) |>
+  arrange(desc(n))
+
+```
+
+```{r}
+
+data_processed |>
+  filter(exclude_master == FALSE) |>
+  count()
+
+```
+
+```{r}
+
+data_processed |>
+  filter(exclude_master == FALSE) |>
+  count(regex_label)
+
+```
+
+```{r}
+
+data_processed %>% 
+  filter(exclude_comparison_present | 
+           exclude_comparison_present_immediately_before_estimate |
+           exclude_comparison_present_immediately_after_estimate |
+           exclude_comparison_present_after_estimate) %>% 
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
+
+```
+
+```{r}
+
+data_processed %>% 
+  filter(exclude_quant_comparison_present) %>% 
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
+
+```
+
+```{r}
+
+
+data_processed %>% 
+  filter(!exclude_cutoff_present & (exclude_comparison_present |
+                                      exclude_comparison_present_immediately_before_estimate |
+                                      exclude_comparison_present_immediately_after_estimate |
+                                      exclude_comparison_present_after_estimate)) %>% 
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
+
+```
+
+```{r}
+
+data_processed %>% 
+  filter(exclude_cutoff_present) %>% 
+  select(doi, alpha_all, all) %>% 
+  pull(alpha_all) %>% qplot(binwidth = .01)
+
+```
+
+```{r}
+
+data_processed %>% 
+  mutate(exclude_comparison_present = exclude_comparison_present |
+           exclude_comparison_present_immediately_before_estimate |
+           exclude_comparison_present_immediately_after_estimate |
+           exclude_comparison_present_after_estimate) %>% 
+  filter(exclude_comparison_present) %>% 
+  select(doi, alpha_all, all) %>% View()
+
+```
+
+```{r}
+
+data_processed %>% 
+  mutate(alpha = as.numeric(alpha_string)) %>% 
+  filter(exclude_quant_comparison_present & !exclude_significance_present & !exclude_p_present) %>% 
+  select(doi, alpha, all) %>% View()
+
+```
+
+## Mismatches
+
+```{r}
+
+# in_my_method_but_not_ians <- good_rels_long %>% rename(location_alpha_start = location_start) %>% 
+#   left_join(data_processed %>% 
+#               mutate(alpha = as.numeric(alpha_string)) %>% 
+#               mutate(exclude_comparison_present = exclude_comparison_present | exclude_comparison_present_immediately_before_estimate | exclude_comparison_present_immediately_after_estimate | exclude_comparison_present_after_estimate), by = c("doi", "alpha", "location_alpha_start")) %>% 
+#   dplyr::select(doi, Reliability, alpha, exclude_master, 
+# comparison_present = exclude_comparison_present,
+# cutoff_present = exclude_cutoff_present,
+# range_present = exclude_range_present,
+# p_present = exclude_p_present,
+# significance_present = exclude_significance_present,
+# doi_present = exclude_doi_present,
+# psychometrika_present = exclude_psychometrika_present,
+# odd_string_present = exclude_odd_string_present,
+# kappa = exclude_kappa,
+# s = exclude_s)
+# 
+# in_my_method_but_not_ians %>% drop_na() |>
+#   count(comparison_present,
+# cutoff_present,
+# range_present,
+# p_present,
+# significance_present,
+# doi_present,
+# psychometrika_present,
+# odd_string_present,
+# kappa,
+# s) |>
+#   arrange(desc(n))
+# 
+# table(in_my_method_but_not_ians$exclude_master, exclude = NULL)
+# in_my_method_but_not_ians %>% filter(is.na(exclude_master)) %>% View
+# in_my_method_but_not_ians %>% filter(exclude_master) %>% View
+# in_my_method_but_not_ians %>% group_by(doi) %>% filter(all(is.na(exclude_master))) %>% nrow()
+# in_my_method_but_not_ians %>% group_by(doi) %>% filter(all(is.na(exclude_master))) %>% View()
+
+```
+
+## Human checking
+
+```{r}
+
+set.seed(05102019)
+
+for_review <- data_processed %>%
+  filter(exclude_master == FALSE) %>%
+  select(doi, regex_label, alpha = alpha_all) %>%
+  left_join(records_wide_modified %>%
+              select(doi = DOI, Reliability))
+
+# write_rds(for_review, "for_review.rds")
+
+for_review2 <- for_review %>%
+  filter(alpha == .70) 
+# %>%
+#   sample_n(100)
+
+#rio::export(for_review, "for_review.xlsx")
+
+```
+
+```{r}
+for_review <- readRDS("for_review.rds") #only for manual review purpose
+```
+
+
+#### sample 1
+
+filter to .7 and sample
+```{r}
+for_review %>% filter(alpha == .7) %>% nrow() # 1281
+
+
+epiR::epi.sssimpleestb(N = 1281, # population size
+                       Py = .5, # expected proportion
+                       epsilon = .2, # precision bound (.2 * .5 ==> .1 ==> prevalence 40-60%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+```
+
+This gives the same result as inputting the following parameters in the [online sample size calculation tool](https://sampsize.sourceforge.net/iface/index.html):
+Precision = 10%, Prevalence = 50%, Population = 1281, CI = 95%.
+
+
+```{r}
+set.seed(14)
+for_review_sample_1 <- for_review %>% 
+  filter(alpha == .7) %>% 
+  sample_n(size = 90)
+
+rio::export(for_review_sample_1, "for_review_sample_1.xlsx")
+```
+
+9/90 found to be non-alphas, see issues.
+
+```{r}
+prop.test(x = 9, n = 90, p = .5, conf.level = .95)
+```
+
+#### sample 2
+
+filter to not .7, .8, .9 and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 63457
+
+
+epiR::epi.sssimpleestb(N = 63457, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+```
+
+
+```{r}
+set.seed(14)
+for_review_sample_2 <- for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
+  sample_n(size = 72)
+  
+  
+rio::export(for_review_sample_2, "for_review_sample_2.xlsx")
+```
+
+8/72
+
+```{r}
+prop.test(x = 8, n = 72, p = .2, conf.level = .95)
+```
+
+
+#### sample 3 (after fixing most issues found in previous samples)
+
+```{r}
+epiR::epi.sssimpleestb(N = 68272, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+```
+
+
+```{r}
+set.seed(14)
+for_review_sample_3 <- for_review  %>% 
+  sample_n(size = 62)
+  
+  
+rio::export(for_review_sample_3, "for_review_sample_3.xlsx")
+```
+
+only 1 non further specified internal consistency found, otherwise no non-alphas.
+```{r}
+prop.test(x = 0, n = 62, p = .2, conf.level = .95)
+
+prop.test(c(8, 0), c(72,62), conf.level = .95) # compare samples before and after fixing the errors
+```
+
+#### all .7
+
+remove instances which were already reviewed
+```{r}
+exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") %>% 
+  bind_rows(rio::import("for_review_sample_2_reviewed.xlsx"),
+            rio::import("for_review_sample_3_reviewed.xlsx")) %>% 
+  distinct(doi, alpha, .keep_all = T)
+
+
+for_review_2 <- for_review %>% 
+  anti_join(exclude_from_further_review, by = c("doi", "alpha"))
+
+```
+
+```{r}
+
+rio::export(for_review_2 %>% 
+  filter(alpha == .7), "all_.7.xlsx")
+
+
+for_review_2 %>% 
+  filter(alpha == .7)
+```
+looked at a 100 so far. besides not-further specified internal consistencies, found 2 instances of "test/retest reliabilities". previously not caught because the non_crons regex only caught the singular form. fixed now, will look at more alphas later.
+
+
+
+#### sample 4
+
+
+filter to not .8 and .9 and sample
+```{r}
+set.seed(14)
+
+for_review_2 %>% 
+  filter(alpha == .8 | alpha == .9) %>% nrow() # 4999
+
+
+epiR::epi.sssimpleestb(N = 4999, # population size
+                       Py = .02, # expected proportion
+                       epsilon = 1, # # precision bound (.02 * 1 ==> .02 ==> prevalence 0-4%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+for_review_sample_4 <- for_review_2  %>% 
+  filter(alpha == .8 | alpha == .9) %>%  
+  sample_n(size = 182)
+
+rio::export(for_review_sample_4, "for_review_sample_4.xlsx")
+```
+
+7/182 not further specified internal consistency/reliability.
+3/182 non-alphas.
+```{r}
+prop.test(x = 3, n = 182, p = .02, conf.level = .95)
+```
+
+#### sample 5
+remove instances which were already reviewed
+```{r}
+exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") %>% 
+  bind_rows(rio::import("for_review_sample_2_reviewed.xlsx"),
+            rio::import("for_review_sample_3_reviewed.xlsx"),
+            rio::import("for_review_sample_4_reviewed.xlsx")) %>% 
+  distinct(doi, alpha, .keep_all = T)
+
+
+for_review_3 <- for_review %>% 
+  anti_join(exclude_from_further_review, by = c("doi", "alpha"))
+
+```
+
+filter to <.5 and sample
+```{r}
+set.seed(14)
+
+for_review_3 %>% 
+  filter(alpha < .5) %>% nrow() # 928
+
+
+epiR::epi.sssimpleestb(N = 928, # population size
+                       Py = .05, # expected proportion
+                       epsilon = 1, # # precision bound (.05 * 1 ==> .05 ==> prevalence 0-10%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+for_review_sample_5 <- for_review_3  %>% 
+  filter(alpha < .5) %>%  
+  sample_n(size = 68)
+
+rio::export(for_review_sample_5, "for_review_sample_5.xlsx")
+```
+
+lots of occurrences of two main problem that i now fixed. 
+
+### sample 6
+filter to thresholds and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% nrow() # 6006
+
+
+epiR::epi.sssimpleestb(N = 6006, # population size
+                       Py = .015, # expected proportion
+                       epsilon = 1, # # precision bound (0.015 * 1 ==> 0.015 ==> prevalence 0-3%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+set.seed(14)
+for_review_sample_6 <- for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% 
+  sample_n(size = 243)
+  
+  
+rio::export(for_review_sample_6, "for_review_sample_6.xlsx")
+```
+
+4 non-alphas:
+- 2 "surpassed" - fixed
+- 1 item loading - fixed
+- 1 range ".80+" - fixed
+
+1 0.706 but 0.7 extracted
+
+
+```{r}
+prop.test(x = 4, n = 243, p = .015, conf.level = .95)
+```
+
+
+
+### sample 7
+filter to non thresholds and sample
+```{r}
+set.seed(14)
+for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 61090
+
+
+epiR::epi.sssimpleestb(N = 61090, # population size
+                       Py = .02, # expected proportion
+                       epsilon = 1, # # precision bound (.02 * 1 ==> .02 ==> prevalence 0-4%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+set.seed(14)
+for_review_sample_7 <- for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
+  sample_n(size = 188)
+  
+  
+rio::export(for_review_sample_7, "for_review_sample_7.xlsx")
+```
+
+
+## Issues found
+
+
+-   10.1037/t81225-000 consistency\|reliability, alpha, !cronbach 0.0600 "Internal Consistency: The BSWAI-T maintained high internal consistency (.92) and was reduced by a measure of .06 when compared with the full-scale SWAI-T."
+-   remove "increased" and "decreased"
+-   low values of alpha were particularly susceptiable to errors. above around .60 it gets much better. probably because M, SD, SE, p values etc are all likely to be much lower values, throwing off the signal to noise ratio.
+
+- coefficient alphas and test-reliabilities (respectively) for the aim1r were as follows for subscales: aggression = .85 and .90; threat avoidance = .83 and .79; illness avoidance = .82 and .92; environmental inquisitiveness = .89 and .93; interpersonal inquisitiveness = .90 and .82; appearance = .91 and .91; wealth = .94 and .87; mental = .92 and .91; physical = .93 and .93; sex = .91 and .92; commitment = .88 and .64; altruism = .89 and .84; social exchange = .85 and .89; legacy = .90 and .97; and meaning = .93 and .87. the internal consistencies for the b-aim1r scales ranged from .77 to .94. - extracted as "0.850", "0.900" ect. until "0.8800", "0.6400" 
+
+done until row 214
+
+
+### reliability without a metric or with another metric preceeding it
+
+-   "assessment of rasch person reliability yielded estimates of .64, .84, .69, and .67 for the data from factors 1 to 4, respectively (withdrawal symptoms, positive effects, acute negative effects, and mood effects). alpha reliability, which includes extreme cases, was deemed adequate for all factors (factor 1 = .91, factor 2 = .90, factor 3 = .89, factor 4 = .87)." - extracted as "0.640", "0.840", "0.690" und "0.670"
+-   "reliability: z = (0.087)(hsg) + (0.283)(gatv) + (0.222)(gatq) + (0.163)(saat)." returned .163
+-   "the reliabilities of the metaperspective version of the cart-q with the athlete sample was .86 for metacloseness, .86 for metacommitment, and .84 for metacomplementarity. in the coach sample: metacloseness was .78, metacommitment was .69, and metacomplementarity was .75." - extracted as "0.860", "0.860", "0.840" and "0.780", "0.780", "0.690" and "0.750" --\> Not clear how to treat these cases
+-   "internal reliability: the range of reliability coefficients found was between .639 ± .015 and .891 ± .023 (as cited in brill, 1935). the average coefficient of reliability for ages five to ten years, taken separately, was found to be .77. test-retest reliability: goodenough reported a reliability coefficient of .937 ± .006 by re-testing for first grade children (as cited in brill, 1935)." - extracted as "0.937"
+- 10.1037/t59589-000
+
+### standard errors
+
+-   "se = .020" returned .02
+-   "the scale reliability coefficient for the ahemd-sr had a value of .85, with a standard error of 0.028 and a 95% ci ranging from .80 to .91, which indicated a high consistency." - extracted as "0.0238"
+-   "standard error of 0.028" returned .028
+
+### general regex issues
+
+-   120.13 extracted as 0.13
+
+### kr-20 should be explicitly included
+
+-   "the interitem reliability of the brief-fne scale was found to be quite high: cronbach's alpha = .90. this compares favorably with an obtained reliability coefficient of .92 for the full-length fne. watson & friend in 1969 reported a kr-20 coefficient of .94. the 4-week test-retest reliability coefficient was .75, which also compares favorably to watson and friend's reported test-retest coefficient of .68 for the longer scale." - extracted as "0.940"
+
+### p values
+
+-   "p \< .001" returned .001
+
+### mean, median, sd, se
+
+-   "the split-half reliabilities of the test itself have been uniformly high. for three studies, these reliabilities (corrected by the spearman-brown formula) were respectively .94, .95, and .93. a median interscorer reliability of .97 was found in an investigation involving 10 scorers, and in other, smaller projects, the results were comparable." - extracted as "0.970"
+-   "m =", "sd =" - maybe too general? already added above, but could be limited to immediately prior to the alpha string instead of general.
+-   "internal consistency: the alpha for the 23-item pscd (excluding the odd item) total score was .80. the mic values were acceptable for factors of gm (.17), cu (.16), di (.26), and cd (.27). the omega coefficients ranged from .69 to .81. the omega coefficient for the total scale was .90." returned .17.
+
+
+### in parentheses after actual alpha estimate 
+
+- 10.1037/t49575-000, internal consistency estimates of reliability (coefficients alpha) were .81 (.80-.81 across individual items) 
+- 10.1037/t18202-000	consistency|reliability, alpha, !cronbach	0.8	internal consistency: the measure showed internal consistencies above alpha = .80.
+
+
+
+# plot - eventually to be moved to analysis script
+
+```{r}
+
+data_included <- data_processed %>% 
+  mutate(alpha = alpha_all) |>
+  filter(exclude_master == FALSE) 
+  
+```
+
+```{r}
+
+# nrow(data_included)
+
+# create tibble containing all alpha bins, for a later join
+all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
+                     freq = 0,
+                     missing = TRUE)
+
+data_processed_binned <- data_included %>% 
+  pull(alpha) %>% 
+  unlist() %>% 
+  as.numeric() %>% 
+  tibble(alpha = .) %>% 
+  filter(alpha > 0, !is.na(alpha)) %>% 
+  mutate(alpha = janitor::round_half_up(alpha, 2),
+         alpha = case_when(alpha == 0 ~ 0.01,
+                           alpha == 1 ~ 0.99,
+                           TRUE ~ alpha))
+
+data_frequency_temp <- data_processed_binned %>% 
+  mutate(n_total = n()) %>% 
+  group_by(alpha) %>% 
+  summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
+  # convert alpha to character to facilitate a join later
+  mutate(alpha = as.character(alpha))
+
+# kernel density estimation
+data_density <- 
+  density(data_processed_binned %>%
+            pull(alpha),
+          n      = length(seq(0.01, 0.99, 0.01)),
+          from   = 0.01,
+          to     = 0.99, 
+          kernel = "gaussian",
+          bw     = 0.01) # "nrd0" returns 0.01
+
+data_frequency <- data_frequency_temp %>%
+  # join the previous two tibbles to create a complete list of alpha bins
+  bind_rows(all_alphas %>% anti_join(data_frequency_temp, by = "alpha")) %>%
+  arrange(alpha, desc(freq)) %>%
+  distinct(alpha, .keep_all = TRUE) %>%
+  mutate(density_kernel = data_density$y,
+         missing = ifelse(is.na(missing), FALSE, missing)) %>%
+  mutate(residual_kernel = freq*100 - density_kernel,
+         alpha = as.numeric(alpha),
+         missing = ifelse(is.na(missing), FALSE, missing))
+
+total_n <- nrow(data_processed_binned)/100
+
+plot_data_psych <- data_processed_binned |>
+  mutate(n_total = n()) |>
+  group_by(alpha) |>
+  summarise(count = sum(!is.na(alpha))) |>
+  mutate(type = case_when(alpha %in% c(.70, .80, .90) ~ "Common reliability threshold",
+                          TRUE ~ "Non-threshold"),
+         type = fct_relevel(type, "Non-threshold", "Common reliability threshold")) |>
+  right_join(data_frequency, by = "alpha") |>
+  mutate(excess = if_else(residual_kernel > 0, "excess", "deficit"))# %>% 
+# drop_na()
+
+c_excess <- "#2A788EFF"
+c_data <- "lightgrey"
+c_line <- "black"
+c_lpbg <- "white"
+c_grid <- "#F0F0F0AA"
+
+p1_kernel_psych <-
+  ggplot(plot_data_psych, aes(alpha, y = count, fill = excess)) +
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col() +
+  geom_col(aes(y = count - if_else(residual_kernel > 0, residual_kernel * total_n, 0)), fill = c_data) +
+  geom_step(aes(y = density_kernel * total_n, group = 1), direction = "mid", size = 0.2, color = c_line) +
+  scale_fill_manual(values = c(c_data, c_excess),
+                    name = element_blank()) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "", 
+       y = "Count") +
+  theme(axis.title.x = element_markdown()) +
+  ylim(0, NA_real_) +
+  theme(legend.position = "none",
+        legend.background = element_blank(),
+        panel.grid = element_line(color = c_grid))
+
+p2_kernel_psych <- 
+  ggplot(plot_data_psych, aes(alpha, residual_kernel * total_n, fill = excess)) + 
+  geom_vline(xintercept = c(0.7, 0.8, 0.9), linetype = "dotted") +
+  geom_col(aes(color = excess), size = 0.2) +
+  scale_color_manual(values = c(c_line, "#FFFFFF00")) +
+  geom_segment(x = 0.005, xend = 0.995, y = 0,yend=0, size = 0.2, color = c_line) +
+  scale_fill_manual(values = c("white", c_excess),
+                    guide = guide_legend(reverse = TRUE)) +
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1),
+                     labels = label_number(accuracy = 0.1),
+                     minor_breaks = NULL) +
+  scale_y_continuous(breaks = seq(from = -200, to = 200, by = 50),
+                     labels = label_number(accuracy = 1),
+                     minor_breaks = NULL) +
+  theme_bw() +
+  labs(x = "Cronbach's &alpha;",
+       y = "Residual") +
+  theme(legend.title = element_blank(),
+        axis.title.x = element_markdown(),
+        legend.position = "none",
+        panel.background = element_rect(fill = c_lpbg),
+        panel.grid = element_line(color = c_grid))  # c(0.23, 0.77), legend.background = element_blank()
+
+p_kernel_psych <- 
+  p1_kernel_psych + 
+  p2_kernel_psych + 
+  plot_layout(nrow = 2, heights = c(1.5, 1))
+
+p_kernel_psych
+
+# ggsave("p_kernel_psyctests.pdf",
+#        plot = p_kernel_psych,
+#        device = cairo_pdf,
+#        width = 6,
+#        height = 4.5,
+#        units = "in")
+
+```
