@@ -12,10 +12,6 @@ output:
     toc_float: yes
 ---
 
-# TODO
-
-- Add magnifcation plot? https://github.com/hughjonesd/ggmagnify
-
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(message = FALSE, 
@@ -91,19 +87,33 @@ n_scale_names <- data_psyctests %>%
 cat("n scale names =", n_scale_names, "\n")
 
 
+# data_psyctests_cleaned_names <- data_psyctests %>%
+#   mutate(
+#     Name = tolower(Name),
+#     Name = str_replace_all(Name, "--.*", ""), # translations are often be append with "-- spanish version" etc
+#     Name = str_replace_all(Name, ";.*", ""),  # translations are sometimes append with "; spanish version" etc
+#     Name = str_remove_all(Name, "-( )revised"), # drop revised scales for a conservative estimate
+#     Name = str_replace_all(Name, "scales", "scale"), # scales vs scale may be the same scale
+#     Name = str_replace_all(Name, "-[0-9]+.*", ""), # number of items is often appended as "-12" etc
+#     Name = str_replace_all(Name, "\\b\\d+\\s?-\\s?item\\s?", ""), # drops "N-item" as these may be versions of the same original scale
+#     Name = str_replace_all(Name, "( |-)\\S+ version", "") # drops things like "-russian version" and "-child version" and " mother version"
+#   ) |>
+#   distinct(Name) |>
+#   arrange(Name)
+
 data_psyctests_cleaned_names <- data_psyctests %>%
   mutate(
-    Name = tolower(Name),
-    Name = str_replace_all(Name, "--.*", ""), # translations are often be append with "-- spanish version" etc
-    Name = str_replace_all(Name, ";.*", ""),  # translations are sometimes append with "; spanish version" etc
-    Name = str_remove_all(Name, "-( )revised"), # drop revised scales for a conservative estimate
-    Name = str_replace_all(Name, "scales", "scale"), # scales vs scale may be the same scale
-    Name = str_replace_all(Name, "-[0-9]+.*", ""), # number of items is often appended as "-12" etc
-    Name = str_replace_all(Name, "\\b\\d+\\s?-\\s?item\\s?", ""), # drops "N-item" as these may be versions of the same original scale
-    Name = str_replace_all(Name, "( |-)\\S+ version", "") # drops things like "-russian version" and "-child version" and " mother version"
+    Name_base = tolower(Name_base),
+    Name_base = str_replace_all(Name_base, "--.*", ""), # translations are often be append with "-- spanish version" etc
+    Name_base = str_replace_all(Name_base, ";.*", ""),  # translations are sometimes append with "; spanish version" etc
+    Name_base = str_remove_all(Name_base, "-( )revised"), # drop revised scales for a conservative estimate
+    Name_base = str_replace_all(Name_base, "scales", "scale"), # scales vs scale may be the same scale
+    Name_base = str_replace_all(Name_base, "-[0-9]+.*", ""), # number of items is often appended as "-12" etc
+    Name_base = str_replace_all(Name_base, "\\b\\d+\\s?-\\s?item\\s?", ""), # drops "N-item" as these may be versions of the same original scale
+    Name_base = str_replace_all(Name_base, "( |-)\\S+ version", "") # drops things like "-russian version" and "-child version" and " mother version"
   ) |>
-  distinct(Name) |>
-  arrange(Name)
+  distinct(Name_base) |>
+  arrange(Name_base)
 
 n_unique_scale_names <- data_psyctests_cleaned_names |>
   nrow()
@@ -112,6 +122,86 @@ cat("n unique scale names after removing apparent duplicates, translations and v
 
 ```
 
+```{r}
+
+data_psyctests %>%
+  summarize(earliest_year = min(TestYear, na.rm = TRUE),
+            latest_year = max(TestYear, na.rm = TRUE))
+
+data_psyctests |>
+  select(DOI, TestYear, Name) |>
+  arrange(TestYear) |>
+  slice(1:10)
+
+```
+
+```{r}
+
+data_journals <- data_psyctests |>
+  select(DOI, SourceCitationList) %>%
+  rowwise(DOI) |>
+  mutate(data = list(as.data.frame(unlist(SourceCitationList)))) |>
+  unnest(data) |>
+  ungroup() |>
+  rename(text = `unlist(SourceCitationList)`) |>
+  group_by(DOI) |>
+  mutate(var = row_number()) |>
+  ungroup() |>
+  pivot_wider(names_from = var,
+              names_prefix = "X",
+              values_from = text) |>
+  select(DOI, journal = X2) |>
+  mutate(journal = tolower(journal),
+         journal = str_replace_all(journal, ", vol\\. \\d+\\.?", ""),
+         journal = str_remove_all(journal, "  "),
+         journal = str_remove_all(journal, "\n")) |>
+  distinct(journal) |>
+  arrange(journal) |>
+  filter(!str_detect(journal, "adaptation") & # drop non journals: scale adaptations
+           !str_detect(journal, "\\d{4}-\\d{4}-\\d{4}-\\d{3}") &
+           !str_detect(journal, "study") &
+           !str_detect(journal, "instrument") &
+           !str_detect(journal, "conference") &
+           !str_detect(journal, "survey") &
+           !str_detect(journal, "measure ") &
+           !str_detect(journal, "revised ") &
+           !str_detect(journal, "tool ") &
+           !str_detect(journal, "tests ") &
+           !str_detect(journal, "revised ") &
+           !str_detect(journal, "symptom ") &
+           !str_detect(journal, "short ") &
+           !str_detect(journal, "short-form") &
+           !str_detect(journal, "questionnaire") &
+           !str_detect(journal, "scale") &
+           !str_detect(journal, "reliabil") &
+           !str_detect(journal, "valid") &
+           !str_detect(journal, "academic self-efficacy in education: nature, assessment, and research") &
+           !str_detect(journal, "adapting ") &
+           !str_detect(journal, "guide ") &
+           !str_detect(journal, "index ") &
+           !str_detect(journal, " test") &
+           !str_detect(journal, "inventory ") &
+           !str_detect(journal, "assessing ") &
+           !str_detect(journal, "analysis of") &
+           !str_detect(journal, "analyses of") &
+           !str_detect(journal, " model") &
+           !str_detect(journal, "assessment of") &
+           !str_detect(journal, "an assessment") &
+           !str_detect(journal, "factor structure") &
+           !str_detect(journal, "factor analy") &
+           !str_detect(journal, "psychometric ") &
+           !str_detect(journal, "a new method for analyzing early mother-child interactions") &
+           !str_detect(journal, "raising awareness among secondary school students about the needsof their deaf and hard-of-hearing peers") &
+           !str_detect(journal, "rape prevention through bystander education: bringing abroader community perspective to sexual violence prevention"))
+
+write_csv(data_journals, "../../data/processed/psycTests/data_psyctests_journals.csv")
+
+n_journals <- data_journals |>
+  nrow()
+
+cat("n journals =", n_journals, "\n")
+
+```
 
 ```{r}
 
@@ -119,6 +209,15 @@ n_estimates_after_exclusions <- data_processed |>
   nrow() 
 
 cat("n alpha estimates after exclusions =", n_estimates_after_exclusions, "\n")
+
+doi_with_at_least_one_alpha <- data_processed |>
+  select(doi, alpha) |>
+  group_by(doi) |>
+  summarize(at_least_one_alpha = max(!is.na(alpha))) |>
+  summarize(doi_with_at_least_one_alpha = janitor::round_half_up(mean(at_least_one_alpha)*100, 1)) |>
+  pull(doi_with_at_least_one_alpha)
+
+cat("% dois with at least one alpha =", doi_with_at_least_one_alpha, "%\n")
 
 ```
 
