@@ -77,16 +77,48 @@ n_doi <- data_psyctests |>
   distinct(DOI) |>
   nrow()
 
-cat("n articles =", 
-      n_doi, "\n")
+cat("n articles =", n_doi, "\n")
 
+```
+
+```{r}
+
+n_scale_names <- data_psyctests %>%
+  distinct(Name) |>
+  arrange(Name) |>
+  nrow()
+
+cat("n scale names =", n_scale_names, "\n")
+
+
+data_psyctests_cleaned_names <- data_psyctests %>%
+  mutate(
+    Name = tolower(Name),
+    Name = str_replace_all(Name, "--.*", ""), # translations are often be append with "-- spanish version" etc
+    Name = str_replace_all(Name, ";.*", ""),  # translations are sometimes append with "; spanish version" etc
+    Name = str_remove_all(Name, "-( )revised"), # drop revised scales for a conservative estimate
+    Name = str_replace_all(Name, "scales", "scale"), # scales vs scale may be the same scale
+    Name = str_replace_all(Name, "-[0-9]+.*", ""), # number of items is often appended as "-12" etc
+    Name = str_replace_all(Name, "\\b\\d+\\s?-\\s?item\\s?", ""), # drops "N-item" as these may be versions of the same original scale
+    Name = str_replace_all(Name, "( |-)\\S+ version", "") # drops things like "-russian version" and "-child version" and " mother version"
+  ) |>
+  distinct(Name) |>
+  arrange(Name)
+
+n_unique_scale_names <- data_psyctests_cleaned_names |>
+  nrow()
+
+cat("n unique scale names after removing apparent duplicates, translations and versions =", n_unique_scale_names, "\n")
+
+```
+
+
+```{r}
 
 n_estimates_after_exclusions <- data_processed |>
-  count(name = "n_estimates") |>
-  pull(n_estimates)
+  nrow() 
 
-cat("n alpha estimates after exclusions =", 
-      n_estimates_after_exclusions, "\n")
+cat("n alpha estimates after exclusions =", n_estimates_after_exclusions, "\n")
 
 ```
 
@@ -248,12 +280,12 @@ ggsave("plots/p_kernel_psyctests.pdf",
        height = 4.5,
        units = "in")
 
-ggsave("plots/p_kernel_psyctests.png",
-       plot = p_kernel_psyctests,
-       device = png,
-       width = 6,
-       height = 4.5,
-       units = "in")
+# ggsave("plots/p_kernel_psyctests.png",
+#        plot = p_kernel_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4.5,
+#        units = "in")
 
 ```
 
@@ -394,12 +426,12 @@ ggsave("plots/p_caliper_all_psyctests.pdf",
        height = 4,
        units = "in")
 
-ggsave("plots/p_caliper_all_psyctests.png",
-       plot = p_caliper_all_psyctests,
-       device = png,
-       width = 6,
-       height = 4,
-       units = "in")
+# ggsave("plots/p_caliper_all_psyctests.png",
+#        plot = p_caliper_all_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
@@ -566,12 +598,12 @@ ggsave("plots/p_kernel_psyctests_originaltests.pdf",
        height = 4.5,
        units = "in")
 
-ggsave("plots/p_kernel_psyctests_originaltests.png",
-       plot = p_kernel_psyctests,
-       device = png,
-       width = 6,
-       height = 4.5,
-       units = "in")
+# ggsave("plots/p_kernel_psyctests_originaltests.png",
+#        plot = p_kernel_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4.5,
+#        units = "in")
 
 ```
 
@@ -712,12 +744,12 @@ ggsave("plots/p_caliper_all_psyctests_original.pdf",
        height = 4,
        units = "in")
 
-ggsave("plots/p_caliper_all_psyctests_original.png",
-       plot = p_caliper_all_psyctests,
-       device = png,
-       width = 6,
-       height = 4,
-       units = "in")
+# ggsave("plots/p_caliper_all_psyctests_original.png",
+#        plot = p_caliper_all_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
@@ -884,12 +916,12 @@ ggsave("plots/p_kernel_psyctests_revisionstranslations.pdf",
        height = 4.5,
        units = "in")
 
-ggsave("plots/p_kernel_psyctests_revisionstranslations.png",
-       plot = p_kernel_psyctests,
-       device = png,
-       width = 6,
-       height = 4.5,
-       units = "in")
+# ggsave("plots/p_kernel_psyctests_revisionstranslations.png",
+#        plot = p_kernel_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4.5,
+#        units = "in")
 
 ```
 
@@ -1031,12 +1063,12 @@ ggsave("plots/p_caliper_all_psyctests_revisionstranslations.pdf",
        height = 4,
        units = "in")
 
-ggsave("plots/p_caliper_all_psyctests_revisionstranslations.png",
-       plot = p_caliper_all_psyctests,
-       device = png,
-       width = 6,
-       height = 4,
-       units = "in")
+# ggsave("plots/p_caliper_all_psyctests_revisionstranslations.png",
+#        plot = p_caliper_all_psyctests,
+#        device = png,
+#        width = 6,
+#        height = 4,
+#        units = "in")
 
 ```
 
