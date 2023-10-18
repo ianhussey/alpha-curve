@@ -1199,6 +1199,59 @@ independence_test(ratio ~ group_1_cutoff,
 
 ```
 
+# Combined plots across datasets
+
+Values are hard-coded and may need updating if results changed!
+
+```{r fig.height=4.5, fig.width=5.0}
+
+dat <- 
+  tibble(Dataset = c("Psychology", "I/O", "PsycTests"),
+         excess_70 = c(14, 14, 12),
+         excess_80 = c(3, 2, 5),
+         excess_90 = c(3, 1, 0)) |>
+  pivot_longer(cols = starts_with("excess_"),
+               names_to = "Threshold",
+               values_to = "Excess") |>
+  mutate(Excess = Excess + 0.05) |> # offset so that 0% is still visible in the plot
+  mutate(Dataset = fct_relevel(Dataset, "Psychology", "I/O", "PsycTests"))
+
+custom_labels <- c("excess_70" = "α = .70", 
+                   "excess_80" = "α = .80", 
+                   "excess_90" = "α = .90")
+
+#library(ggsci)
+#pal_simpsons("springfield")(12)
+#show_col(pal_simpsons("springfield")(15))
+
+plot_combined_excesses <- 
+  ggplot(dat, aes(Threshold, Excess, fill = Dataset)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#709AE1FF", "#FED439FF", "#F05C3BFF", "#8A9197FF", "#075149FF")) +
+  theme_linedraw() +
+  theme(legend.position = c(.80, .8),
+        legend.background = element_rect(color = "black", size = 0.1)) +
+  scale_y_continuous(labels = percent_format(scale = 1), breaks = seq(0, 100, by = 2.5), name = "Excess (Residual)") + # y-axis in percent with increments of 2.5%
+  scale_x_discrete(labels = custom_labels) # custom x-axis labels
+
+plot_combined_excesses
+
+ggsave("plots/p_combined_excesses.pdf",
+       plot = plot_combined_excesses,
+       device = cairo_pdf,
+       width = 5,
+       height = 4.5,
+       units = "in")
+
+ggsave("plots/p_combined_excesses.png",
+       plot = plot_combined_excesses,
+       device = png,
+       width = 5,
+       height = 4.5,
+       units = "in")
+
+```
+
 # Session info
 
 ```{r}
