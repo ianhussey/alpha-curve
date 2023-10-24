@@ -131,7 +131,9 @@ data_psyctests %>%
 data_psyctests |>
   select(DOI, TestYear, Name) |>
   arrange(TestYear) |>
-  slice(1:10)
+  slice(1:10) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
 
 ```
 
@@ -205,7 +207,13 @@ cat("n journals =", n_journals, "\n")
 
 ```{r}
 
+n_estimates_before_exclusions <- data_processed |>
+  nrow() 
+
+cat("n alpha estimates before exclusions =", n_estimates_before_exclusions, "\n")
+
 n_estimates_after_exclusions <- data_processed |>
+  filter(exclude_master == FALSE) |>
   nrow() 
 
 cat("n alpha estimates after exclusions =", n_estimates_after_exclusions, "\n")
@@ -227,16 +235,22 @@ cat("% dois with at least one alpha =", doi_with_at_least_one_alpha, "%\n")
 
 n_doi_by_test_type <- data_psyctests |>
   distinct(DOI, test_type) |>
+  mutate(test_type = case_when(test_type == "Original" ~ "Original",
+                               test_type %in% c("Revision", "Translation") ~ "Revision or translation",
+                               TRUE ~ test_type)) |>
   count(test_type, name = "n_dois")
 
 n_estimates_after_exclusions_by_test_type <- data_processed |>
+  mutate(test_type = case_when(test_type == "Original" ~ "Original",
+                               test_type %in% c("Revision", "Translation") ~ "Revision or translation",
+                               TRUE ~ test_type)) |>
   count(test_type, name = "n_estimates")
 
 n_by_test_type <- 
   full_join(n_doi_by_test_type,
             n_estimates_after_exclusions_by_test_type, 
             by = "test_type") |>
-  mutate(mean_estimates_per_doi = janitor::round_half_up(n_estimates / n_dois, digits = 1)) |>
+  mutate(proportion_dois_giving_one_or_more_estimates = janitor::round_half_up(n_dois / n_estimates * 100, digits = 1)) |>
   arrange(desc(n_dois))
 
 n_by_test_type |>
