@@ -1,0 +1,344 @@
+---
+title: "Documentation of manual inspection"
+subtitle: "PsycTests dataset"
+author: "Ian Hussey, Ruben Arslan, & Taym Alsalti"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+records_wide <- read_rds("../../data/raw/psycTests/preprocessed_records.rds") |>
+  mutate(Reliability = str_to_lower(Reliability))
+
+data_processed <- readRDS("../../data/processed/psycTests/data_processed_psyctests.rds")
+
+```
+
+## Hand checking 
+
+```{r}
+
+for_review <- data_processed %>%
+  filter(exclude_master == FALSE) %>%
+  select(doi, regex_label, alpha = alpha_all) %>%
+  left_join(records_wide %>%
+              select(doi = DOI, Reliability))
+
+```
+
+### sample 1
+
+filter to .7 and sample
+
+```{r}
+
+for_review %>% filter(alpha == .7) %>% nrow() # 1281
+
+
+epiR::epi.sssimpleestb(N = 1281, # population size
+                       Py = .5, # expected proportion
+                       epsilon = .2, # precision bound (.2 * .5 ==> .1 ==> prevalence 40-60%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+```
+
+This gives the same result as inputting the following parameters in [this online sample size calculation tool](https://sampsize.sourceforge.net/iface/index.html):
+Precision = 10%, Prevalence = 50%, Population = 1281, CI = 95%.
+
+```{r}
+
+set.seed(14)
+for_review_sample_1 <- for_review %>% 
+  filter(alpha == .7) %>% 
+  sample_n(size = 90)
+
+rio::export(for_review_sample_1, "for_review_sample_1.xlsx")
+
+```
+
+9/90 found to be non-alphas
+
+```{r}
+
+prop.test(x = 9, n = 90, p = .5, conf.level = .95)
+
+```
+
+### sample 2
+
+filter to not .7, .8, .9 and sample
+
+```{r}
+
+set.seed(14)
+
+for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 63457
+
+
+epiR::epi.sssimpleestb(N = 63457, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+```
+
+
+```{r}
+
+set.seed(14)
+
+for_review_sample_2 <- for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
+  sample_n(size = 72) # sampled and looked at 72 instead of 62 by mistake
+  
+
+rio::export(for_review_sample_2, "for_review_sample_2.xlsx")
+
+```
+
+8/72
+
+```{r}
+
+prop.test(x = 8, n = 72, p = .2, conf.level = .95)
+
+```
+
+### sample 3 (after fixing most issues found in previous samples)
+
+```{r}
+
+epiR::epi.sssimpleestb(N = 68272, # population size
+                       Py = .2, # expected proportion
+                       epsilon = .5, # # precision bound (.2 * .5 ==> .1 ==> prevalence 10-30%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+```
+
+```{r}
+
+set.seed(14)
+
+for_review_sample_3 <- for_review  %>% 
+  sample_n(size = 62)
+  
+rio::export(for_review_sample_3, "for_review_sample_3.xlsx")
+
+```
+
+only 1 non further specified internal consistency found, otherwise no non-alphas.
+
+```{r}
+
+prop.test(x = 0, n = 62, p = .2, conf.level = .95)
+
+prop.test(c(8, 0), c(72,62), conf.level = .95) # compare samples before and after fixing the errors
+
+```
+
+### unnumbered sample 
+
+remove instances which were already reviewed
+
+```{r}
+
+exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") %>% 
+  bind_rows(rio::import("for_review_sample_2_reviewed.xlsx"),
+            rio::import("for_review_sample_3_reviewed.xlsx")) %>% 
+  distinct(doi, alpha, .keep_all = T)
+
+for_review_2 <- for_review %>% 
+  anti_join(exclude_from_further_review, by = c("doi", "alpha"))
+
+```
+
+```{r}
+
+rio::export(for_review_2 %>% 
+  filter(alpha == .7), "all_.7.xlsx")
+
+for_review_2 %>% 
+  filter(alpha == .7)
+
+```
+
+looked at 100.
+
+### sample 4
+
+filter to .8 and .9 and sample
+
+```{r}
+
+set.seed(14)
+
+for_review_2 %>% 
+  filter(alpha == .8 | alpha == .9) %>% nrow() # 4999
+
+epiR::epi.sssimpleestb(N = 4999, # population size
+                       Py = .02, # expected proportion
+                       epsilon = 1, # # precision bound (.02 * 1 ==> .02 ==> prevalence 0-4%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+
+for_review_sample_4 <- for_review_2  %>% 
+  filter(alpha == .8 | alpha == .9) %>%  
+  sample_n(size = 182)
+
+rio::export(for_review_sample_4, "for_review_sample_4.xlsx")
+
+```
+
+7/182 not further specified internal consistency/reliability.
+3/182 non-alphas.
+
+```{r}
+
+prop.test(x = 3, n = 182, p = .02, conf.level = .95)
+
+```
+
+### sample 5
+
+remove instances which were already reviewed
+
+```{r}
+
+exclude_from_further_review <- rio::import("for_review_sample_1_reviewed.xlsx") %>% 
+  bind_rows(rio::import("for_review_sample_2_reviewed.xlsx"),
+            rio::import("for_review_sample_3_reviewed.xlsx"),
+            rio::import("for_review_sample_4_reviewed.xlsx")) %>% 
+  distinct(doi, alpha, .keep_all = T)
+
+for_review_3 <- for_review %>% 
+  anti_join(exclude_from_further_review, by = c("doi", "alpha"))
+
+```
+
+filter to <.5 and sample
+
+```{r}
+
+set.seed(14)
+
+for_review_3 %>% 
+  filter(alpha < .5) %>% nrow() # 928
+
+epiR::epi.sssimpleestb(N = 928, # population size
+                       Py = .05, # expected proportion
+                       epsilon = 1, # # precision bound (.05 * 1 ==> .05 ==> prevalence 0-10%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+for_review_sample_5 <- for_review_3  %>% 
+  filter(alpha < .5) %>%  
+  sample_n(size = 68)
+
+rio::export(for_review_sample_5, "for_review_sample_5.xlsx")
+
+```
+
+lots of occurrences of two main problem that were subsequently fixed
+
+### sample 6
+
+filter to thresholds and sample
+
+```{r}
+
+set.seed(14)
+
+for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% nrow() # 6006
+
+epiR::epi.sssimpleestb(N = 6006, # population size
+                       Py = .015, # expected proportion
+                       epsilon = 1, # # precision bound (0.015 * 1 ==> 0.015 ==> prevalence 0-3%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+set.seed(14)
+
+for_review_sample_6 <- for_review %>% 
+  filter(alpha == .7 | alpha == .8 | alpha == .9) %>% 
+  sample_n(size = 243)
+  
+rio::export(for_review_sample_6, "for_review_sample_6.xlsx")
+
+```
+
+4/243 non-alphas
+
+```{r}
+
+prop.test(x = 4, n = 243, p = .015, conf.level = .95)
+
+```
+
+### sample 7
+
+filter to non thresholds and sample
+
+```{r}
+
+set.seed(14)
+
+for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% nrow() # 61090
+
+epiR::epi.sssimpleestb(N = 61090, # population size
+                       Py = .02, # expected proportion
+                       epsilon = 1, # # precision bound (.02 * 1 ==> .02 ==> prevalence 0-4%)
+                       conf.level = .95, 
+                       se = 1, # sensitivity
+                       sp = 1) # specificity
+
+set.seed(14)
+
+for_review_sample_7 <- for_review %>% 
+  filter(alpha != .7 & alpha != .8 & alpha != .9) %>% 
+  sample_n(size = 188)
+  
+rio::export(for_review_sample_7, "for_review_sample_7.xlsx")
+
+```
+
+Checked by Remo.
+
+### total n of hand-checked instances
+
+```{r}
+
+90+72+62+100+182+68+243+188
+
+```
+
+With 615 out of the 1005 having been sampled to be exclusively at the thresholds. 
+
