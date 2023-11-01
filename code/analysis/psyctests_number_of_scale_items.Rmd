@@ -1,0 +1,174 @@
+---
+title: "PsycTests frequency of the number of items in scales"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+# disable scientific notation
+options(scipen=999)
+
+```
+
+```{r}
+
+library(tidyverse)
+library(patchwork)
+library(scales)
+library(ggtext)
+library(knitr)
+library(kableExtra)
+
+records_wide <- readRDS("../../data/raw/psycTests/preprocessed_records.rds")
+
+```
+
+# Descriptives
+
+n records
+
+```{r}
+
+nrow(records_wide)
+
+```
+
+n records with k items entry
+
+```{r}
+
+records_wide |> 
+  filter(!is.na(number_of_test_items) & number_of_test_items != 0) |>
+  nrow()
+
+```
+
+n records with k items entry and created within the last 50 years
+
+```{r}
+
+records_wide |> 
+  filter(!is.na(number_of_test_items) & 
+           number_of_test_items != 0 & 
+           TestYear >= 1973) |>
+  nrow()
+
+```
+
+# Bumber of test items
+
+## All records with k items listed
+
+By frequency of use of that number of items
+
+```{r}
+
+n_test_items_by_frequency <- records_wide |>
+  filter(!is.na(number_of_test_items) & number_of_test_items != 0) |>
+  count(number_of_test_items) |>
+  arrange(desc(n)) |>
+  mutate(percent = (n/sum(n)*100)) |>
+  mutate(cumulative_proportion = cumsum(percent))
+
+n_test_items_by_frequency |>
+  select(number_of_test_items, percent) |>
+  mutate(percent = janitor::round_half_up(percent, 1)) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+By k items
+
+```{r}
+
+n_test_items_by_n <- records_wide |>
+  filter(!is.na(number_of_test_items) & number_of_test_items != 0) |>
+  count(number_of_test_items) |>
+  arrange(number_of_test_items) |>
+  mutate(percent = n/sum(n)*100,
+         percent_floor = floor(percent)) |>
+  mutate(cumulative_percent = cumsum(percent),
+         cumulative_percent_floor = floor(cumulative_percent)) |>
+  #filter(cumulative_percent_floor %in% c(50, 60, 70, 80, 90, 95, 99)) |>
+  filter(cumulative_percent_floor != lag(cumulative_percent_floor))
+
+n_test_items_by_n |>
+  select(number_of_test_items, percent, cumulative_percent) |>
+  mutate(percent = janitor::round_half_up(percent, 1),
+         cumulative_percent = janitor::round_half_up(cumulative_percent, 1)) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+- about 1/3 of scales developed in the last 50 years (34.7%) have 10 items or less.
+- about 1/2 (50.1%) have 15 items or less
+- about 2/3 (67.3%) have 22 items or less
+
+## Modern scales developed in the last 50 years with k items listed
+
+By frequency of use of that number of items
+
+```{r}
+
+n_test_items_by_frequency_modern <- records_wide |>
+  filter(TestYear >= 1973) |>
+  filter(!is.na(number_of_test_items) & number_of_test_items != 0) |>
+  count(number_of_test_items) |>
+  arrange(desc(n)) |>
+  mutate(percent = (n/sum(n)*100)) |>
+  mutate(cumulative_proportion = cumsum(percent))
+
+n_test_items_by_frequency_modern |>
+  select(number_of_test_items, percent) |>
+  mutate(percent = janitor::round_half_up(percent, 1)) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+By k items
+
+```{r}
+
+n_test_items_by_n_modern <- records_wide |>
+  filter(TestYear >= 1973) |>
+  filter(!is.na(number_of_test_items) & number_of_test_items != 0) |>
+  count(number_of_test_items) |>
+  arrange(number_of_test_items) |>
+  mutate(percent = n/sum(n)*100,
+         percent_floor = floor(percent)) |>
+  mutate(cumulative_percent = cumsum(percent),
+         cumulative_percent_floor = floor(cumulative_percent)) |>
+  #filter(cumulative_percent_floor %in% c(50, 60, 70, 80, 90, 95, 99)) |>
+  filter(cumulative_percent_floor != lag(cumulative_percent_floor))
+
+n_test_items_by_n_modern |>
+  select(number_of_test_items, percent, cumulative_percent) |>
+  mutate(percent = janitor::round_half_up(percent, 1),
+         cumulative_percent = janitor::round_half_up(cumulative_percent, 1)) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+- about 1/3 of scales developed in the last 50 years (35.1%) have 10 items or less.
+- about 1/2 (50.7%) have 15 items or less
+- about 2/3 (66.1%) have 21 items or less
+
+
+
+
+
