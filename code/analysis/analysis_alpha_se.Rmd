@@ -39,12 +39,29 @@ options(scipen=999)
 
 ```
 
+# Distribution of number of items per scale in the psychology literature
+
+Using APA PsycTests database.
+
+```{r}
+
+items <- c(3, 5, 10, 15, 20, 25, 50, 100)
+cumulative_percent <- c(5.8, 14.8, 34.7, 50.1, 63.5, 73.1, 92.5, 98.0) # taken from psyctests_number_of_scale_items.Rmd
+
+tab <- data.frame(items = items,
+                  cumulative_percent)
+
+tab |>
+  kable(caption = "k items per scale & the cumulative % of all measures in APA PsycTests with up to k items") |>
+  kable_classic(full_width = FALSE) 
+
+```
+
 # Standard Error of Cronbach's α = .70
 
 ```{r}
 
 n <- c(50, 100, 250, 500, 1000, 2000, 5000)
-items <- c(3, 5, 10, 25, 50, 100)
 
 dat <- NULL
 
@@ -66,7 +83,24 @@ dat_reshaped <- dat |>
 dat_reshaped |>
   kable(caption = "Standard Error of Cronbach's α = .70") |>
   kable_classic(full_width = FALSE) |>
-  add_header_above(c(" " = 1, "Items" = ncol(dat_reshaped)-1))
+  add_header_above(c(" " = 1, "k items" = ncol(dat_reshaped)-1))
+
+```
+
+```{r}
+
+dat_reshaped2 <- dat |>
+  mutate(se = (CI_upper - CI_lower)/(1.96*2),
+         se = janitor::round_half_up(se, 3)) |>
+  select(n, items, se) |>
+  pivot_wider(names_from = n, 
+              values_from = se)
+
+dat_reshaped2 |>
+  rename(`k items` = items) |>
+  kable(caption = "Standard Error of Cronbach's α = .70") |>
+  kable_classic(full_width = FALSE) |>
+  add_header_above(c(" " = 1, "n participants" = ncol(dat_reshaped2)-1))
 
 ```
 
@@ -82,6 +116,8 @@ cocron.two.coefficients(alpha = c(.69, .70),
                         n = c(n, n))
 
 ```
+
+n in each sample = `r n`
 
 # Session info
 
