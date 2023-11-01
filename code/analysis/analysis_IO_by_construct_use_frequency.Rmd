@@ -12,10 +12,6 @@ output:
     toc_float: yes
 ---
 
-# TODO
-
-- Add descriptives
-
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(message = FALSE, 
@@ -34,6 +30,8 @@ library(patchwork)
 library(coin)
 
 dir.create("plots")
+
+set.seed(42)
 
 ```
 
@@ -101,27 +99,27 @@ ggsave("plots/p_frequency_of_construct_use_log10_IO.pdf",
        units = "in")
 
 
-
-constructs_used_once <- data_processed_binned |>
-  count(Var1) |>
-  filter(n == 1)
+construct_counts <- data_processed_binned |>
+  count(Var1)
 
 data_processed_binned_constructs_used_once <- data_processed_binned |>
-  semi_join(constructs_used_once, by = "Var1")
+  semi_join(construct_counts |>
+              filter(n == 1), 
+            by = "Var1")
 
 data_processed_binned_constructs_used_many_times <- data_processed_binned |>
-  anti_join(constructs_used_once, by = "Var1")
-
-
-constructs_used_100 <- data_processed_binned |>
-  count(Var1) |>
-  filter(n >= 100)
+  semi_join(construct_counts |>
+              filter(n > 1 & n < 100), 
+            by = "Var1")
 
 data_processed_binned_constructs_used_100 <- data_processed_binned |>
-  semi_join(constructs_used_100, by = "Var1")
+  semi_join(construct_counts |>
+              filter(n >= 100), 
+            by = "Var1")
 
 rm(data_processed_binned,
-   data_processed)
+   data_processed,
+   construct_counts)
 
 ```
 
@@ -135,6 +133,8 @@ rm(data_processed_binned,
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
+
+nrow(data_processed_binned_constructs_used_once)
 
 data_frequency_temp <- data_processed_binned_constructs_used_once %>% 
   mutate(n_total = n()) %>% 
@@ -281,6 +281,8 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
+nrow(data_processed_binned_constructs_used_many_times)
+
 data_frequency_temp <- data_processed_binned_constructs_used_many_times %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
@@ -425,6 +427,8 @@ independence_test(residual ~ group_1_cutoff,
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
+
+nrow(data_processed_binned_constructs_used_100)
 
 data_frequency_temp <- data_processed_binned_constructs_used_100 %>% 
   mutate(n_total = n()) %>% 
