@@ -214,6 +214,14 @@ ggsave("plots/p_kernel_io.pdf",
        height = 4.5,
        units = "in")
 
+ggsave("plots/p_kernel_io.png",
+       plot = p_kernel_io,
+       dev = png,
+       width = 6,
+       height = 4.5,
+       dpi = 600,
+       units = "in")
+
 ```
 
 
@@ -235,6 +243,8 @@ data_inflation_kernel <- data_frequency %>%
                                                TRUE ~ "non cutoff")),
          group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
                                                TRUE ~ "non cutoff")))
+
+write_csv(data_inflation_kernel, "plots/residuals_io.csv")
 
 ```
 

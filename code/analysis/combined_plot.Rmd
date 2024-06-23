@@ -1,0 +1,77 @@
+---
+title: "Combined plot of excesses"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, 
+                      warning = FALSE)
+
+```
+
+# Combined plots across datasets
+
+```{r fig.height=4.5, fig.width=5.0}
+
+library(tidyverse)
+library(scales)
+
+dat <- bind_rows(
+  read_csv("plots/residuals_psychology.csv") |>
+    filter(alpha %in% c(.70, .80, .90)) |>
+    mutate(Dataset = "Psychology"),
+  read_csv("plots/residuals_io.csv") |>
+    filter(alpha %in% c(.70, .80, .90)) |>
+    mutate(Dataset = "I/O"),
+  read_csv("plots/residuals_psyctests.csv") |>
+    filter(alpha %in% c(.70, .80, .90)) |>
+    mutate(Dataset = "PsycTests")
+) |>
+  rename(Threshold = alpha,
+         Excess = inflation) |>
+  mutate(Dataset = fct_relevel(Dataset, "Psychology", "I/O", "PsycTests"),
+         Threshold = as.factor(Threshold))
+
+custom_labels <- c("0.7" = "α = .70", 
+                   "0.8" = "α = .80", 
+                   "0.9" = "α = .90")
+
+plot_combined_excesses <- 
+  ggplot(dat, aes(Threshold, Excess, fill = Dataset)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("#709AE1FF", "#FED439FF", "#F05C3BFF", "#8A9197FF", "#075149FF")) +
+  theme_linedraw() +
+  theme(legend.position = c(.80, .8),
+        legend.background = element_rect(color = "black", size = 0.1)) +
+  scale_y_continuous(labels = label_percent(),
+                     breaks = breaks_pretty(n = 6), 
+                     name = "Excess (Residual)") +
+  scale_x_discrete(labels = custom_labels) # custom x-axis labels
+
+plot_combined_excesses
+
+ggsave("plots/p_combined_excesses.pdf",
+       plot = plot_combined_excesses,
+       device = cairo_pdf,
+       width = 5,
+       height = 4.5,
+       units = "in")
+
+ggsave("plots/p_combined_excesses.png",
+       plot = plot_combined_excesses,
+       device = png,
+       width = 5,
+       height = 4.5,
+       dpi = 600,
+       units = "in")
+
+```

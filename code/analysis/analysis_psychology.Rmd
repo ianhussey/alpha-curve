@@ -231,6 +231,14 @@ ggsave("plots/p_kernel_psychology.pdf",
        height = 4.5,
        units = "in")
 
+ggsave("plots/p_kernel_psychology.png",
+       plot = p_kernel_psych,
+       device = png,
+       width = 6,
+       height = 4.5,
+       dpi = 600,
+       units = "in")
+
 ```
 
 ## Quantify excess 
@@ -251,6 +259,8 @@ data_inflation_kernel <- data_frequency %>%
                                                TRUE ~ "non cutoff")),
          group_1_cutoff = as.factor(case_when(alpha %in% c(.70) ~ "cutoff",
                                                TRUE ~ "non cutoff")))
+
+write_csv(data_inflation_kernel, "plots/residuals_psychology.csv")
 
 ```
 
@@ -626,8 +636,8 @@ p_kernel_alt
 
 write_rds(p_kernel_alt, "plots/p_kernel_psychology_alt.rds")
 
-# ggsave("plots/p_kernel_psychology_alt.pdf", 
-#        plot = p_kernel_alt, 
+# ggsave("plots/p_kernel_psychology_alt.pdf",
+#        plot = p_kernel_alt,
 #        device = cairo_pdf,
 #        width = 6,
 #        height = 4,
