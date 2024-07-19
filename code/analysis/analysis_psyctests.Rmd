@@ -50,6 +50,10 @@ set.seed(42)
 
 data_processed <- read_rds("../../data/processed/psycTests/data_processed_psyctests.rds")
 
+# data_processed |>
+#   slice(1:50) |>
+#   write_csv("psyctests_processed_sample.csv")
+
 data_processed_binned <- data_processed %>%
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression

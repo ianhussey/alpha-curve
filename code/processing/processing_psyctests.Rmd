@@ -432,8 +432,11 @@ data_test_type <- records_wide |>
 ```{r}
 
 data_processed <- data_estimates_after_exclusions |>
-  left_join(data_test_type, by = "doi")
-
+  left_join(data_test_type, by = "doi") |>
+  # select cols of interest + rename
+  select(doi, test_type, exemplar, alpha, alpha_all,
+         extracted_text = all, regex_label, regex_inclusion, regex_exclusion, alpha_location_in_text = location_alpha_absolute, 
+         starts_with("exclude"))
 
 data_processed |>
   count(test_type) |>
@@ -449,6 +452,8 @@ dir.create("../../data/processed/psycTests")
 
 write_rds(data_processed, "../../data/processed/psycTests/data_processed_psyctests.rds",
           compress = "gz")
+
+write_csv(data_processed, "../../data/processed/psycTests/data_processed_psyctests.csv")
 
 ```
 
