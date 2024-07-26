@@ -49,12 +49,7 @@ set.seed(42)
 
 ```{r}
 
-data_processed <- read_csv("../../data/processed/psychology/data_processed_psychology.csv")
-
-data_processed_trimmed <- data_processed |>
-  filter(!is.na(alpha) & exclude_master == FALSE)
-
-data_processed_binned <- data_processed_trimmed %>%
+data_processed <- read_csv("../../data/processed/psychology/data_processed_psychology.csv") %>%
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
@@ -62,6 +57,9 @@ data_processed_binned <- data_processed_trimmed %>%
          alpha = case_when(alpha == 0 ~ 0.01,
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) 
+
+data_processed_trimmed <- data_processed |>
+  filter(!is.na(alpha) & exclude_master == FALSE)
 
 ```
 
@@ -86,7 +84,6 @@ cat("n articles =",
 
 
 n_exclusions <- data_processed |>
-  filter(exclude_master == TRUE) |>
   count(name = "n_exclusions") |>
   pull(n_exclusions)
 
@@ -124,7 +121,7 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-data_frequency_temp <- data_processed_binned %>% 
+data_frequency_temp <- data_processed_trimmed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -133,7 +130,7 @@ data_frequency_temp <- data_processed_binned %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned %>%
+  density(data_processed_trimmed %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -153,9 +150,9 @@ data_frequency <-
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-total_n <- nrow(data_processed_binned)/100
+total_n <- nrow(data_processed_trimmed)/100
 
-plot_data_psych <- data_processed_binned |>
+plot_data_psych <- data_processed_trimmed |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -304,7 +301,7 @@ The usual null hypothesis of no differences cannot be tested against, so instead
 
 ```{r}
 
-data_caliper <- data_processed_binned %>% 
+data_caliper <- data_processed_trimmed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(count = sum(!is.na(alpha)))
@@ -418,7 +415,7 @@ Beta regression was also explored, but it had many more assumptions and poorer f
 
 # solution from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients
 
-model_beta <- data_processed_binned %>%
+model_beta <- data_processed_trimmed %>%
   betareg(alpha ~ 1 | 1, 
           link = "logit",
           data = .)
@@ -449,7 +446,7 @@ data_frequency <- data_frequency %>%
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-plot_data_psych_beta <- data_processed_binned |>
+plot_data_psych_beta <- data_processed_trimmed |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -580,7 +577,7 @@ independence_test(residual ~ group_1_cutoff,
 cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
           "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
-plot_data <- data_processed_binned |>
+plot_data <- data_processed_trimmed |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>

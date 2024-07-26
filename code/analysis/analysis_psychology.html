@@ -1888,7 +1888,7 @@ border-radius: 0px;
 rule-of-thumb cut-offs</h1>
 <h3 class="subtitle">Analyses of Psychology/APA dataset</h3>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">23 June, 2024</h4>
+<h4 class="date">26 July, 2024</h4>
 
 </div>
 
@@ -1917,19 +1917,17 @@ rule-of-thumb cut-offs</h1>
 </div>
 <div id="get-data" class="section level1">
 <h1>Get data</h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;../../data/processed/psychology/data_processed_psychology.csv&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>data_processed_trimmed <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha) <span class="sc">&amp;</span> exclude_master <span class="sc">==</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>data_processed_binned <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">%&gt;%</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="co"># round the alpha values to 2 decimal places, using standard rounding method</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="co"># recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="co"># nb none present in dataset</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(alpha, <span class="dv">2</span>),</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">case_when</span>(alpha <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="fl">0.01</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                           alpha <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="fl">0.99</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                           <span class="cn">TRUE</span> <span class="sc">~</span> alpha)) </span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;../../data/processed/psychology/data_processed_psychology.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="co"># round the alpha values to 2 decimal places, using standard rounding method</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="co"># recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="co"># nb none present in dataset</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(alpha, <span class="dv">2</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">case_when</span>(alpha <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="fl">0.01</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                           alpha <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="fl">0.99</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                           <span class="cn">TRUE</span> <span class="sc">~</span> alpha)) </span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>data_processed_trimmed <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha) <span class="sc">&amp;</span> exclude_master <span class="sc">==</span> <span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="descriptives" class="section level1">
 <h1>Descriptives</h1>
@@ -1949,12 +1947,11 @@ rule-of-thumb cut-offs</h1>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>      n_doi, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
 <pre><code>## n articles = 74470</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>n_exclusions <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">filter</span>(exclude_master <span class="sc">==</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">count</span>(<span class="at">name =</span> <span class="st">&quot;n_exclusions&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="fu">pull</span>(n_exclusions)</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;n exclusions =&quot;</span>, n_exclusions, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## n exclusions = 26744</code></pre>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">count</span>(<span class="at">name =</span> <span class="st">&quot;n_exclusions&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">pull</span>(n_exclusions)</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;n exclusions =&quot;</span>, n_exclusions, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## n exclusions = 60153</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>n_estimates_after_exclusions <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">|&gt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">count</span>(<span class="at">name =</span> <span class="st">&quot;n_estimates&quot;</span>) <span class="sc">|&gt;</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">pull</span>(n_estimates)</span>
@@ -1982,7 +1979,7 @@ rule-of-thumb cut-offs</h1>
 <span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>                     <span class="at">freq =</span> <span class="dv">0</span>,</span>
 <span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>                     <span class="at">missing =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>data_frequency_temp <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span> </span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>data_frequency_temp <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">%&gt;%</span> </span>
 <span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">%&gt;%</span> </span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">freq =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))<span class="sc">/</span><span class="fu">first</span>(n_total)) <span class="sc">%&gt;%</span></span>
@@ -1991,7 +1988,7 @@ rule-of-thumb cut-offs</h1>
 <span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a></span>
 <span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co"># kernel density estimation</span></span>
 <span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>data_density <span class="ot">&lt;-</span> </span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  <span class="fu">density</span>(data_processed_binned <span class="sc">%&gt;%</span></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  <span class="fu">density</span>(data_processed_trimmed <span class="sc">%&gt;%</span></span>
 <span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>            <span class="fu">pull</span>(alpha),</span>
 <span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>          <span class="at">n      =</span> <span class="fu">length</span>(<span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>, <span class="fl">0.01</span>)),</span>
 <span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>          <span class="at">from   =</span> <span class="fl">0.01</span>,</span>
@@ -2011,9 +2008,9 @@ rule-of-thumb cut-offs</h1>
 <span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">as.numeric</span>(alpha),</span>
 <span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>         <span class="at">missing =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(missing), <span class="cn">FALSE</span>, missing))</span>
 <span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a></span>
-<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>total_n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(data_processed_binned)<span class="sc">/</span><span class="dv">100</span></span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>total_n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(data_processed_trimmed)<span class="sc">/</span><span class="dv">100</span></span>
 <span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a></span>
-<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>plot_data_psych <span class="ot">&lt;-</span> data_processed_binned <span class="sc">|&gt;</span></span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>plot_data_psych <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">|&gt;</span></span>
 <span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">|&gt;</span></span>
 <span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))) <span class="sc">|&gt;</span></span>
@@ -2162,7 +2159,7 @@ for the cut-off score ratio being larger than the ratios calculated from
 non cut-offs is then tested via permuation test.</p>
 <div id="quantify-excess-1" class="section level2">
 <h2>Quantify excess</h2>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>data_caliper <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>data_caliper <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">%&gt;%</span> </span>
 <span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">%&gt;%</span> </span>
 <span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha)))</span>
@@ -2333,7 +2330,7 @@ in favor of kernel smoothing. It is reported here for transparency.</p>
 <h2>Model and plot</h2>
 <div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="co"># solution from https://www.andrewheiss.com/blog/2021/11/08/beta-regression-guide/#interpreting-coefficients</span></span>
 <span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a></span>
-<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>model_beta <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span></span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>model_beta <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">%&gt;%</span></span>
 <span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a>  <span class="fu">betareg</span>(alpha <span class="sc">~</span> <span class="dv">1</span> <span class="sc">|</span> <span class="dv">1</span>, </span>
 <span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a>          <span class="at">link =</span> <span class="st">&quot;logit&quot;</span>,</span>
 <span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a>          <span class="at">data =</span> .)</span>
@@ -2429,7 +2426,7 @@ precision
 <span id="cb29-18"><a href="#cb29-18" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">as.numeric</span>(alpha),</span>
 <span id="cb29-19"><a href="#cb29-19" tabindex="-1"></a>         <span class="at">missing =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(missing), <span class="cn">FALSE</span>, missing))</span>
 <span id="cb29-20"><a href="#cb29-20" tabindex="-1"></a></span>
-<span id="cb29-21"><a href="#cb29-21" tabindex="-1"></a>plot_data_psych_beta <span class="ot">&lt;-</span> data_processed_binned <span class="sc">|&gt;</span></span>
+<span id="cb29-21"><a href="#cb29-21" tabindex="-1"></a>plot_data_psych_beta <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">|&gt;</span></span>
 <span id="cb29-22"><a href="#cb29-22" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb29-23"><a href="#cb29-23" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">|&gt;</span></span>
 <span id="cb29-24"><a href="#cb29-24" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))) <span class="sc">|&gt;</span></span>
@@ -2555,7 +2552,7 @@ precision
 <div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>cbp1 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;#999999&quot;</span>, <span class="st">&quot;#E69F00&quot;</span>, <span class="st">&quot;#56B4E9&quot;</span>, <span class="st">&quot;#009E73&quot;</span>,</span>
 <span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>          <span class="st">&quot;#F0E442&quot;</span>, <span class="st">&quot;#0072B2&quot;</span>, <span class="st">&quot;#D55E00&quot;</span>, <span class="st">&quot;#CC79A7&quot;</span>)</span>
 <span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a>plot_data <span class="ot">&lt;-</span> data_processed_binned <span class="sc">|&gt;</span></span>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a>plot_data <span class="ot">&lt;-</span> data_processed_trimmed <span class="sc">|&gt;</span></span>
 <span id="cb36-5"><a href="#cb36-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb36-6"><a href="#cb36-6" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">|&gt;</span></span>
 <span id="cb36-7"><a href="#cb36-7" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))) <span class="sc">|&gt;</span></span>
@@ -2743,7 +2740,7 @@ precision
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.3.3 (2024-02-29)
 ## Platform: aarch64-apple-darwin20 (64-bit)
-## Running under: macOS Sonoma 14.4.1
+## Running under: macOS Sonoma 14.5
 ## 
 ## Matrix products: default
 ## BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
@@ -2752,7 +2749,7 @@ precision
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 ## 
-## time zone: Europe/London
+## time zone: Europe/Zurich
 ## tzcode source: internal
 ## 
 ## attached base packages:
@@ -2771,11 +2768,11 @@ precision
 ##  [1] tidyselect_1.2.1  viridisLite_0.4.2 libcoin_1.0-9     farver_2.1.2     
 ##  [5] fastmap_1.1.1     TH.data_1.1-2     janitor_2.2.0     digest_0.6.35    
 ##  [9] timechange_0.3.0  lifecycle_1.0.4   magrittr_2.0.3    compiler_4.3.3   
-## [13] rlang_1.1.3       sass_0.4.9        tools_4.3.3       utf8_1.2.4       
+## [13] rlang_1.1.4       sass_0.4.9        tools_4.3.3       utf8_1.2.4       
 ## [17] yaml_2.3.8        labeling_0.4.3    bit_4.0.5         xml2_1.3.6       
 ## [21] multcomp_1.4-25   withr_3.0.0       nnet_7.3-19       grid_4.3.3       
 ## [25] stats4_4.3.3      fansi_1.0.6       colorspace_2.1-0  MASS_7.3-60.0.1  
-## [29] cli_3.6.2         mvtnorm_1.2-4     rmarkdown_2.26    crayon_1.5.2     
+## [29] cli_3.6.3         mvtnorm_1.2-4     rmarkdown_2.26    crayon_1.5.2     
 ## [33] generics_0.1.3    rstudioapi_0.16.0 tzdb_0.4.0        commonmark_1.9.1 
 ## [37] cachem_1.0.8      modeltools_0.2-23 splines_4.3.3     parallel_4.3.3   
 ## [41] matrixStats_1.0.0 vctrs_0.6.5       Matrix_1.6-5      sandwich_3.1-0   

@@ -39,9 +39,7 @@ set.seed(42)
 
 ```{r}
 
-data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
-
-data_processed_binned <- data_processed %>%
+data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds") |>
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
@@ -59,7 +57,7 @@ data_processed_binned <- data_processed %>%
 ```{r}
 
 p_freq <- 
-  data_processed_binned |>
+  data_processed |>
   count(Var1) |>
   count(n) |>
   ggplot(aes(n, nn * 10)) +
@@ -79,7 +77,7 @@ ggsave("plots/p_frequency_of_construct_use_IO.pdf",
 
 
 p_freq_log10 <- 
-  data_processed_binned |>
+  data_processed |>
   count(Var1) |>
   count(n) |>
   ggplot(aes(n, nn * 10)) +
@@ -99,25 +97,25 @@ ggsave("plots/p_frequency_of_construct_use_log10_IO.pdf",
        units = "in")
 
 
-construct_counts <- data_processed_binned |>
+construct_counts <- data_processed |>
   count(Var1)
 
-data_processed_binned_constructs_used_once <- data_processed_binned |>
+data_processed_constructs_used_once <- data_processed |>
   semi_join(construct_counts |>
               filter(n == 1), 
             by = "Var1")
 
-data_processed_binned_constructs_used_many_times <- data_processed_binned |>
+data_processed_constructs_used_many_times <- data_processed |>
   semi_join(construct_counts |>
               filter(n > 1 & n < 100), 
             by = "Var1")
 
-data_processed_binned_constructs_used_100 <- data_processed_binned |>
+data_processed_constructs_used_100 <- data_processed |>
   semi_join(construct_counts |>
               filter(n >= 100), 
             by = "Var1")
 
-rm(data_processed_binned,
+rm(data_processed,
    data_processed,
    construct_counts)
 
@@ -134,9 +132,9 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-nrow(data_processed_binned_constructs_used_once)
+nrow(data_processed_constructs_used_once)
 
-data_frequency_temp <- data_processed_binned_constructs_used_once %>% 
+data_frequency_temp <- data_processed_constructs_used_once %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -145,7 +143,7 @@ data_frequency_temp <- data_processed_binned_constructs_used_once %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned_constructs_used_once %>%
+  density(data_processed_constructs_used_once %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -184,7 +182,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_binned_constructs_used_once)/100
+total_n <- nrow(data_processed_constructs_used_once)/100
 
 p1_kernel <-
   data_diff %>%  
@@ -281,9 +279,9 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-nrow(data_processed_binned_constructs_used_many_times)
+nrow(data_processed_constructs_used_many_times)
 
-data_frequency_temp <- data_processed_binned_constructs_used_many_times %>% 
+data_frequency_temp <- data_processed_constructs_used_many_times %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -292,7 +290,7 @@ data_frequency_temp <- data_processed_binned_constructs_used_many_times %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned_constructs_used_many_times %>%
+  density(data_processed_constructs_used_many_times %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -331,7 +329,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_binned_constructs_used_many_times)/100
+total_n <- nrow(data_processed_constructs_used_many_times)/100
 
 p1_kernel <-
   data_diff %>%  
@@ -428,9 +426,9 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-nrow(data_processed_binned_constructs_used_100)
+nrow(data_processed_constructs_used_100)
 
-data_frequency_temp <- data_processed_binned_constructs_used_100 %>% 
+data_frequency_temp <- data_processed_constructs_used_100 %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -439,7 +437,7 @@ data_frequency_temp <- data_processed_binned_constructs_used_100 %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned_constructs_used_100 %>%
+  density(data_processed_constructs_used_100 %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -478,7 +476,7 @@ data_diff <- data_frequency %>%
 color_1 <- scales::viridis_pal()(11)[3]
 color_2 <- scales::viridis_pal()(11)[7]
 
-total_n <- nrow(data_processed_binned_constructs_used_100)/100
+total_n <- nrow(data_processed_constructs_used_100)/100
 
 p1_kernel <-
   data_diff %>%  

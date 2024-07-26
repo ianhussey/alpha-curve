@@ -48,13 +48,7 @@ set.seed(42)
 
 ```{r}
 
-data_processed <- read_rds("../../data/processed/psycTests/data_processed_psyctests.rds")
-
-# data_processed |>
-#   slice(1:50) |>
-#   write_csv("psyctests_processed_sample.csv")
-
-data_processed_binned <- data_processed %>%
+data_processed <- read_rds("../../data/processed/psycTests/data_processed_psyctests.rds") %>%
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
@@ -62,6 +56,9 @@ data_processed_binned <- data_processed %>%
          alpha = case_when(alpha == 0 ~ 0.01,
                            alpha == 1 ~ 0.99,
                            TRUE ~ alpha)) 
+
+data_processed_trimmed <- data_processed |>
+  filter(!is.na(alpha) & exclude_master == FALSE)
 
 ```
 
@@ -216,8 +213,7 @@ n_estimates_before_exclusions <- data_processed |>
 
 cat("n alpha estimates before exclusions =", n_estimates_before_exclusions, "\n")
 
-n_estimates_after_exclusions <- data_processed |>
-  filter(exclude_master == FALSE) |>
+n_estimates_after_exclusions <- data_processed_trimmed |>
   nrow() 
 
 cat("n alpha estimates after exclusions =", n_estimates_after_exclusions, "\n")
@@ -244,7 +240,7 @@ n_doi_by_test_type <- data_psyctests |>
                                TRUE ~ test_type)) |>
   count(test_type, name = "n_dois")
 
-n_estimates_after_exclusions_by_test_type <- data_processed |>
+n_estimates_after_exclusions_by_test_type <- data_processed_trimmed |>
   mutate(test_type = case_when(test_type == "Original" ~ "Original",
                                test_type %in% c("Revision", "Translation") ~ "Revision or translation",
                                TRUE ~ test_type)) |>
@@ -271,29 +267,14 @@ n_by_test_type |>
 
 ```{r}
 
-data_included <- data_processed %>% 
-  mutate(alpha = alpha_all) |>
-  filter(exclude_master == FALSE) 
-
-nrow(data_included)
+nrow(data_processed_trimmed)
 
 # create tibble containing all alpha bins, for a later join
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-data_processed_binned <- data_included %>% 
-  pull(alpha) %>% 
-  unlist() %>% 
-  as.numeric() %>% 
-  tibble(alpha = .) %>% 
-  filter(alpha > 0, !is.na(alpha)) %>% 
-  mutate(alpha = janitor::round_half_up(alpha, 2),
-         alpha = case_when(alpha == 0 ~ 0.01,
-                           alpha == 1 ~ 0.99,
-                           TRUE ~ alpha))
-
-data_frequency_temp <- data_processed_binned %>% 
+data_frequency_temp <- data_processed_trimmed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -302,7 +283,7 @@ data_frequency_temp <- data_processed_binned %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned %>%
+  density(data_processed_trimmed %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -321,9 +302,9 @@ data_frequency <- data_frequency_temp %>%
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-total_n <- nrow(data_processed_binned)/100
+total_n <- nrow(data_processed_trimmed)/100
 
-plot_data_psyctests <- data_processed_binned |>
+plot_data_psyctests <- data_processed_trimmed |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -470,7 +451,7 @@ The usual null hypothesis of no differences cannot be tested against, so instead
 
 ```{r}
 
-data_caliper <- data_processed_binned %>% 
+data_caliper <- data_processed_trimmed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(count = sum(!is.na(alpha)))
@@ -592,30 +573,17 @@ independence_test(ratio ~ group_1_cutoff,
 
 ```{r}
 
-data_included <- data_processed |>
-  filter(test_type == "Original") |>
-  mutate(alpha = alpha_all) |>
-  filter(exclude_master == FALSE) 
+data_processed_trimmed_temp <- data_processed_trimmed |>
+  filter(test_type == "Original")
   
-nrow(data_included)
+nrow(data_processed_trimmed_temp)
 
 # create tibble containing all alpha bins, for a later join
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-data_processed_binned <- data_included %>% 
-  pull(alpha) %>% 
-  unlist() %>% 
-  as.numeric() %>% 
-  tibble(alpha = .) %>% 
-  filter(alpha > 0, !is.na(alpha)) %>% 
-  mutate(alpha = janitor::round_half_up(alpha, 2),
-         alpha = case_when(alpha == 0 ~ 0.01,
-                           alpha == 1 ~ 0.99,
-                           TRUE ~ alpha))
-
-data_frequency_temp <- data_processed_binned %>% 
+data_frequency_temp <- data_processed_trimmed_temp %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -624,7 +592,7 @@ data_frequency_temp <- data_processed_binned %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned %>%
+  density(data_processed_trimmed_temp %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -643,9 +611,9 @@ data_frequency <- data_frequency_temp %>%
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-total_n <- nrow(data_processed_binned)/100
+total_n <- nrow(data_processed_trimmed_temp)/100
 
-plot_data_psyctests <- data_processed_binned |>
+plot_data_psyctests <- data_processed_trimmed_temp |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -790,7 +758,7 @@ The usual null hypothesis of no differences cannot be tested against, so instead
 
 ```{r}
 
-data_caliper <- data_processed_binned %>% 
+data_caliper <- data_processed_trimmed_temp %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(count = sum(!is.na(alpha)))
@@ -912,30 +880,17 @@ independence_test(ratio ~ group_1_cutoff,
 
 ```{r}
 
-data_included <- data_processed |>
-  filter(test_type %in% c("Revision", "Translation")) |>
-  mutate(alpha = alpha_all) |>
-  filter(exclude_master == FALSE) 
+data_processed_trimmed_temp <- data_processed_trimmed |>
+  filter(test_type %in% c("Revision", "Translation"))
   
-nrow(data_included)
+nrow(data_processed_trimmed_temp)
 
 # create tibble containing all alpha bins, for a later join
 all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-data_processed_binned <- data_included %>% 
-  pull(alpha) %>% 
-  unlist() %>% 
-  as.numeric() %>% 
-  tibble(alpha = .) %>% 
-  filter(alpha > 0, !is.na(alpha)) %>% 
-  mutate(alpha = janitor::round_half_up(alpha, 2),
-         alpha = case_when(alpha == 0 ~ 0.01,
-                           alpha == 1 ~ 0.99,
-                           TRUE ~ alpha))
-
-data_frequency_temp <- data_processed_binned %>% 
+data_frequency_temp <- data_processed_trimmed_temp %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -944,7 +899,7 @@ data_frequency_temp <- data_processed_binned %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned %>%
+  density(data_processed_trimmed_temp %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -963,9 +918,9 @@ data_frequency <- data_frequency_temp %>%
          alpha = as.numeric(alpha),
          missing = ifelse(is.na(missing), FALSE, missing))
 
-total_n <- nrow(data_processed_binned)/100
+total_n <- nrow(data_processed_trimmed_temp)/100
 
-plot_data_psyctests <- data_processed_binned |>
+plot_data_psyctests <- data_processed_trimmed_temp |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -1110,7 +1065,7 @@ The usual null hypothesis of no differences cannot be tested against, so instead
 
 ```{r}
 
-data_caliper <- data_processed_binned %>% 
+data_caliper <- data_processed_trimmed_temp %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(count = sum(!is.na(alpha)))

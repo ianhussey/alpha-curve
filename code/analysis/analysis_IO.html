@@ -1888,7 +1888,7 @@ border-radius: 0px;
 rule-of-thumb cut-offs</h1>
 <h3 class="subtitle">Analyses of I/O dataset</h3>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">23 June, 2024</h4>
+<h4 class="date">26 July, 2024</h4>
 
 </div>
 
@@ -1915,16 +1915,14 @@ rule-of-thumb cut-offs</h1>
 </div>
 <div id="get-data" class="section level1">
 <h1>Get data</h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/IO/data_processed_io.rds&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>data_processed_binned <span class="ot">&lt;-</span> data_processed <span class="sc">%&gt;%</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="co"># round the alpha values to 2 decimal places, using standard rounding method</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="co"># recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="co"># nb none present in dataset</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(alpha, <span class="dv">2</span>),</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">case_when</span>(alpha <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="fl">0.01</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>                           alpha <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="fl">0.99</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                           <span class="cn">TRUE</span> <span class="sc">~</span> alpha)) </span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>data_processed <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">&quot;../../data/processed/IO/data_processed_io.rds&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="co"># round the alpha values to 2 decimal places, using standard rounding method</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="co"># recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="co"># nb none present in dataset</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">alpha =</span> janitor<span class="sc">::</span><span class="fu">round_half_up</span>(alpha, <span class="dv">2</span>),</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>         <span class="at">alpha =</span> <span class="fu">case_when</span>(alpha <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="fl">0.01</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                           alpha <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="fl">0.99</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                           <span class="cn">TRUE</span> <span class="sc">~</span> alpha)) </span></code></pre></div>
 </div>
 <div id="descriptives" class="section level1">
 <h1>Descriptives</h1>
@@ -1952,7 +1950,7 @@ rule-of-thumb cut-offs</h1>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>                     <span class="at">freq =</span> <span class="dv">0</span>,</span>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>                     <span class="at">missing =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>data_frequency_temp <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span> </span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>data_frequency_temp <span class="ot">&lt;-</span> data_processed <span class="sc">%&gt;%</span> </span>
 <span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">%&gt;%</span> </span>
 <span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">freq =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))<span class="sc">/</span><span class="fu">first</span>(n_total)) <span class="sc">%&gt;%</span></span>
@@ -1961,7 +1959,7 @@ rule-of-thumb cut-offs</h1>
 <span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
 <span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co"># kernel density estimation</span></span>
 <span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>data_density <span class="ot">&lt;-</span> </span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="fu">density</span>(data_processed_binned <span class="sc">%&gt;%</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>  <span class="fu">density</span>(data_processed <span class="sc">%&gt;%</span></span>
 <span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>            <span class="fu">pull</span>(alpha),</span>
 <span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>          <span class="at">n      =</span> <span class="fu">length</span>(<span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>, <span class="fl">0.01</span>)),</span>
 <span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>          <span class="at">from   =</span> <span class="fl">0.01</span>,</span>
@@ -1996,9 +1994,9 @@ rule-of-thumb cut-offs</h1>
 <span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;residual_kernel&quot;</span>,</span>
 <span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>               <span class="fu">c</span>(frequency_without_residual_kernel, residual_kernel))</span>
 <span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a></span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>total_n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(data_processed_binned)<span class="sc">/</span><span class="dv">100</span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>total_n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(data_processed)<span class="sc">/</span><span class="dv">100</span></span>
 <span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a></span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>plot_data_io <span class="ot">&lt;-</span> data_processed_binned <span class="sc">|&gt;</span></span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>plot_data_io <span class="ot">&lt;-</span> data_processed <span class="sc">|&gt;</span></span>
 <span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">|&gt;</span></span>
 <span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha))) <span class="sc">|&gt;</span></span>
@@ -2147,7 +2145,7 @@ for the cut-off score ratio being larger than the ratios calculated from
 non cut-offs is then tested via permuation test.</p>
 <div id="quantify-excess-1" class="section level2">
 <h2>Quantify excess</h2>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>data_caliper <span class="ot">&lt;-</span> data_processed_binned <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>data_caliper <span class="ot">&lt;-</span> data_processed <span class="sc">%&gt;%</span> </span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_total =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>  <span class="fu">group_by</span>(alpha) <span class="sc">%&gt;%</span> </span>
 <span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(alpha)))</span>
@@ -2315,7 +2313,7 @@ these are annotated in the same way using vertical bars.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.3.3 (2024-02-29)
 ## Platform: aarch64-apple-darwin20 (64-bit)
-## Running under: macOS Sonoma 14.4.1
+## Running under: macOS Sonoma 14.5
 ## 
 ## Matrix products: default
 ## BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
@@ -2324,7 +2322,7 @@ these are annotated in the same way using vertical bars.</p>
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 ## 
-## time zone: Europe/London
+## time zone: Europe/Zurich
 ## tzcode source: internal
 ## 
 ## attached base packages:
@@ -2350,11 +2348,11 @@ these are annotated in the same way using vertical bars.</p>
 ## [29] MASS_7.3-60.0.1   cachem_1.0.8      multcomp_1.4-25   commonmark_1.9.1 
 ## [33] tidyselect_1.2.1  digest_0.6.35     mvtnorm_1.2-4     stringi_1.8.4    
 ## [37] labeling_0.4.3    splines_4.3.3     fastmap_1.1.1     grid_4.3.3       
-## [41] colorspace_2.1-0  cli_3.6.2         magrittr_2.0.3    utf8_1.2.4       
+## [41] colorspace_2.1-0  cli_3.6.3         magrittr_2.0.3    utf8_1.2.4       
 ## [45] TH.data_1.1-2     libcoin_1.0-9     withr_3.0.0       backports_1.4.1  
 ## [49] bit64_4.0.5       timechange_0.3.0  rmarkdown_2.26    matrixStats_1.0.0
 ## [53] bit_4.0.5         zoo_1.8-12        modeltools_0.2-23 hms_1.1.3        
-## [57] evaluate_0.23     viridisLite_0.4.2 markdown_1.12     rlang_1.1.3      
+## [57] evaluate_0.23     viridisLite_0.4.2 markdown_1.12     rlang_1.1.4      
 ## [61] gridtext_0.1.5    Rcpp_1.0.12       glue_1.7.0        xml2_1.3.6       
 ## [65] vroom_1.6.5       svglite_2.1.3     rstudioapi_0.16.0 jsonlite_1.8.8   
 ## [69] R6_2.5.1          systemfonts_1.0.6</code></pre>

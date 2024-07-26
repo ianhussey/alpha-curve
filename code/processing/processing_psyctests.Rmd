@@ -434,8 +434,10 @@ data_test_type <- records_wide |>
 data_processed <- data_estimates_after_exclusions |>
   left_join(data_test_type, by = "doi") |>
   # select cols of interest + rename
-  select(doi, test_type, exemplar, alpha, alpha_all,
-         extracted_text = all, regex_label, regex_inclusion, regex_exclusion, alpha_location_in_text = location_alpha_absolute, 
+  select(doi, test_type, exemplar, alpha, 
+         # alpha_all,
+         extracted_text = all, regex_label, regex_inclusion, regex_exclusion, 
+         #alpha_location_in_text = location_alpha_absolute, 
          starts_with("exclude"))
 
 data_processed |>

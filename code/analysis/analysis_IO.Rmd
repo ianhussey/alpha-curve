@@ -47,9 +47,7 @@ set.seed(42)
 
 ```{r}
 
-data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds")
-
-data_processed_binned <- data_processed %>%
+data_processed <- read_rds("../../data/processed/IO/data_processed_io.rds") |>
   # round the alpha values to 2 decimal places, using standard rounding method
   # recode alpha values of 0 or 1 to .01 or .99, in order to be able to fit beta regression
   # nb none present in dataset
@@ -92,7 +90,7 @@ all_alphas <- tibble(alpha = as.character(seq(0.01, 0.99, 0.01)),
                      freq = 0,
                      missing = TRUE)
 
-data_frequency_temp <- data_processed_binned %>% 
+data_frequency_temp <- data_processed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(freq = sum(!is.na(alpha))/first(n_total)) %>%
@@ -101,7 +99,7 @@ data_frequency_temp <- data_processed_binned %>%
 
 # kernel density estimation
 data_density <- 
-  density(data_processed_binned %>%
+  density(data_processed %>%
             pull(alpha),
           n      = length(seq(0.01, 0.99, 0.01)),
           from   = 0.01,
@@ -136,9 +134,9 @@ data_diff <- data_frequency %>%
                values_to = "residual_kernel",
                c(frequency_without_residual_kernel, residual_kernel))
 
-total_n <- nrow(data_processed_binned)/100
+total_n <- nrow(data_processed)/100
 
-plot_data_io <- data_processed_binned |>
+plot_data_io <- data_processed |>
   mutate(n_total = n()) |>
   group_by(alpha) |>
   summarise(count = sum(!is.na(alpha))) |>
@@ -288,7 +286,7 @@ The usual null hypothesis of no differences cannot be tested against, so instead
 
 ```{r}
 
-data_caliper <- data_processed_binned %>% 
+data_caliper <- data_processed %>% 
   mutate(n_total = n()) %>% 
   group_by(alpha) %>% 
   summarise(count = sum(!is.na(alpha)))
